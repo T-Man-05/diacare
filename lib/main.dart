@@ -82,12 +82,12 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           elevation: 0,
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.info_outline),
-              label: 'Info',
+              icon: Icon(Icons.alarm),
+              label: 'Reminders',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.bar_chart),
-              label: 'Stats',
+              label: 'Insights',
             ),
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(
