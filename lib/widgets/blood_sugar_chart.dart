@@ -88,9 +88,12 @@ class BloodSugarChart extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
-              child: const Text(
-                'See Details',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 15),
+                child: const Text(
+                  'See Details',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, ),
+                ),
               ),
             ),
           ),
