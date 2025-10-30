@@ -1,10 +1,12 @@
-name: diacare
-description: "A new Flutter project."
-publish_to: 'none'
-version: 0.1.0
+name: diabetic_monitoring_app
+description: A diabetic monitoring Flutter application with clean architecture
+
+publish_to: "none"
+
+version: 1.0.0+1
 
 environment:
-  sdk: ^3.9.2
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -13,7 +15,11 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^2.0.0
 
 flutter:
   uses-material-design: true
+
+  # Add the JSON data file as an asset
+  assets:
+    - assets/data/demo_data.json
