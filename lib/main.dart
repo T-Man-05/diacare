@@ -47,7 +47,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       const PlaceholderPage(title: 'Insights'),
       DashboardPage(repository: repository), // Home
       const PlaceholderPage(title: 'Chat'),
-      SettingsPage(repository: repository),
+      MyProfilePage(repository: repository),
     ]);
   }
 

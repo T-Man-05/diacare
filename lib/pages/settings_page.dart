@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import '../models/settings_data.dart';
 import '../repositories/app_repository.dart';
 import '../utils/constants.dart';
+import 'edit_profile_page.dart';
+import 'diabetics_profile_page.dart';
 
-/// Settings Page - User profile and app settings
-class SettingsPage extends StatefulWidget {
+class MyProfilePage extends StatefulWidget {
   final AppRepository repository;
 
-  const SettingsPage({Key? key, required this.repository}) : super(key: key);
+  const MyProfilePage({Key? key, required this.repository}) : super(key: key);
 
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  State<MyProfilePage> createState() => _MyProfilePageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class _MyProfilePageState extends State<MyProfilePage> {
   SettingsData? _settingsData;
   bool _isLoading = true;
 
@@ -23,13 +24,9 @@ class _SettingsPageState extends State<SettingsPage> {
     _loadData();
   }
 
-  /// Load data using single getData() function from repository
   Future<void> _loadData() async {
     try {
-      // Call single getData() function
       final allData = await widget.repository.getData();
-
-      // Extract settings data
       final settingsJson = allData['settings'] as Map<String, dynamic>;
 
       setState(() {
@@ -38,18 +35,13 @@ class _SettingsPageState extends State<SettingsPage> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      debugPrint('Error loading settings data: $e');
+      debugPrint('Error loading data: $e');
     }
   }
 
   Future<void> _saveSettings() async {
     if (_settingsData != null) {
       await widget.repository.updateSettings(_settingsData!.toJson());
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Settings saved successfully')),
-        );
-      }
     }
   }
 
@@ -69,21 +61,33 @@ class _SettingsPageState extends State<SettingsPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'My Profile',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.screenPadding),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionHeader('General'),
-              const SizedBox(height: 16),
-              _buildGeneralSection(),
-              const SizedBox(height: AppSpacing.sectionSpacing),
-              // _buildPremiumCard(),
-              const SizedBox(height: AppSpacing.sectionSpacing),
-              _buildSectionHeader('Account'),
-              const SizedBox(height: 16),
-              _buildAccountSection(),
+              _buildProfileHeader(),
+              const SizedBox(height: 24),
+              _buildMainMenuSection(),
+              const SizedBox(height: 24),
+              _buildAccountActionsSection(),
             ],
           ),
         ),
@@ -91,99 +95,68 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Text(title, style: AppTextStyles.sectionHeader);
-  }
-
-  Widget _buildGeneralSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          _buildSettingsTile(
-            icon: Icons.person,
-            title: 'Personal details',
-            onTap: _showPersonalDetailsDialog,
-          ),
-          _buildDivider(),
-          _buildSettingsTile(
-            icon: Icons.language,
-            title: 'Language',
-            trailing: 'English',
-            onTap: () {},
-          ),
-          _buildDivider(),
-          _buildSettingsTile(
-            icon: Icons.star,
-            title: 'Rate us',
-            onTap: () {},
-          ),
-          _buildDivider(),
-          _buildSettingsTile(
-            icon: Icons.privacy_tip,
-            title: 'Privacy Policy',
-            onTap: () {},
-          ),
-          _buildDivider(),
-          _buildSettingsTile(
-            icon: Icons.description,
-            title: 'Terms Of Use',
-            onTap: () {},
-          ),
-          _buildDivider(),
-          _buildSettingsTile(
-            icon: Icons.feedback,
-            title: 'Feedback',
-            onTap: () {},
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPremiumCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryDark],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  'Get Premium',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Enjoy all the benefits of the app',
-                  style: TextStyle(fontSize: 14, color: Colors.white70),
-                ),
-              ],
+  Widget _buildProfileHeader() {
+    return Row(
+      children: [
+        Stack(
+          children: [
+            CircleAvatar(
+              radius: 40,
+              backgroundImage: _settingsData?.profileImageUrl != null
+                  ? NetworkImage(_settingsData!.profileImageUrl!)
+                  : null,
+              child: _settingsData?.profileImageUrl == null
+                  ? const Icon(Icons.person, size: 40, color: Colors.white)
+                  : null,
+              backgroundColor: Colors.grey[300],
             ),
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.camera_alt,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _settingsData?.fullName ?? 'Charlotte King',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _settingsData?.username ?? '@johnkinggraphics',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
           ),
-          const Icon(Icons.star, color: Colors.white, size: 48),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildAccountSection() {
+  Widget _buildMainMenuSection() {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
@@ -191,17 +164,69 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       child: Column(
         children: [
-          _buildSettingsTile(
-            icon: Icons.delete,
+          _buildMenuItem(
+            icon: Icons.person_outline,
+            title: 'Edit Profile',
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      EditProfilePage(repository: widget.repository),
+                ),
+              );
+              _loadData();
+            },
+          ),
+          _buildDivider(),
+          _buildMenuItem(
+            icon: Icons.favorite_outline,
+            title: 'Diabetics Profile',
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      DiabeticsProfilePage(repository: widget.repository),
+                ),
+              );
+              _loadData();
+            },
+          ),
+          _buildDivider(),
+          _buildMenuItem(
+            icon: Icons.settings_outlined,
+            title: 'Settings',
+            onTap: () {
+              _showSettingsBottomSheet();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAccountActionsSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          _buildMenuItem(
+            icon: Icons.delete_outline,
             title: 'Delete account',
             iconColor: Colors.red,
+            textColor: Colors.red,
             onTap: _showDeleteAccountDialog,
           ),
           _buildDivider(),
-          _buildSettingsTile(
+          _buildMenuItem(
             icon: Icons.logout,
-            title: 'Logout',
+            title: 'Log out',
             iconColor: AppColors.primary,
+            textColor: AppColors.primary,
             onTap: _showLogoutDialog,
           ),
         ],
@@ -209,12 +234,12 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildSettingsTile({
+  Widget _buildMenuItem({
     required IconData icon,
     required String title,
-    String? trailing,
-    Color? iconColor,
     required VoidCallback onTap,
+    Color? iconColor,
+    Color? textColor,
   }) {
     return ListTile(
       leading: Container(
@@ -223,21 +248,23 @@ class _SettingsPageState extends State<SettingsPage> {
           color: (iconColor ?? AppColors.primary).withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: iconColor ?? AppColors.primary, size: 24),
+        child: Icon(
+          icon,
+          color: iconColor ?? AppColors.primary,
+          size: 24,
+        ),
       ),
-      title: Text(title, style: AppTextStyles.cardTitle),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (trailing != null)
-            Text(
-              trailing,
-              style:
-                  const TextStyle(fontSize: 14, color: AppColors.textSecondary),
-            ),
-          const SizedBox(width: 8),
-          const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-        ],
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: textColor ?? AppColors.textPrimary,
+        ),
+      ),
+      trailing: const Icon(
+        Icons.chevron_right,
+        color: AppColors.textSecondary,
       ),
       onTap: onTap,
     );
@@ -245,88 +272,326 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildDivider() => const Divider(height: 1, indent: 72);
 
-  void _showPersonalDetailsDialog() {
-    final emailController = TextEditingController(text: _settingsData!.email);
-    final passwordController =
-        TextEditingController(text: _settingsData!.password);
-
-    showDialog(
+  void _showSettingsBottomSheet() {
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Personal Details'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.8,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          ElevatedButton(
-            onPressed: () {
-              if (emailController.text.contains('@') &&
-                  passwordController.text.isNotEmpty) {
-                setState(() {
-                  _settingsData!.email = emailController.text;
-                  _settingsData!.password = passwordController.text;
-                });
-                _saveSettings();
-                Navigator.pop(context);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter valid email and password'),
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Settings',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader('Theme'),
+                      const SizedBox(height: 12),
+                      _buildThemeSection(),
+                      const SizedBox(height: 24),
+                      _buildSectionHeader('Notifications'),
+                      const SizedBox(height: 12),
+                      _buildNotificationsSection(),
+                      const SizedBox(height: 24),
+                      _buildSectionHeader('Units Preference'),
+                      const SizedBox(height: 12),
+                      _buildUnitsSection(),
+                    ],
                   ),
-                );
-              }
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimary,
+      ),
+    );
+  }
+
+  Widget _buildThemeSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          _buildRadioTile(
+            icon: Icons.wb_sunny_outlined,
+            title: 'Light',
+            value: 'light',
+            groupValue: _settingsData!.preferences.theme,
+            onChanged: (value) {
+              setState(() {
+                _settingsData!.preferences.theme = value!;
+              });
+              _saveSettings();
             },
-            child: const Text('Save'),
+          ),
+          _buildSettingsDivider(),
+          _buildRadioTile(
+            icon: Icons.nightlight_round,
+            title: 'Dark',
+            value: 'dark',
+            groupValue: _settingsData!.preferences.theme,
+            onChanged: (value) {
+              setState(() {
+                _settingsData!.preferences.theme = value!;
+              });
+              _saveSettings();
+            },
+          ),
+          _buildSettingsDivider(),
+          _buildRadioTile(
+            icon: Icons.computer,
+            title: 'System',
+            value: 'system',
+            groupValue: _settingsData!.preferences.theme,
+            onChanged: (value) {
+              setState(() {
+                _settingsData!.preferences.theme = value!;
+              });
+              _saveSettings();
+            },
           ),
         ],
       ),
     );
   }
 
+  Widget _buildNotificationsSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.notifications_outlined,
+              color: AppColors.primary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Text(
+              'Enable Notifications',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+          Switch(
+            value: _settingsData!.preferences.notificationsEnabled,
+            onChanged: (value) {
+              setState(() {
+                _settingsData!.preferences.notificationsEnabled = value;
+              });
+              _saveSettings();
+            },
+            activeThumbColor: AppColors.primary,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUnitsSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          _buildRadioTile(
+            title: 'g/dL',
+            value: 'g/dL',
+            groupValue: _settingsData!.preferences.units,
+            onChanged: (value) {
+              setState(() {
+                _settingsData!.preferences.units = value!;
+              });
+              _saveSettings();
+            },
+            showIcon: false,
+          ),
+          _buildSettingsDivider(),
+          _buildRadioTile(
+            title: 'mmol/dL',
+            value: 'mmol/dL',
+            groupValue: _settingsData!.preferences.units,
+            onChanged: (value) {
+              setState(() {
+                _settingsData!.preferences.units = value!;
+              });
+              _saveSettings();
+            },
+            showIcon: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRadioTile({
+    IconData? icon,
+    required String title,
+    required String value,
+    required String groupValue,
+    required ValueChanged<String?> onChanged,
+    bool showIcon = true,
+  }) {
+    final isSelected = value == groupValue;
+
+    return InkWell(
+      onTap: () => onChanged(value),
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            if (showIcon && icon != null) ...[
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  color: AppColors.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+            ],
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: isSelected
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
+                ),
+              ),
+            ),
+            Radio<String>(
+              value: value,
+              groupValue: groupValue,
+              onChanged: onChanged,
+              activeColor: AppColors.primary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsDivider() =>
+      const Divider(height: 1, indent: 16, endIndent: 16);
+
   void _showDeleteAccountDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Account'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const Text(
+          'Delete Account',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         content: const Text(
           'Are you sure you want to delete your account? This action cannot be undone.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Account deleted')),
               );
             },
-            child: const Text('Delete'),
+            child: const Text(
+              'Sure',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -337,21 +602,40 @@ class _SettingsPageState extends State<SettingsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const Text(
+          'Log Out',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text('Are you sure you want to log out?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Logged out successfully')),
               );
             },
-            child: const Text('Logout'),
+            child: const Text(
+              'Sure',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
