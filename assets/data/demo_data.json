@@ -43,16 +43,22 @@
       "days": ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"]
     }
   },
-  "settings": {
-    "email": "user@example.com",
+ "settings": {
+    "email": "charlotte.king@email.com",
     "password": "••••••••",
+    "full_name": "Charlotte King",
+    "username": "@johnkinggraphics",
+    "profile_image_url": null,
     "diabetic_profile": {
-      "diabetes_type": "Type 1",
-      "treatments": ["Insulin"]
+      "diabetic_type": "Type 1",
+      "treatment_type": "Insulin",
+      "min_glucose": 70,
+      "max_glucose": 180
     },
     "preferences": {
       "theme": "light",
-      "notifications_enabled": true
+      "notifications_enabled": true,
+      "units": "g/dL"
     }
   }
 }
