@@ -4,7 +4,7 @@ import '../repositories/app_repository.dart';
 import '../widgets/info_card.dart';
 import '../widgets/blood_sugar_chart.dart';
 import '../utils/constants.dart';
-import 'insights_placeholder.dart';
+import 'insights_page.dart';
 
 /// Dashboard Page - Main screen showing health metrics
 class DashboardPage extends StatefulWidget {
@@ -81,7 +81,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const InsightsPlaceholder(),
+                      builder: (context) => const InsightsPage(),
                     ),
                   );
                 },

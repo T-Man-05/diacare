@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/settings_page.dart';
+import 'pages/reminders_page.dart';
+import 'pages/insights_page.dart';
+import 'pages/chat_page.dart';
 import 'repositories/local_demo_repository.dart';
 
 void main() {
@@ -34,27 +37,30 @@ class MainNavigationPage extends StatefulWidget {
 }
 
 class _MainNavigationPageState extends State<MainNavigationPage> {
-  int _currentIndex = 0;
+  int _currentIndex = 2; // Start at Home (Dashboard)
   final repository = LocalDemoRepository();
 
-  final List<Widget> _pages = [];
+  late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
-    _pages.addAll([
-      DashboardPage(repository: repository),
-      const PlaceholderPage(title: 'Insights'),
-      DashboardPage(repository: repository), // Home
-      const PlaceholderPage(title: 'Chat'),
-      MyProfilePage(repository: repository),
-    ]);
+    _pages = [
+      const RemindersPage(), // Index 0 - Alarm icon
+      const InsightsPage(), // Index 1 - Bar chart icon
+      DashboardPage(repository: repository), // Index 2 - Home icon
+      const ChatPage(), // Index 3 - Chat icon
+      SettingsPage(repository: repository), // Index 4 - Profile icon
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -82,14 +88,17 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           elevation: 0,
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.info_outline),
-              label: 'Info',
+              icon: Icon(Icons.alarm),
+              label: 'Reminders',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.bar_chart),
-              label: 'Stats',
+              label: 'Insights',
             ),
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
             BottomNavigationBarItem(
               icon: Icon(Icons.chat_bubble_outline),
               label: 'Chat',
@@ -99,30 +108,6 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
               label: 'Profile',
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class PlaceholderPage extends StatelessWidget {
-  final String title;
-
-  const PlaceholderPage({Key? key, required this.title}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-      ),
-      body: Center(
-        child: Text(
-          '$title Page',
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
         ),
       ),
     );
