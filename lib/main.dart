@@ -50,7 +50,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       const InsightsPage(), // Index 1 - Bar chart icon
       DashboardPage(repository: repository), // Index 2 - Home icon
       const ChatPage(), // Index 3 - Chat icon
-      SettingsPage(repository: repository), // Index 4 - Profile icon
+      MyProfilePage(repository: repository), // Index 4 - Profile icon
     ];
   }
 
