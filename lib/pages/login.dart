@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'signup.dart';
 import 'home.dart';
+import '../utils/constants.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: const Color(0xFFFFFFFF),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32,vertical: 64),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 64),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -33,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   fontSize: 68,
                   height: 1.0,
                   letterSpacing: 0.0,
-                  color: Color(0xFF16B8A8),
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 46),
@@ -79,13 +80,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Text(
                           'Email Address',
                           style: TextStyle(
-                            fontFamily: 'Inter',           // Font
-                            fontWeight: FontWeight.w500,   // Weight (400)
-                            fontStyle: FontStyle.normal,   // Style (Regular)
-                            fontSize: 18,                  // Size (18px)
-                            height: 1.0,                   // Line height (100%)
-                            letterSpacing: 0.0,            // Letter spacing (0%)
-                            color: Color(0xFF5D5D5D),      // Default black text
+                            fontFamily: 'Inter', // Font
+                            fontWeight: FontWeight.w500, // Weight (400)
+                            fontStyle: FontStyle.normal, // Style (Regular)
+                            fontSize: 18, // Size (18px)
+                            height: 1.0, // Line height (100%)
+                            letterSpacing: 0.0, // Letter spacing (0%)
+                            color: Color(0xFF5D5D5D), // Default black text
                           ),
                         ),
                       ),
@@ -121,13 +122,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Text(
                           'Password',
                           style: TextStyle(
-                            fontFamily: 'Inter',           // Font
-                            fontWeight: FontWeight.w500,   // Weight (400)
-                            fontStyle: FontStyle.normal,   // Style (Regular)
-                            fontSize: 18,                  // Size (18px)
-                            height: 1.0,                   // Line height (100%)
-                            letterSpacing: 0.0,            // Letter spacing (0%)
-                            color: Color(0xFF5D5D5D),      // Default black text
+                            fontFamily: 'Inter', // Font
+                            fontWeight: FontWeight.w500, // Weight (400)
+                            fontStyle: FontStyle.normal, // Style (Regular)
+                            fontSize: 18, // Size (18px)
+                            height: 1.0, // Line height (100%)
+                            letterSpacing: 0.0, // Letter spacing (0%)
+                            color: Color(0xFF5D5D5D), // Default black text
                           ),
                         ),
                       ),
@@ -163,12 +164,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: ElevatedButton(
                           onPressed: () {
                             Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const MainNavigationPage()),
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const MainNavigationPage()),
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF16B8A8),
+                            backgroundColor: AppColors.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -176,13 +179,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: const Text(
                             'Log In',
                             style: TextStyle(
-                              fontFamily: 'Inter',           // Font
-                              fontWeight: FontWeight.w600,   // Weight (600 → Semi Bold)
-                              fontStyle: FontStyle.normal,   // Style (Regular)
-                              fontSize: 18,                  // Size (18px)
-                              height: 1.0,                   // Line height (100%)
-                              letterSpacing: 0.0,            // Letter spacing (0%)
-                              color: Colors.white,           // Optional, depends on button color
+                              fontFamily: 'Inter', // Font
+                              fontWeight:
+                                  FontWeight.w600, // Weight (600 → Semi Bold)
+                              fontStyle: FontStyle.normal, // Style (Regular)
+                              fontSize: 18, // Size (18px)
+                              height: 1.0, // Line height (100%)
+                              letterSpacing: 0.0, // Letter spacing (0%)
+                              color: Colors
+                                  .white, // Optional, depends on button color
                             ),
                           ),
                         ),
@@ -193,30 +198,31 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: ElevatedButton(
                           onPressed: () {
                             Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const SignupScreen()),
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const SignupScreen()),
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              side:const BorderSide(
-                                color: Color(0XFF16B8A8),
-                                width: 2,
-                              )
-                            ),
+                                borderRadius: BorderRadius.circular(10),
+                                side: const BorderSide(
+                                  color: AppColors.primary,
+                                  width: 2,
+                                )),
                           ),
                           child: const Text(
                             'Sign Up',
                             style: TextStyle(
-                              fontFamily: 'Inter',           // Font
-                              fontWeight: FontWeight.w600,   // Weight (600 → Semi Bold)
-                              fontStyle: FontStyle.normal,   // Style (Regular)
-                              fontSize: 18,                  // Size (18px)
-                              height: 1.0,                   // Line height (100%)
-                              letterSpacing: 0.0,            // Letter spacing (0%)
-                              color: Color(0XFF16B8A8),           // Optional, depends on button color
+                              fontFamily: 'Inter', // Font
+                              fontWeight:
+                                  FontWeight.w600, // Weight (600 → Semi Bold)
+                              fontStyle: FontStyle.normal, // Style (Regular)
+                              fontSize: 18, // Size (18px)
+                              height: 1.0, // Line height (100%)
+                              letterSpacing: 0.0, // Letter spacing (0%)
+                              color: AppColors
+                                  .primary, // Optional, depends on button color
                             ),
                           ),
                         ),
@@ -230,10 +236,10 @@ class _LoginScreenState extends State<LoginScreen> {
               const Text(
                 'Forgot your password?',
                 style: TextStyle(
-                  color: Color(0xFF16B8A8),
+                  color: AppColors.primary,
                   fontWeight: FontWeight.w500,
                   decoration: TextDecoration.underline,
-                  decorationColor: Color(0xFF16B8A8),
+                  decorationColor: AppColors.primary,
                   fontSize: 20,
                 ),
               ),

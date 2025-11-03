@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'legend_item.dart';
-
+import '../utils/constants.dart';
 class CarbsChart extends StatelessWidget {
   const CarbsChart({Key? key}) : super(key: key);
 
@@ -29,7 +29,7 @@ class CarbsChart extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [
-            LegendItem(color: Color(0xFF4FC3C3), label: 'Normal'),
+            LegendItem(color: AppColors.primary, label: 'Normal'),
             LegendItem(color: Color(0xFFE87B3C), label: 'Above Normal'),
           ],
         ),
@@ -99,13 +99,13 @@ class CarbsChart extends StatelessWidget {
               ),
               borderData: FlBorderData(show: false),
               barGroups: [
-                _makeBarGroup(0, 130, const Color(0xFF4FC3C3)),
-                _makeBarGroup(1, 155, const Color(0xFF4FC3C3)),
-                _makeBarGroup(2, 140, const Color(0xFF4FC3C3)),
-                _makeBarGroup(3, 80, const Color(0xFF4FC3C3)),
+                _makeBarGroup(0, 130, AppColors.primary),
+                _makeBarGroup(1, 155, AppColors.primary),
+                _makeBarGroup(2, 140, AppColors.primary),
+                _makeBarGroup(3, 80, AppColors.primary),
                 _makeBarGroup(4, 165, const Color(0xFFE87B3C)),
-                _makeBarGroup(5, 145, const Color(0xFF4FC3C3)),
-                _makeBarGroup(6, 110, const Color(0xFF4FC3C3)),
+                _makeBarGroup(5, 145, AppColors.primary),
+                _makeBarGroup(6, 110, AppColors.primary),
               ],
             ),
           ),

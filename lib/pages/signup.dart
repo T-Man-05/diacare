@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'date_gen.dart';
-
+import '../utils/constants.dart';
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
@@ -32,7 +32,7 @@ class _SignupScreen extends State<SignupScreen> {
                   fontSize: 68,
                   height: 1.0,
                   letterSpacing: 0.0,
-                  color: Color(0xFF16B8A8),
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 46),
@@ -101,7 +101,7 @@ class _SignupScreen extends State<SignupScreen> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: const BorderSide(
-                                  color: Color(0xFF0E8278), width: 2),
+                                  color: AppColors.primaryDark, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             hintText: 'choose an @Username',
@@ -141,7 +141,7 @@ class _SignupScreen extends State<SignupScreen> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: const BorderSide(
-                                  color: Color(0xFF0E8278), width: 2),
+                                  color: AppColors.primaryDark, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             hintText: 'Enter your email',
@@ -183,7 +183,7 @@ class _SignupScreen extends State<SignupScreen> {
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: const BorderSide(
-                                  color: Color(0xFF0E8278), width: 2),
+                                  color: AppColors.primaryDark, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             hintText: 'Enter your password',
@@ -204,7 +204,7 @@ class _SignupScreen extends State<SignupScreen> {
                             MaterialPageRoute(builder: (context) => const DateGenScreen()),
                           );},
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF16B8A8),
+                            backgroundColor:  AppColors.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -233,10 +233,10 @@ class _SignupScreen extends State<SignupScreen> {
               const Text(
                 ' ',
                 style: TextStyle(
-                  color: Color(0xFF16B8A8),
+                  color: AppColors.primary,
                   fontWeight: FontWeight.w500,
                   decoration: TextDecoration.underline,
-                  decorationColor: Color(0xFF16B8A8),
+                  decorationColor: AppColors.primary,
                   fontSize: 20,
                 ),
               ),

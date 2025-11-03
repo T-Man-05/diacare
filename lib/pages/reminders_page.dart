@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/reminder_card_widget.dart';
 import '../widgets/reminder_status_dialog.dart';
 import 'insights_page.dart';
-
+import '../utils/constants.dart';
 class RemindersPage extends StatefulWidget {
   const RemindersPage({Key? key}) : super(key: key);
 
@@ -147,9 +147,9 @@ class _RemindersPageState extends State<RemindersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF2C3E50),
+        backgroundColor: AppColors.background,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Column(
@@ -160,12 +160,12 @@ class _RemindersPageState extends State<RemindersPage> {
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: AppColors.textPrimary,
               ),
             ),
-            Text(
+            const Text(
               'Fri, 24 Oct  15:54',
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade300),
+              style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
             ),
           ],
         ),
@@ -180,7 +180,7 @@ class _RemindersPageState extends State<RemindersPage> {
                     notificationsEnabled
                         ? Icons.notifications_active
                         : Icons.notifications_off,
-                    color: Colors.white,
+                    color: AppColors.primary,
                     size: 28,
                   ),
                   onPressed: _toggleNotifications,
