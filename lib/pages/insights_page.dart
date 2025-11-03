@@ -86,7 +86,7 @@ class _InsightsPageState extends State<InsightsPage> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
+      // bottomNavigationBar: _buildBottomNav(),
     );
   }
 
