@@ -76,6 +76,7 @@ class _DashboardPageState extends State<DashboardPage> {
               _buildHealthCardsGrid(),
               const SizedBox(height: AppSpacing.sectionSpacing),
               BloodSugarChart(
+                flag: true,
                 chartData: _dashboardData!.chart,
                 onSeeDetails: () {
                   Navigator.push(

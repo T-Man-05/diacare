@@ -5,6 +5,7 @@ import '../widgets/carbs_chart.dart';
 import '../widgets/activity_chart.dart';
 import '../models/chart_data.dart';
 import 'reminders_page.dart';
+import '../utils/constants.dart';
 
 class InsightsPage extends StatefulWidget {
   const InsightsPage({Key? key}) : super(key: key);
@@ -47,6 +48,7 @@ class _InsightsPageState extends State<InsightsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -56,15 +58,12 @@ class _InsightsPageState extends State<InsightsPage> {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    ChartCard(
-                      title: 'Blood Sugar',
-                      unit: '(mg/dl)',
-                      child: BloodSugarChart(
-                        chartData: _bloodSugarData,
-                        onSeeDetails: () {
-                          // No action needed in insights page
-                        },
-                      ),
+                    BloodSugarChart(
+                      flag: false,
+                      chartData: _bloodSugarData,
+                      onSeeDetails: () {
+                        // No action needed in insights page
+                      },
                     ),
                     const SizedBox(height: 16),
                     ChartCard(
@@ -107,7 +106,7 @@ class _InsightsPageState extends State<InsightsPage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF4FC3C3),
+              color: AppColors.primary,
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
@@ -156,7 +155,7 @@ class _InsightsPageState extends State<InsightsPage> {
       onPressed: () => _onNavItemTapped(index),
       icon: Icon(
         icon,
-        color: isSelected ? const Color(0xFF4FC3C3) : Colors.grey.shade400,
+        color: isSelected ? AppColors.primary : Colors.grey.shade400,
         size: 28,
       ),
     );
