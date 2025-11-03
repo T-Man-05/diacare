@@ -222,34 +222,34 @@ class _RemindersPageState extends State<RemindersPage> {
           );
         },
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 1,
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(Icons.notifications_outlined, 0),
-                _buildNavItem(Icons.bar_chart, 1),
-                _buildNavItem(Icons.home_outlined, 2),
-                _buildNavItem(Icons.chat_bubble_outline, 3),
-                _buildNavItem(Icons.person_outline, 4),
-              ],
-            ),
-          ),
-        ),
-      ),
+      // bottomNavigationBar: Container(
+      //   decoration: BoxDecoration(
+      //     color: Colors.white,
+      //     boxShadow: [
+      //       BoxShadow(
+      //         color: Colors.grey.withOpacity(0.2),
+      //         spreadRadius: 1,
+      //         blurRadius: 10,
+      //         offset: const Offset(0, -2),
+      //       ),
+      //     ],
+      //   ),
+      //   child: SafeArea(
+      //     child: Padding(
+      //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      //       child: Row(
+      //         mainAxisAlignment: MainAxisAlignment.spaceAround,
+      //         children: [
+      //           _buildNavItem(Icons.notifications_outlined, 0),
+      //           _buildNavItem(Icons.bar_chart, 1),
+      //           _buildNavItem(Icons.home_outlined, 2),
+      //           _buildNavItem(Icons.chat_bubble_outline, 3),
+      //           _buildNavItem(Icons.person_outline, 4),
+      //         ],
+      //       ),
+      //     ),
+      //   ),
+      // ),
     );
   }
 
