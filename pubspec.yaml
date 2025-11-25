@@ -24,3 +24,8 @@ flutter:
   # Add the JSON data file as an asset
   assets:
     - assets/data/demo_data.json
+  fonts:
+    - family: Borel
+      fonts:
+        - asset: assets/fonts/Borel-Regular.ttf
+
