@@ -54,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 //height: 520,
                 child: Padding(
-                  padding: const EdgeInsets.all(32),
+                  padding: const EdgeInsets.only(top: 32, left: 24, right: 24, bottom:0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -83,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontFamily: 'Inter', // Font
                             fontWeight: FontWeight.w500, // Weight (400)
                             fontStyle: FontStyle.normal, // Style (Regular)
-                            fontSize: 18, // Size (18px)
+                            fontSize: 16, // Size (18px)
                             height: 1.0, // Line height (100%)
                             letterSpacing: 0.0, // Letter spacing (0%)
                             color: Color(0xFF5D5D5D), // Default black text
@@ -125,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontFamily: 'Inter', // Font
                             fontWeight: FontWeight.w500, // Weight (400)
                             fontStyle: FontStyle.normal, // Style (Regular)
-                            fontSize: 18, // Size (18px)
+                            fontSize: 16, // Size (18px)
                             height: 1.0, // Line height (100%)
                             letterSpacing: 0.0, // Letter spacing (0%)
                             color: Color(0xFF5D5D5D), // Default black text
@@ -150,6 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             hintText: 'Enter your password',
+                            
                             contentPadding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 12),
                           ),
@@ -227,12 +228,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
+                    SizedBox(height: 46,),
                     ],
                   ),
                 ),
               ),
 
-              const SizedBox(height: 46),
+              const SizedBox(height: 8),
               const Text(
                 'Forgot your password?',
                 style: TextStyle(
@@ -240,7 +242,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   fontWeight: FontWeight.w500,
                   decoration: TextDecoration.underline,
                   decorationColor: AppColors.primary,
-                  fontSize: 20,
+                  fontSize: 14,
                 ),
               ),
             ],
