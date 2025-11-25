@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'legend_item.dart';
-
+import '../utils/constants.dart';
 class ActivityChart extends StatelessWidget {
   const ActivityChart({Key? key}) : super(key: key);
 
@@ -110,7 +110,7 @@ class ActivityChart extends StatelessWidget {
                 _makeBarGroup(1, 1.2, const Color(0xFF6B9EFA)),
                 _makeBarGroup(2, 1.1, const Color(0xFF6B9EFA)),
                 _makeBarGroup(3, 0.65, const Color(0xFF6B9EFA)),
-                _makeBarGroup(4, 1.3, const Color(0xFF4FC3C3)),
+                _makeBarGroup(4, 1.3, AppColors.primary),
                 _makeBarGroup(5, 1.05, const Color(0xFF6B9EFA)),
                 _makeBarGroup(6, 0.85, const Color(0xFF6B9EFA)),
               ],
