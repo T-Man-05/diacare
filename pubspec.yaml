@@ -21,11 +21,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # Add the JSON data file as an asset
+  # Add the JSON data files as assets
   assets:
     - assets/data/demo_data.json
+    - assets/data/app_data.json
   fonts:
     - family: Borel
       fonts:
         - asset: assets/fonts/Borel-Regular.ttf
-

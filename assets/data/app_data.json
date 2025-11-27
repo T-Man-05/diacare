@@ -1,0 +1,268 @@
+{
+  "app_strings": {
+    "app_name": "DiaCare",
+    "welcome": "Welcome!",
+    "login": {
+      "title": "Log In",
+      "email_label": "Email Address",
+      "email_hint": "Enter your email",
+      "password_label": "Password",
+      "password_hint": "Enter your password",
+      "login_button": "Log In",
+      "signup_button": "Sign Up",
+      "forgot_password": "Forgot your password?"
+    },
+    "signup": {
+      "title": "Sign Up",
+      "username_label": "Username",
+      "username_hint": "choose an @Username",
+      "email_label": "Email Address",
+      "email_hint": "Enter your email",
+      "password_label": "Password",
+      "password_hint": "Enter your password",
+      "signup_button": "Sign up"
+    },
+    "onboarding": {
+      "date_of_birth_label": "Date of birth",
+      "date_of_birth_hint": "Select your date of birth",
+      "gender_label": "Gender",
+      "gender_hint": "Select your gender",
+      "height_label": "Height",
+      "height_hint": "Enter your height",
+      "weight_label": "Weight",
+      "weight_hint": "Enter your weight",
+      "diabetes_type_label": "Type of diabetes",
+      "diabetes_type_hint": "Select your type of diabetes",
+      "unit_preferences_label": "Unit preferences",
+      "unit_preferences_hint": "Select your measure unit",
+      "diagnosis_duration_label": "Duration of the diagnosis",
+      "treatment_type_label": "Usual treatment type",
+      "continue_button": "Continue"
+    },
+    "dashboard": {
+      "glucose_label": "Glucose",
+      "next_reminder": "Next Reminder",
+      "see_details": "See Details"
+    },
+    "profile": {
+      "my_profile": "My Profile",
+      "edit_profile": "Edit Profile",
+      "diabetics_profile": "Diabetics Profile",
+      "settings": "Settings",
+      "delete_account": "Delete account",
+      "log_out": "Log out",
+      "full_name_label": "Full Name",
+      "username_label": "Username",
+      "email_label": "Email",
+      "save_changes": "Save Changes"
+    },
+    "diabetic_profile": {
+      "title": "Diabetics Profile",
+      "diabetic_type_label": "Diabetic Type",
+      "treatment_type_label": "Treatment Type",
+      "glucose_range_label": "Glucose Target Range (mg/dL)",
+      "min_label": "Min",
+      "max_label": "Max",
+      "save_button": "Save Changes"
+    },
+    "settings": {
+      "title": "Settings",
+      "theme_section": "Theme",
+      "notifications_section": "Notifications",
+      "units_section": "Units Preference",
+      "theme_light": "Light",
+      "theme_dark": "Dark",
+      "theme_system": "System",
+      "notifications_enable": "Enable Notifications"
+    },
+    "insights": {
+      "title": "Insights",
+      "blood_sugar_chart": "Blood Sugar",
+      "carbs_chart": "Carbs",
+      "carbs_unit": "(calories)",
+      "activity_chart": "Daily Activity",
+      "activity_unit": "(km)",
+      "legend_before_meal": "Before Meal",
+      "legend_after_meal": "After Meal",
+      "legend_normal": "Normal",
+      "legend_above_normal": "Above Normal",
+      "legend_above_usual": "Above Usual"
+    },
+    "reminders": {
+      "title": "Reminder",
+      "date_format": "Fri, 24 Oct  15:54",
+      "status_done": "Done",
+      "status_not_done": "Not Done",
+      "status_later": "Later",
+      "dialog_title": "Mark Reminder Status"
+    },
+    "chat": {
+      "title": "Chat",
+      "description": " AI assistant support for diabetes management."
+    },
+    "dialogs": {
+      "delete_account_title": "Delete Account",
+      "delete_account_message": "Are you sure you want to delete your account? This action cannot be undone.",
+      "logout_title": "Log Out",
+      "logout_message": "Are you sure you want to log out?",
+      "cancel": "Cancel",
+      "confirm": "Sure",
+      "done": "Done"
+    },
+    "messages": {
+      "profile_updated": "Profile updated successfully",
+      "diabetic_profile_updated": "Diabetic profile updated successfully",
+      "account_deleted": "Account deleted",
+      "logged_out": "Logged out successfully",
+      "notifications_enabled": "Notifications enabled",
+      "notifications_disabled": "Notifications disabled",
+      "reminder_done": "Reminder marked as done",
+      "reminder_not_done": "Reminder marked as not done",
+      "reminder_later": "Reminder postponed"
+    },
+    "validation": {
+      "email_required": "Email is required",
+      "email_invalid": "Please enter a valid email address",
+      "password_required": "Password is required",
+      "password_too_short": "Password must be at least 6 characters",
+      "username_required": "Username is required",
+      "field_required": "This field is required",
+      "invalid_glucose_range": "Min glucose must be less than max glucose"
+    },
+    "options": {
+      "genders": ["Male", "Female", "Other"],
+      "diabetes_types": ["Type 1", "Type 2", "Gestational", "Monogenic", "Secondary"],
+      "treatment_types": ["Diet", "Pills", "Insulin"],
+      "unit_options": ["mg/dL", "mmol/L"],
+      "theme_options": ["light", "dark", "system"]
+    }
+  },
+  "dashboard": {
+    "greeting": "Hi, Sam",
+    "glucose": {
+      "value": 112,
+      "unit": "mg/dl",
+      "status": "you are fine"
+    },
+    "reminder": "Drink Water",
+    "health_cards": [
+      {
+        "title": "Water",
+        "value": 1.2,
+        "unit": "L"
+      },
+      {
+        "title": "Pills",
+        "value": 5,
+        "unit": "taken"
+      },
+      {
+        "title": "Activity",
+        "value": 306,
+        "unit": "steps"
+      },
+      {
+        "title": "Carbs",
+        "value": 522,
+        "unit": "cal"
+      },
+      {
+        "title": "Insulin",
+        "value": 5,
+        "unit": "units"
+      }
+    ],
+    "chart": {
+      "title": "Blood Sugar (mg/dl)",
+      "data": {
+        "before_meal": [120, 110, 130, 125, 140, 100, 105],
+        "after_meal": [160, 150, 140, 130, 145, 135, 120]
+      },
+      "days": ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"]
+    }
+  },
+  "settings": {
+    "email": "charlotte.king@email.com",
+    "password": "••••••••",
+    "full_name": "Charlotte King",
+    "username": "@johnkinggraphics",
+    "profile_image_url": null,
+    "diabetic_profile": {
+      "diabetic_type": "Type 1",
+      "treatment_type": "Insulin",
+      "min_glucose": 70,
+      "max_glucose": 180
+    },
+    "preferences": {
+      "theme": "light",
+      "notifications_enabled": true,
+      "units": "mg/dL"
+    }
+  },
+  "reminders": [
+    {
+      "id": "1",
+      "title": "Check Your Glucose Level",
+      "next_time": "18H00",
+      "time_remaining": "in 2h6min",
+      "is_late": false,
+      "is_done": false
+    },
+    {
+      "id": "2",
+      "title": "Drink Water",
+      "next_time": "16H00",
+      "time_remaining": "in 6min",
+      "is_late": false,
+      "is_done": true
+    },
+    {
+      "id": "3",
+      "title": "Take Your Pill",
+      "next_time": "15H00",
+      "time_remaining": "54min late",
+      "is_late": true,
+      "is_done": false
+    },
+    {
+      "id": "4",
+      "title": "Check Your Glucose Level",
+      "next_time": "18H00",
+      "time_remaining": "in 2h6min",
+      "is_late": false,
+      "is_done": false
+    },
+    {
+      "id": "5",
+      "title": "Drink Water",
+      "next_time": "16H00",
+      "time_remaining": "in 6min",
+      "is_late": false,
+      "is_done": true
+    },
+    {
+      "id": "6",
+      "title": "Take Your Pill",
+      "next_time": "15H00",
+      "time_remaining": "54min late",
+      "is_late": true,
+      "is_done": false
+    }
+  ],
+  "charts": {
+    "carbs": {
+      "title": "Carbs",
+      "unit": "(calories)",
+      "data": [130, 155, 140, 80, 165, 145, 110],
+      "days": ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"],
+      "threshold": 150
+    },
+    "activity": {
+      "title": "Daily Activity",
+      "unit": "(km)",
+      "data": [0.95, 1.2, 1.1, 0.65, 1.3, 1.05, 0.85],
+      "days": ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"],
+      "threshold": 1.2
+    }
+  }
+}

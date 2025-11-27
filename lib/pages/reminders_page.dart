@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../widgets/reminder_card_widget.dart';
 import '../widgets/reminder_status_dialog.dart';
-import 'insights_page.dart';
 import '../utils/constants.dart';
+
 class RemindersPage extends StatefulWidget {
   const RemindersPage({Key? key}) : super(key: key);
 
@@ -11,7 +11,6 @@ class RemindersPage extends StatefulWidget {
 }
 
 class _RemindersPageState extends State<RemindersPage> {
-  int _selectedIndex = 0;
   bool notificationsEnabled = true;
 
   List<Map<String, dynamic>> reminders = [
@@ -70,20 +69,6 @@ class _RemindersPageState extends State<RemindersPage> {
       'icon': Icons.info_outline,
     },
   ];
-
-  void _onNavItemTapped(int index) {
-    if (index == 1) {
-      // Navigate to Insights screen when Charts icon is tapped
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const InsightsPage()),
-      );
-    } else {
-      setState(() {
-        _selectedIndex = index;
-      });
-    }
-  }
 
   void _toggleNotifications() {
     setState(() {
@@ -147,15 +132,15 @@ class _RemindersPageState extends State<RemindersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: Column(
+        title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Reminder',
               style: TextStyle(
                 fontSize: 32,
@@ -163,7 +148,7 @@ backgroundColor: AppColors.background,
                 color: AppColors.textPrimary,
               ),
             ),
-            const Text(
+            Text(
               'Fri, 24 Oct  15:54',
               style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
             ),
@@ -222,46 +207,9 @@ backgroundColor: AppColors.background,
           );
         },
       ),
-      // bottomNavigationBar: Container(
-      //   decoration: BoxDecoration(
-      //     color: Colors.white,
-      //     boxShadow: [
-      //       BoxShadow(
-      //         color: Colors.grey.withOpacity(0.2),
-      //         spreadRadius: 1,
-      //         blurRadius: 10,
-      //         offset: const Offset(0, -2),
-      //       ),
-      //     ],
-      //   ),
-      //   child: SafeArea(
-      //     child: Padding(
-      //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      //       child: Row(
-      //         mainAxisAlignment: MainAxisAlignment.spaceAround,
-      //         children: [
-      //           _buildNavItem(Icons.notifications_outlined, 0),
-      //           _buildNavItem(Icons.bar_chart, 1),
-      //           _buildNavItem(Icons.home_outlined, 2),
-      //           _buildNavItem(Icons.chat_bubble_outline, 3),
-      //           _buildNavItem(Icons.person_outline, 4),
-      //         ],
-      //       ),
-      //     ),
-      //   ),
-      // ),
+      // Bottom navigation removed - handled by MainNavigationPage
     );
   }
 
-  Widget _buildNavItem(IconData icon, int index) {
-    final isSelected = _selectedIndex == index;
-    return IconButton(
-      onPressed: () => _onNavItemTapped(index),
-      icon: Icon(
-        icon,
-        color: isSelected ? Colors.teal : Colors.grey.shade400,
-        size: 28,
-      ),
-    );
-  }
+  // Removed unused _buildNavItem() method
 }

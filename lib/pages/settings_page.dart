@@ -105,10 +105,10 @@ class _MyProfilePageState extends State<MyProfilePage> {
               backgroundImage: _settingsData?.profileImageUrl != null
                   ? NetworkImage(_settingsData!.profileImageUrl!)
                   : null,
+              backgroundColor: Colors.grey[300],
               child: _settingsData?.profileImageUrl == null
                   ? const Icon(Icons.person, size: 40, color: Colors.white)
                   : null,
-              backgroundColor: Colors.grey[300],
             ),
             Positioned(
               bottom: 0,

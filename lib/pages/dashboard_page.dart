@@ -214,8 +214,8 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ],
           ),
-          Row(
-            children: const [
+          const Row(
+            children: [
               Text(
                 '15:34:12',
                 style: TextStyle(

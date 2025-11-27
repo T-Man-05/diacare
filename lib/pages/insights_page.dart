@@ -4,7 +4,6 @@ import '../widgets/blood_sugar_chart.dart';
 import '../widgets/carbs_chart.dart';
 import '../widgets/activity_chart.dart';
 import '../models/chart_data.dart';
-import 'reminders_page.dart';
 import '../utils/constants.dart';
 
 class InsightsPage extends StatefulWidget {
@@ -15,7 +14,6 @@ class InsightsPage extends StatefulWidget {
 }
 
 class _InsightsPageState extends State<InsightsPage> {
-  int _selectedIndex = 1;
   late final ChartData _bloodSugarData;
 
   @override
@@ -29,20 +27,6 @@ class _InsightsPageState extends State<InsightsPage> {
       },
       days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     );
-  }
-
-  void _onNavItemTapped(int index) {
-    if (index == 0) {
-      // Navigate to Reminders screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const RemindersPage()),
-      );
-    } else {
-      setState(() {
-        _selectedIndex = index;
-      });
-    }
   }
 
   @override
@@ -66,16 +50,16 @@ class _InsightsPageState extends State<InsightsPage> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    ChartCard(
+                    const ChartCard(
                       title: 'Carbs',
                       unit: '(calories)',
-                      child: const CarbsChart(),
+                      child: CarbsChart(),
                     ),
                     const SizedBox(height: 16),
-                    ChartCard(
+                    const ChartCard(
                       title: 'Daily Activity',
                       unit: '(km)',
-                      child: const ActivityChart(),
+                      child: ActivityChart(),
                     ),
                     const SizedBox(height: 80),
                   ],
@@ -120,44 +104,6 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(Icons.notifications_outlined, 0),
-              _buildNavItem(Icons.bar_chart, 1),
-              _buildNavItem(Icons.home_outlined, 2),
-              _buildNavItem(Icons.chat_bubble_outline, 3),
-              _buildNavItem(Icons.person_outline, 4),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, int index) {
-    final isSelected = _selectedIndex == index;
-    return IconButton(
-      onPressed: () => _onNavItemTapped(index),
-      icon: Icon(
-        icon,
-        color: isSelected ? AppColors.primary : Colors.grey.shade400,
-        size: 28,
-      ),
-    );
-  }
+  // Removed unused _buildBottomNav() and _buildNavItem() methods
+  // Navigation is now handled by MainNavigationPage
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'legend_item.dart';
 import '../utils/constants.dart';
+
 class CarbsChart extends StatelessWidget {
   const CarbsChart({Key? key}) : super(key: key);
 
@@ -26,9 +27,9 @@ class CarbsChart extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             LegendItem(color: AppColors.primary, label: 'Normal'),
             LegendItem(color: Color(0xFFE87B3C), label: 'Above Normal'),
           ],
@@ -40,7 +41,7 @@ class CarbsChart extends StatelessWidget {
             BarChartData(
               alignment: BarChartAlignment.spaceAround,
               maxY: 200,
-              barTouchData: BarTouchData(enabled: false),
+              barTouchData: const BarTouchData(enabled: false),
               titlesData: FlTitlesData(
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(
@@ -58,17 +59,25 @@ class CarbsChart extends StatelessWidget {
                     },
                   ),
                 ),
-                rightTitles: AxisTitles(
+                rightTitles: const AxisTitles(
                   sideTitles: SideTitles(showTitles: false),
                 ),
-                topTitles: AxisTitles(
+                topTitles: const AxisTitles(
                   sideTitles: SideTitles(showTitles: false),
                 ),
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
                     getTitlesWidget: (value, meta) {
-                      const days = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+                      const days = [
+                        'Sat',
+                        'Sun',
+                        'Mon',
+                        'Tue',
+                        'Wed',
+                        'Thu',
+                        'Fri'
+                      ];
                       if (value.toInt() >= 0 && value.toInt() < days.length) {
                         return Padding(
                           padding: const EdgeInsets.only(top: 8.0),

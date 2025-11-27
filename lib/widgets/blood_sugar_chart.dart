@@ -81,31 +81,32 @@ class BloodSugarChart extends StatelessWidget {
               const SizedBox(width: 35), // Same space as left side
             ],
           ),
-          
 
-        const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-        if(flag) Center(
-            child: TextButton(
-              onPressed: onSeeDetails,
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.only(top: 15),
-                child: const Text(
-                  'See Details',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+          if (flag)
+            Center(
+              child: TextButton(
+                onPressed: onSeeDetails,
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.only(top: 15),
+                  child: Text(
+                    'See Details',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
-            ),
-          )else const SizedBox(height: 16),
-            
+            )
+          else
+            const SizedBox(height: 16),
         ],
       ),
     );
@@ -156,7 +157,7 @@ class YAxisPainter extends CustomPainter {
     final padding = range * 0.2;
 
     // Draw value labels
-    final numGridLines = 4;
+    const numGridLines = 4;
     for (int i = 0; i <= numGridLines; i++) {
       final y = size.height * (i / numGridLines);
 
@@ -222,14 +223,14 @@ class LineChartPainter extends CustomPainter {
     final padding = range * 0.2;
 
     // Draw horizontal grid lines
-    final numGridLines = 4;
+    const numGridLines = 4;
     for (int i = 0; i <= numGridLines; i++) {
       final y = size.height * (i / numGridLines);
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
 
     // Add horizontal padding to prevent chart from touching edges
-    final horizontalPadding = 20.0;
+    const horizontalPadding = 20.0;
     final chartWidth = size.width - (2 * horizontalPadding);
 
     // Calculate points with padding
