@@ -4,16 +4,17 @@
 ///
 /// This is the main entry point for the DiaCare diabetic monitoring app.
 /// It initializes the data service layer and sets up the app-wide configuration.
+///
+/// State Management: Uses BLoC/Cubit pattern with flutter_bloc package
 /// ============================================================================
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'pages/login.dart';
 import 'services/data_service.dart';
 import 'l10n/app_localizations.dart';
-import 'providers/settings_provider.dart';
-import 'providers/locale_provider.dart';
+import 'blocs/blocs.dart';
 import 'utils/constants.dart';
 
 /// Main function - Entry point of the application
@@ -31,51 +32,61 @@ void main() {
 }
 
 /// Root application widget
-/// Configures theme, localization, and navigation
+/// Configures theme, localization, and navigation using BLoC pattern
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
+    return MultiBlocProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => SettingsProvider()),
-        ChangeNotifierProvider(create: (_) => LocaleProvider()),
+        // Settings Cubit - manages theme and units
+        BlocProvider<SettingsCubit>(
+          create: (_) => SettingsCubit(),
+        ),
+        // Locale Cubit - manages app language
+        BlocProvider<LocaleCubit>(
+          create: (_) => LocaleCubit(),
+        ),
       ],
-      child: Consumer2<SettingsProvider, LocaleProvider>(
-        builder: (context, settingsProvider, localeProvider, child) {
-          return MaterialApp(
-            // App title shown in task manager
-            title: 'DiaCare',
+      child: BlocBuilder<SettingsCubit, SettingsState>(
+        builder: (context, settingsState) {
+          return BlocBuilder<LocaleCubit, LocaleState>(
+            builder: (context, localeState) {
+              return MaterialApp(
+                // App title shown in task manager
+                title: 'DiaCare',
 
-            // App theme configuration
-            theme: AppThemes.lightTheme,
-            darkTheme: AppThemes.darkTheme,
-            themeMode: settingsProvider.themeMode,
+                // App theme configuration
+                theme: AppThemes.lightTheme,
+                darkTheme: AppThemes.darkTheme,
+                themeMode: settingsState.themeMode,
 
-            // Localization delegates for multi-language support
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
+                // Localization delegates for multi-language support
+                localizationsDelegates: const [
+                  AppLocalizations.delegate,
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
 
-            // Supported locales
-            supportedLocales: const [
-              Locale('en'),
-              Locale('fr'),
-              Locale('ar'),
-            ],
+                // Supported locales
+                supportedLocales: const [
+                  Locale('en'),
+                  Locale('fr'),
+                  Locale('ar'),
+                ],
 
-            // Current locale from provider
-            locale: localeProvider.locale,
+                // Current locale from cubit state
+                locale: localeState.locale,
 
-            // Initial route - Login screen
-            home: const LoginScreen(),
+                // Initial route - Login screen
+                home: const LoginScreen(),
 
-            // Hide debug banner in top right corner
-            debugShowCheckedModeBanner: false,
+                // Hide debug banner in top right corner
+                debugShowCheckedModeBanner: false,
+              );
+            },
           );
         },
       ),

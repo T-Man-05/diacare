@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/dashboard_data.dart';
-import '../providers/settings_provider.dart';
+import '../blocs/blocs.dart';
 import '../repositories/app_repository.dart';
 import '../widgets/info_card.dart';
 import '../widgets/blood_sugar_chart.dart';
@@ -53,7 +53,6 @@ class _DashboardPageState extends State<DashboardPage> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
-    final settingsProvider = Provider.of<SettingsProvider>(context);
 
     if (_isLoading) {
       return Scaffold(
@@ -76,39 +75,43 @@ class _DashboardPageState extends State<DashboardPage> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.screenPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(theme, isDark, l10n),
-              const SizedBox(height: 20),
-              _buildGlucoseCard(theme, isDark, l10n, settingsProvider),
-              const SizedBox(height: 16),
-              _buildReminderCard(theme, isDark, l10n),
-              const SizedBox(height: 20),
-              _buildHealthCardsGrid(isDark, l10n),
-              const SizedBox(height: AppSpacing.sectionSpacing),
-              BloodSugarChart(
-                flag: true,
-                chartData: _dashboardData!.chart,
-                onSeeDetails: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const InsightsPage(),
-                    ),
-                  );
-                },
+    return BlocBuilder<SettingsCubit, SettingsState>(
+      builder: (context, settingsState) {
+        return Scaffold(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.screenPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(theme, isDark, l10n),
+                  const SizedBox(height: 20),
+                  _buildGlucoseCard(theme, isDark, l10n, settingsState),
+                  const SizedBox(height: 16),
+                  _buildReminderCard(theme, isDark, l10n),
+                  const SizedBox(height: 20),
+                  _buildHealthCardsGrid(isDark, l10n),
+                  const SizedBox(height: AppSpacing.sectionSpacing),
+                  BloodSugarChart(
+                    flag: true,
+                    chartData: _dashboardData!.chart,
+                    onSeeDetails: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const InsightsPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                ],
               ),
-              const SizedBox(height: 20),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -155,13 +158,13 @@ class _DashboardPageState extends State<DashboardPage> {
     ThemeData theme,
     bool isDark,
     AppLocalizations l10n,
-    SettingsProvider settingsProvider,
+    SettingsState settingsState,
   ) {
     final glucose = _dashboardData!.glucose;
     // Convert glucose value based on settings
     final displayValue =
-        settingsProvider.formatGlucoseValue(glucose.value.toDouble());
-    final units = settingsProvider.units;
+        settingsState.formatGlucoseValue(glucose.value.toDouble());
+    final units = settingsState.units;
 
     return Container(
       padding: const EdgeInsets.all(20),

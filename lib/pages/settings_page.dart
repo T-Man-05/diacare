@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/settings_data.dart';
 import '../repositories/app_repository.dart';
 import '../utils/constants.dart';
-import '../providers/settings_provider.dart';
-import '../providers/locale_provider.dart';
+import '../blocs/blocs.dart';
 import '../l10n/app_localizations.dart';
 import 'edit_profile_page.dart';
 import 'diabetics_profile_page.dart';
@@ -401,93 +400,103 @@ class _MyProfilePageState extends State<MyProfilePage> {
   }
 
   Widget _buildThemeSection(bool isDark, AppLocalizations l10n) {
-    final settingsProvider = Provider.of<SettingsProvider>(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          _buildThemeRadioTile(
-            icon: Icons.wb_sunny_outlined,
-            title: l10n.themeLight,
-            value: ThemeMode.light,
-            groupValue: settingsProvider.themeMode,
-            isDark: isDark,
-            onChanged: (value) {
-              settingsProvider.setThemeMode(value!);
-            },
+    return BlocBuilder<SettingsCubit, SettingsState>(
+      builder: (context, settingsState) {
+        final settingsCubit = context.read<SettingsCubit>();
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.darkCardBackground
+                : AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(16),
           ),
-          _buildSettingsDivider(isDark),
-          _buildThemeRadioTile(
-            icon: Icons.nightlight_round,
-            title: l10n.themeDark,
-            value: ThemeMode.dark,
-            groupValue: settingsProvider.themeMode,
-            isDark: isDark,
-            onChanged: (value) {
-              settingsProvider.setThemeMode(value!);
-            },
+          child: Column(
+            children: [
+              _buildThemeRadioTile(
+                icon: Icons.wb_sunny_outlined,
+                title: l10n.themeLight,
+                value: ThemeMode.light,
+                groupValue: settingsState.themeMode,
+                isDark: isDark,
+                onChanged: (value) {
+                  settingsCubit.setThemeMode(value!);
+                },
+              ),
+              _buildSettingsDivider(isDark),
+              _buildThemeRadioTile(
+                icon: Icons.nightlight_round,
+                title: l10n.themeDark,
+                value: ThemeMode.dark,
+                groupValue: settingsState.themeMode,
+                isDark: isDark,
+                onChanged: (value) {
+                  settingsCubit.setThemeMode(value!);
+                },
+              ),
+              _buildSettingsDivider(isDark),
+              _buildThemeRadioTile(
+                icon: Icons.computer,
+                title: l10n.themeSystem,
+                value: ThemeMode.system,
+                groupValue: settingsState.themeMode,
+                isDark: isDark,
+                onChanged: (value) {
+                  settingsCubit.setThemeMode(value!);
+                },
+              ),
+            ],
           ),
-          _buildSettingsDivider(isDark),
-          _buildThemeRadioTile(
-            icon: Icons.computer,
-            title: l10n.themeSystem,
-            value: ThemeMode.system,
-            groupValue: settingsProvider.themeMode,
-            isDark: isDark,
-            onChanged: (value) {
-              settingsProvider.setThemeMode(value!);
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildLanguageSection(bool isDark, AppLocalizations l10n) {
-    final localeProvider = Provider.of<LocaleProvider>(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          _buildLanguageRadioTile(
-            title: l10n.languageEn,
-            value: 'en',
-            groupValue: localeProvider.languageCode,
-            isDark: isDark,
-            onChanged: (value) {
-              localeProvider.setLocale(value!);
-            },
+    return BlocBuilder<LocaleCubit, LocaleState>(
+      builder: (context, localeState) {
+        final localeCubit = context.read<LocaleCubit>();
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.darkCardBackground
+                : AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(16),
           ),
-          _buildSettingsDivider(isDark),
-          _buildLanguageRadioTile(
-            title: l10n.languageFr,
-            value: 'fr',
-            groupValue: localeProvider.languageCode,
-            isDark: isDark,
-            onChanged: (value) {
-              localeProvider.setLocale(value!);
-            },
+          child: Column(
+            children: [
+              _buildLanguageRadioTile(
+                title: l10n.languageEn,
+                value: 'en',
+                groupValue: localeState.languageCode,
+                isDark: isDark,
+                onChanged: (value) {
+                  localeCubit.setLocale(value!);
+                },
+              ),
+              _buildSettingsDivider(isDark),
+              _buildLanguageRadioTile(
+                title: l10n.languageFr,
+                value: 'fr',
+                groupValue: localeState.languageCode,
+                isDark: isDark,
+                onChanged: (value) {
+                  localeCubit.setLocale(value!);
+                },
+              ),
+              _buildSettingsDivider(isDark),
+              _buildLanguageRadioTile(
+                title: l10n.languageAr,
+                value: 'ar',
+                groupValue: localeState.languageCode,
+                isDark: isDark,
+                onChanged: (value) {
+                  localeCubit.setLocale(value!);
+                },
+              ),
+            ],
           ),
-          _buildSettingsDivider(isDark),
-          _buildLanguageRadioTile(
-            title: l10n.languageAr,
-            value: 'ar',
-            groupValue: localeProvider.languageCode,
-            isDark: isDark,
-            onChanged: (value) {
-              localeProvider.setLocale(value!);
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -540,38 +549,43 @@ class _MyProfilePageState extends State<MyProfilePage> {
   }
 
   Widget _buildUnitsSection(bool isDark) {
-    final settingsProvider = Provider.of<SettingsProvider>(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          _buildRadioTile(
-            title: 'mg/dL',
-            value: 'mg/dL',
-            groupValue: settingsProvider.units,
-            isDark: isDark,
-            onChanged: (value) {
-              settingsProvider.setUnits(value!);
-            },
-            showIcon: false,
+    return BlocBuilder<SettingsCubit, SettingsState>(
+      builder: (context, settingsState) {
+        final settingsCubit = context.read<SettingsCubit>();
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.darkCardBackground
+                : AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(16),
           ),
-          _buildSettingsDivider(isDark),
-          _buildRadioTile(
-            title: 'mmol/L',
-            value: 'mmol/L',
-            groupValue: settingsProvider.units,
-            isDark: isDark,
-            onChanged: (value) {
-              settingsProvider.setUnits(value!);
-            },
-            showIcon: false,
+          child: Column(
+            children: [
+              _buildRadioTile(
+                title: 'mg/dL',
+                value: 'mg/dL',
+                groupValue: settingsState.units,
+                isDark: isDark,
+                onChanged: (value) {
+                  settingsCubit.setUnits(value!);
+                },
+                showIcon: false,
+              ),
+              _buildSettingsDivider(isDark),
+              _buildRadioTile(
+                title: 'mmol/L',
+                value: 'mmol/L',
+                groupValue: settingsState.units,
+                isDark: isDark,
+                onChanged: (value) {
+                  settingsCubit.setUnits(value!);
+                },
+                showIcon: false,
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 

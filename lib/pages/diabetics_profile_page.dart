@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/settings_data.dart';
-import '../providers/settings_provider.dart';
+import '../blocs/blocs.dart';
 import '../repositories/app_repository.dart';
 import '../utils/constants.dart';
 import '../l10n/app_localizations.dart';
@@ -131,8 +131,6 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
-    final settingsProvider = Provider.of<SettingsProvider>(context);
-    final units = settingsProvider.units;
 
     if (_isLoading) {
       return Scaffold(
@@ -143,89 +141,96 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: theme.textTheme.bodyLarge?.color),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          l10n.diabeticProfile,
-          style: TextStyle(
-            color: theme.textTheme.bodyLarge?.color,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
+    return BlocBuilder<SettingsCubit, SettingsState>(
+      builder: (context, settingsState) {
+        final units = settingsState.units;
+        return Scaffold(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          appBar: AppBar(
+            backgroundColor: theme.scaffoldBackgroundColor,
+            elevation: 0,
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back,
+                  color: theme.textTheme.bodyLarge?.color),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: Text(
+              l10n.diabeticProfile,
+              style: TextStyle(
+                color: theme.textTheme.bodyLarge?.color,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            centerTitle: true,
           ),
-        ),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.screenPadding),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 20),
-                _buildSelectionField(
-                  label: l10n.diabetesType,
-                  value: _settingsData!.diabeticProfile.diabeticType,
-                  isDark: isDark,
-                  theme: theme,
-                  onTap: () => _showDiabeticTypeDialog(isDark, theme, l10n),
-                ),
-                const SizedBox(height: 20),
-                _buildSelectionField(
-                  label: l10n.treatmentType,
-                  value: _settingsData!.diabeticProfile.treatmentType,
-                  isDark: isDark,
-                  theme: theme,
-                  onTap: () => _showTreatmentTypeDialog(isDark, theme, l10n),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  '${l10n.targetRange} ($units)',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: theme.textTheme.bodyLarge?.color,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.screenPadding),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: _buildGlucoseField(
-                        l10n.minimum,
-                        _minGlucoseController,
-                        isDark,
-                        theme,
-                        (value) => _validateMinGlucose(value, l10n, units),
+                    const SizedBox(height: 20),
+                    _buildSelectionField(
+                      label: l10n.diabetesType,
+                      value: _settingsData!.diabeticProfile.diabeticType,
+                      isDark: isDark,
+                      theme: theme,
+                      onTap: () => _showDiabeticTypeDialog(isDark, theme, l10n),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildSelectionField(
+                      label: l10n.treatmentType,
+                      value: _settingsData!.diabeticProfile.treatmentType,
+                      isDark: isDark,
+                      theme: theme,
+                      onTap: () =>
+                          _showTreatmentTypeDialog(isDark, theme, l10n),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      '${l10n.targetRange} ($units)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: theme.textTheme.bodyLarge?.color,
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildGlucoseField(
-                        l10n.maximum,
-                        _maxGlucoseController,
-                        isDark,
-                        theme,
-                        (value) => _validateMaxGlucose(value, l10n, units),
-                      ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildGlucoseField(
+                            l10n.minimum,
+                            _minGlucoseController,
+                            isDark,
+                            theme,
+                            (value) => _validateMinGlucose(value, l10n, units),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildGlucoseField(
+                            l10n.maximum,
+                            _maxGlucoseController,
+                            isDark,
+                            theme,
+                            (value) => _validateMaxGlucose(value, l10n, units),
+                          ),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 40),
+                    _buildSaveButton(l10n),
                   ],
                 ),
-                const SizedBox(height: 40),
-                _buildSaveButton(l10n),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
