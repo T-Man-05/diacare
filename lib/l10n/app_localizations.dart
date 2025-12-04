@@ -80,17 +80,17 @@ class AppLocalizations {
   String get welcomeBack => translate('welcomeBack');
 
   // Authentication
-  String get login => translate('login');
-  String get signup => translate('signup');
-  String get forgotPassword => translate('forgotPassword');
-  String get password => translate('password');
+  String get login => translate('login.title');
+  String get signup => translate('signup.title');
+  String get forgotPassword => translate('login.forgot_password');
+  String get password => translate('login.password_label');
   String get confirmPassword => translate('confirmPassword');
-  String get email => translate('email');
+  String get email => translate('login.email_label');
   String get name => translate('name');
-  String get fullName => translate('fullName');
+  String get fullName => translate('profile.full_name');
   String get username => translate('profile.username');
-  String get logout => translate('logout');
-  String get logOut => translate('logout');
+  String get logout => translate('profile.log_out');
+  String get logOut => translate('profile.log_out');
 
   // Validation Messages
   String get emailRequired => translate('errors.email_required');
@@ -127,7 +127,7 @@ class AppLocalizations {
 
   // Dashboard
   String get dashboard => translate('dashboard');
-  String get glucoseLevel => translate('glucoseLevel');
+  String get glucoseLevel => translate('dashboard.glucose');
   String get bloodPressure => translate('bloodPressure');
   String get heartRate => translate('heartRate');
   String get steps => translate('steps');
@@ -137,6 +137,16 @@ class AppLocalizations {
   String get height => translate('height');
   String get average => translate('average');
   String get today => translate('today');
+  String get youAreFine => translate('dashboard.you_are_fine');
+  String greeting(String name) =>
+      translateWithParams('dashboard.greeting', {'name': name});
+  String get nextReminder => translate('dashboard.next_reminder');
+
+  // Health Cards
+  String get water => translate('health_cards.water');
+  String get pills => translate('health_cards.pills');
+  String get activity => translate('health_cards.activity');
+  String get insulinCard => translate('health_cards.insulin');
 
   // Onboarding
   String get dateOfBirth => translate('dateOfBirth');
@@ -171,41 +181,60 @@ class AppLocalizations {
   String get mmolUnit => translate('mmolUnit');
 
   // Profile
-  String get profile => translate('profile');
-  String get editProfile => translate('editProfile');
+  String get profile => translate('profile.title');
+  String get editProfile => translate('profile.edit_profile');
   String get myProfile => translate('profile.my_profile');
-  String get saveChanges => translate('saveChanges');
-  String get deleteAccount => translate('deleteAccount');
-  String get deleteAccountConfirm => translate('deleteAccountConfirm');
+  String get saveChanges => translate('profile.save_changes');
+  String get deleteAccount => translate('profile.delete_account');
+  String get deleteAccountConfirm =>
+      translate('dialogs.delete_account_confirm');
+  String get profileLogOut => translate('profile.log_out');
+  String get profileFullName => translate('profile.full_name');
+  String get profileUsername => translate('profile.username');
+  String get profileEmail => translate('profile.email');
 
   // Diabetic Profile
-  String get diabeticProfile => translate('diabeticProfile');
-  String get editDiabeticProfile => translate('editDiabeticProfile');
+  String get diabeticProfile => translate('profile.diabetics_profile');
+  String get editDiabeticProfile => translate('diabetics_profile.title');
+  String get diabeticType => translate('diabetics_profile.diabetic_type');
+  String get glucoseTarget => translate('diabetics_profile.glucose_target');
+  String get minGlucose => translate('diabetics_profile.min');
+  String get maxGlucose => translate('diabetics_profile.max');
+  String get selectDiabeticType =>
+      translate('diabetics_profile.select_diabetic_type');
+  String get selectTreatmentType =>
+      translate('diabetics_profile.select_treatment_type');
+  String get treatmentDiet => translate('diabetics_profile.treatment_diet');
+  String get treatmentPills => translate('diabetics_profile.treatment_pills');
+  String get treatmentInsulin =>
+      translate('diabetics_profile.treatment_insulin');
+  String get diabeticProfileUpdated => translate('diabetics_profile.updated');
 
   // Settings
-  String get settings => translate('settings');
-  String get theme => translate('theme');
-  String get darkTheme => translate('darkTheme');
-  String get lightTheme => translate('lightTheme');
-  String get systemTheme => translate('systemTheme');
-  String get themeLight => translate('lightMode');
-  String get themeDark => translate('darkMode');
-  String get themeSystem => translate('systemDefault');
-  String get notifications => translate('notifications');
-  String get enableNotifications => translate('enableNotifications');
-  String get language => translate('language');
-  String get selectLanguage => translate('selectLanguage');
+  String get settings => translate('profile.settings');
+  String get settingsTitle => translate('settings.title');
+  String get theme => translate('settings.theme');
+  String get darkTheme => translate('settings.theme_dark');
+  String get lightTheme => translate('settings.theme_light');
+  String get systemTheme => translate('settings.theme_system');
+  String get themeLight => translate('settings.theme_light');
+  String get themeDark => translate('settings.theme_dark');
+  String get themeSystem => translate('settings.theme_system');
+  String get notifications => translate('settings.notifications');
+  String get enableNotifications => translate('settings.enable_notifications');
+  String get language => translate('settings.language');
+  String get selectLanguage => translate('settings.select_language');
   String get selectTheme => translate('selectTheme');
   String get selectUnits => translate('selectUnits');
-  String get units => translate('units');
-  String get glucoseUnits => translate('glucoseUnits');
-  String get mgdl => translate('mgdl');
-  String get mmoll => translate('mmoll');
+  String get units => translate('settings.units');
+  String get glucoseUnits => translate('settings.units_preference');
+  String get mgdl => translate('settings.unit_mgdl');
+  String get mmoll => translate('settings.unit_mmol');
 
   // Languages
-  String get languageEn => translate('language_en');
-  String get languageFr => translate('language_fr');
-  String get languageAr => translate('language_ar');
+  String get languageEn => translate('languages.english');
+  String get languageFr => translate('languages.french');
+  String get languageAr => translate('languages.arabic');
 
   // Insights
   String get insights => translate('insights');
@@ -271,16 +300,16 @@ class AppLocalizations {
   String get dayFri => translate('days.fri');
 
   // Common
-  String get save => translate('save');
-  String get cancel => translate('cancel');
-  String get delete => translate('delete');
-  String get edit => translate('edit');
-  String get confirm => translate('confirm');
+  String get save => translate('profile.save_changes');
+  String get cancel => translate('dialogs.cancel');
+  String get delete => translate('profile.delete_account');
+  String get edit => translate('profile.edit_profile');
+  String get confirm => translate('dialogs.confirm');
   String get yes => translate('yes');
   String get no => translate('no');
   String get ok => translate('ok');
   String get loading => translate('loading');
-  String get error => translate('error');
+  String get error => translate('errors.loading_error');
   String get retry => translate('retry');
   String get noData => translate('noData');
   String get viewAll => translate('viewAll');
@@ -290,9 +319,11 @@ class AppLocalizations {
   String get to => translate('to');
 
   // Dialogs
-  String get logoutConfirm => translate('logoutConfirm');
-  String get accountDeleted => translate('accountDeleted');
-  String get loggedOut => translate('loggedOut');
+  String get logoutConfirm => translate('dialogs.logout_confirm');
+  String get accountDeleted => translate('dialogs.account_deleted');
+  String get loggedOut => translate('dialogs.logged_out');
+  String get dialogCancel => translate('dialogs.cancel');
+  String get dialogConfirm => translate('dialogs.confirm');
 }
 
 /// Delegate for loading localizations

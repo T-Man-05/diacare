@@ -84,13 +84,13 @@ class _DashboardPageState extends State<DashboardPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(theme, isDark),
+              _buildHeader(theme, isDark, l10n),
               const SizedBox(height: 20),
               _buildGlucoseCard(theme, isDark, l10n, settingsProvider),
               const SizedBox(height: 16),
               _buildReminderCard(theme, isDark, l10n),
               const SizedBox(height: 20),
-              _buildHealthCardsGrid(isDark),
+              _buildHealthCardsGrid(isDark, l10n),
               const SizedBox(height: AppSpacing.sectionSpacing),
               BloodSugarChart(
                 flag: true,
@@ -112,12 +112,17 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildHeader(ThemeData theme, bool isDark) {
+  Widget _buildHeader(ThemeData theme, bool isDark, AppLocalizations l10n) {
+    // Extract name from greeting (e.g., "Hi, Sam" -> "Sam")
+    final userName = _dashboardData!.greeting.split(', ').length > 1
+        ? _dashboardData!.greeting.split(', ')[1]
+        : 'User';
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          _dashboardData!.greeting,
+          l10n.greeting(userName),
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w600,
@@ -218,7 +223,7 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                glucose.status,
+                l10n.youAreFine,
                 style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.primary,
@@ -254,7 +259,7 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               const SizedBox(height: 4),
               Text(
-                _dashboardData!.reminder,
+                _getLocalizedReminder(_dashboardData!.reminder, l10n),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -283,7 +288,39 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildHealthCardsGrid(bool isDark) {
+  /// Helper method to get localized reminder text
+  String _getLocalizedReminder(String reminder, AppLocalizations l10n) {
+    switch (reminder.toLowerCase()) {
+      case 'drink water':
+        return l10n.drinkWater;
+      case 'take your pill':
+        return l10n.takePill;
+      case 'check your glucose level':
+        return l10n.checkGlucose;
+      default:
+        return reminder;
+    }
+  }
+
+  /// Helper method to get localized health card title
+  String _getLocalizedHealthCardTitle(String title, AppLocalizations l10n) {
+    switch (title.toLowerCase()) {
+      case 'water':
+        return l10n.water;
+      case 'pills':
+        return l10n.pills;
+      case 'activity':
+        return l10n.activity;
+      case 'carbs':
+        return l10n.carbs;
+      case 'insulin':
+        return l10n.insulinCard;
+      default:
+        return title;
+    }
+  }
+
+  Widget _buildHealthCardsGrid(bool isDark, AppLocalizations l10n) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -295,8 +332,10 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
       itemCount: _dashboardData!.healthCards.length,
       itemBuilder: (context, index) {
+        final card = _dashboardData!.healthCards[index];
         return InfoCard(
-          healthCard: _dashboardData!.healthCards[index],
+          healthCard: card
+              .copyWithTitle(_getLocalizedHealthCardTitle(card.title, l10n)),
           isDark: isDark,
         );
       },
