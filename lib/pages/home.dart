@@ -6,7 +6,8 @@ import 'insights_page.dart';
 import 'chat_page.dart';
 
 import '../repositories/local_demo_repository.dart';
-
+import '../utils/constants.dart';
+import '../l10n/app_localizations.dart';
 
 class MainNavigationPage extends StatefulWidget {
   const MainNavigationPage({Key? key}) : super(key: key);
@@ -35,6 +36,10 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -42,10 +47,10 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? AppColors.darkCardBackground : Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -59,32 +64,33 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             });
           },
           type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFF4CAF50),
-          unselectedItemColor: Colors.grey,
+          backgroundColor: isDark ? AppColors.darkCardBackground : Colors.white,
+          selectedItemColor: AppColors.primary,
+          unselectedItemColor:
+              isDark ? AppColors.darkTextSecondary : Colors.grey,
           showSelectedLabels: false,
           showUnselectedLabels: false,
           elevation: 0,
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.alarm),
-              label: 'Reminders',
+              icon: const Icon(Icons.alarm),
+              label: l10n.reminders,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.bar_chart),
-              label: 'Insights',
+              icon: const Icon(Icons.bar_chart),
+              label: l10n.insights,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
+              icon: const Icon(Icons.home),
+              label: l10n.dashboard,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline),
-              label: 'Chat',
+              icon: const Icon(Icons.chat_bubble_outline),
+              label: l10n.chat,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              label: 'Profile',
+              icon: const Icon(Icons.person_outline),
+              label: l10n.profile,
             ),
           ],
         ),

@@ -1,7 +1,6 @@
-// ========================================
-// lib/widgets/chart_card.dart
-// ========================================
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
+import '../utils/constants.dart';
 
 class ChartCard extends StatelessWidget {
   final String title;
@@ -17,14 +16,25 @@ class ChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+    final cardBackground =
+        isDark ? AppColors.darkCardBackground : AppColors.cardBackground;
+    final surfaceColor = isDark ? AppColors.darkSurface : Colors.grey.shade100;
+    final l10n = AppLocalizations.of(context);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBackground,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -40,9 +50,10 @@ class ChartCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
+                      color: textPrimary,
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -50,31 +61,32 @@ class ChartCard extends StatelessWidget {
                     unit,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey.shade600,
+                      color: textSecondary,
                     ),
                   ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: surfaceColor,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
                     Text(
-                      'Day',
+                      l10n.day,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey.shade700,
+                        color: textSecondary,
                       ),
                     ),
                     const SizedBox(width: 4),
                     Icon(
                       Icons.keyboard_arrow_down,
                       size: 18,
-                      color: Colors.grey.shade700,
+                      color: textSecondary,
                     ),
                   ],
                 ),

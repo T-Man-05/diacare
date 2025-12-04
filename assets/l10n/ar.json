@@ -1,0 +1,225 @@
+{
+  "app_name": "DiaCare",
+  "welcome": "مرحبًا!",
+  "home": "الرئيسية",
+  
+  "login": {
+    "title": "تسجيل الدخول",
+    "email_label": "البريد الإلكتروني",
+    "email_hint": "أدخل بريدك الإلكتروني",
+    "password_label": "كلمة المرور",
+    "password_hint": "أدخل كلمة المرور",
+    "login_button": "تسجيل الدخول",
+    "signup_button": "إنشاء حساب",
+    "forgot_password": "نسيت كلمة المرور؟"
+  },
+  
+  "signup": {
+    "title": "إنشاء حساب",
+    "username_label": "اسم المستخدم",
+    "username_hint": "اختر @اسم_مستخدم",
+    "email_label": "البريد الإلكتروني",
+    "email_hint": "أدخل بريدك الإلكتروني",
+    "password_label": "كلمة المرور",
+    "password_hint": "أدخل كلمة المرور",
+    "signup_button": "إنشاء حساب"
+  },
+  
+  "onboarding": {
+    "date_of_birth": "تاريخ الميلاد",
+    "date_of_birth_hint": "اختر تاريخ ميلادك",
+    "gender": "الجنس",
+    "gender_hint": "اختر جنسك",
+    "gender_male": "ذكر",
+    "gender_female": "أنثى",
+    "gender_other": "آخر",
+    "height": "الطول",
+    "height_hint": "أدخل طولك",
+    "weight": "الوزن",
+    "weight_hint": "أدخل وزنك",
+    "diabetes_type": "نوع السكري",
+    "diabetes_type_hint": "اختر نوع السكري",
+    "diabetes_type_1": "النوع الأول",
+    "diabetes_type_2": "النوع الثاني",
+    "diabetes_gestational": "سكري الحمل",
+    "diabetes_monogenic": "أحادي الجين",
+    "diabetes_secondary": "ثانوي",
+    "unit_preferences": "تفضيلات الوحدات",
+    "unit_preferences_hint": "اختر وحدة القياس",
+    "diagnosis_duration": "مدة التشخيص",
+    "treatment_type": "نوع العلاج المعتاد",
+    "continue_button": "متابعة"
+  },
+  
+  "dashboard": {
+    "greeting": "مرحبًا، {name}",
+    "glucose": "الجلوكوز",
+    "next_reminder": "التذكير التالي",
+    "see_details": "عرض التفاصيل",
+    "you_are_fine": "أنت بخير"
+  },
+  
+  "health_cards": {
+    "water": "الماء",
+    "pills": "الأدوية",
+    "activity": "النشاط",
+    "carbs": "الكربوهيدرات",
+    "insulin": "الأنسولين"
+  },
+  
+  "chart": {
+    "blood_sugar": "سكر الدم",
+    "before_meal": "قبل الوجبة",
+    "after_meal": "بعد الوجبة",
+    "normal": "طبيعي",
+    "above_normal": "أعلى من الطبيعي",
+    "above_usual": "أعلى من المعتاد",
+    "daily_activity": "النشاط اليومي",
+    "day": "يوم"
+  },
+  
+  "days": {
+    "sat": "السبت",
+    "sun": "الأحد",
+    "mon": "الاثنين",
+    "tue": "الثلاثاء",
+    "wed": "الأربعاء",
+    "thu": "الخميس",
+    "fri": "الجمعة"
+  },
+  
+  "reminders": {
+    "title": "التذكيرات",
+    "check_glucose": "فحص مستوى الجلوكوز",
+    "drink_water": "اشرب الماء",
+    "take_pill": "تناول الدواء",
+    "next_time": "الموعد التالي:",
+    "in_time": "بعد {time}",
+    "late": "متأخر {time}",
+    "notifications_enabled": "الإشعارات مفعلة",
+    "notifications_disabled": "الإشعارات معطلة",
+    "done": "تم",
+    "not_done": "لم يتم",
+    "do_later": "سأفعل ذلك لاحقًا",
+    "marked_done": "تم تحديد التذكير كمكتمل",
+    "marked_not_done": "تم تحديد التذكير كغير مكتمل",
+    "postponed": "تم تأجيل التذكير"
+  },
+  
+  "insights": {
+    "title": "الإحصائيات"
+  },
+  
+  "chat": {
+    "title": "الدردشة",
+    "description": "it will be avialabe soon"
+  },
+  
+  "profile": {
+    "title": "ملفي الشخصي",
+    "my_profile": "ملفي الشخصي",
+    "edit_profile": "تعديل الملف الشخصي",
+    "diabetics_profile": "ملف مريض السكري",
+    "settings": "الإعدادات",
+    "delete_account": "حذف الحساب",
+    "log_out": "تسجيل الخروج",
+    "full_name": "الاسم الكامل",
+    "username": "اسم المستخدم",
+    "email": "البريد الإلكتروني",
+    "save_changes": "حفظ التغييرات",
+    "profile_updated": "تم تحديث الملف الشخصي بنجاح"
+  },
+  
+  "diabetics_profile": {
+    "title": "ملف مريض السكري",
+    "diabetic_type": "نوع السكري",
+    "treatment_type": "نوع العلاج",
+    "glucose_target": "نطاق الجلوكوز المستهدف",
+    "min": "الحد الأدنى",
+    "max": "الحد الأقصى",
+    "select_diabetic_type": "اختر نوع السكري",
+    "select_treatment_type": "اختر نوع العلاج",
+    "treatment_diet": "حمية غذائية",
+    "treatment_pills": "أدوية",
+    "treatment_insulin": "أنسولين",
+    "updated": "تم تحديث ملف مريض السكري بنجاح"
+  },
+  
+  "settings": {
+    "title": "الإعدادات",
+    "theme": "المظهر",
+    "theme_light": "فاتح",
+    "theme_dark": "داكن",
+    "theme_system": "النظام",
+    "notifications": "الإشعارات",
+    "enable_notifications": "تفعيل الإشعارات",
+    "units": "تفضيلات الوحدات",
+    "units_preference": "تفضيلات الوحدات",
+    "unit_mgdl": "ملغ/ديسيلتر",
+    "unit_mmol": "مليمول/لتر",
+    "language": "اللغة",
+    "select_language": "اختر اللغة"
+  },
+  
+  "languages": {
+    "english": "English",
+    "french": "Français",
+    "arabic": "العربية"
+  },
+  
+  "dialogs": {
+    "delete_account_title": "حذف الحساب",
+    "delete_account_message": "هل أنت متأكد من حذف حسابك؟ لا يمكن التراجع عن هذا الإجراء.",
+    "delete_account_confirm": "هل أنت متأكد من حذف حسابك؟ لا يمكن التراجع عن هذا الإجراء.",
+    "logout_title": "تسجيل الخروج",
+    "logout_message": "هل أنت متأكد من تسجيل الخروج؟",
+    "logout_confirm": "هل أنت متأكد من تسجيل الخروج؟",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "done": "تم",
+    "account_deleted": "تم حذف الحساب",
+    "logged_out": "تم تسجيل الخروج بنجاح",
+    "logged_out_success": "تم تسجيل الخروج بنجاح"
+  },
+  
+  "errors": {
+    "loading_error": "خطأ في تحميل البيانات",
+    "field_required": "هذا الحقل مطلوب",
+    "invalid_email": "الرجاء إدخال بريد إلكتروني صحيح",
+    "password_too_short": "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
+    "username_too_short": "يجب أن يكون اسم المستخدم 3 أحرف على الأقل",
+    "username_invalid": "اسم المستخدم يمكن أن يحتوي فقط على أحرف وأرقام وشرطات سفلية",
+    "invalid_credentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+    "glucose_min_invalid": "الحد الأدنى للجلوكوز يجب أن يكون بين 50-150",
+    "glucose_max_invalid": "الحد الأقصى للجلوكوز يجب أن يكون بين 100-300",
+    "glucose_range_invalid": "الحد الأقصى يجب أن يكون أكبر من الحد الأدنى",
+    "name_too_short": "يجب أن يكون الاسم حرفين على الأقل",
+    "email_required": "البريد الإلكتروني مطلوب",
+    "password_required": "كلمة المرور مطلوبة",
+    "name_required": "الاسم مطلوب",
+    "full_name_required": "الاسم الكامل مطلوب",
+    "full_name_min_length": "يجب أن يكون الاسم الكامل حرفين على الأقل",
+    "username_required": "اسم المستخدم مطلوب",
+    "username_min_length": "يجب أن يكون اسم المستخدم 3 أحرف على الأقل",
+    "passwords_do_not_match": "كلمات المرور غير متطابقة",
+    "invalid_number": "الرجاء إدخال رقم صحيح",
+    "number_too_low": "القيمة منخفضة جدًا",
+    "number_too_high": "القيمة مرتفعة جدًا",
+    "account_not_found": "الحساب غير موجود",
+    "email_already_exists": "البريد الإلكتروني مسجل بالفعل",
+    "invalid_range": "نطاق غير صالح",
+    "min_greater_than_max": "الحد الأدنى لا يمكن أن يكون أكبر من الحد الأقصى",
+    "validation_error": "خطأ في التحقق",
+    "please_fix_errors": "يرجى تصحيح الأخطاء قبل المتابعة"
+  },
+  
+  "units": {
+    "mg_dl": "ملغ/ديسيلتر",
+    "mmol_l": "مليمول/لتر",
+    "liters": "لتر",
+    "steps": "خطوة",
+    "calories": "سعرة",
+    "units": "وحدات",
+    "km": "كم"
+  }
+}

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/dashboard_data.dart';
+import '../blocs/blocs.dart';
 import '../repositories/app_repository.dart';
 import '../widgets/info_card.dart';
 import '../widgets/blood_sugar_chart.dart';
 import '../utils/constants.dart';
+import '../l10n/app_localizations.dart';
 import 'insights_page.dart';
 
 /// Dashboard Page - Main screen showing health metrics
@@ -47,59 +50,88 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: Center(
+          child: CircularProgressIndicator(color: theme.primaryColor),
+        ),
       );
     }
 
     if (_dashboardData == null) {
-      return const Scaffold(
-        body: Center(child: Text('Error loading data')),
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: Center(
+          child: Text(
+            l10n.error,
+            style: TextStyle(color: theme.textTheme.bodyLarge?.color),
+          ),
+        ),
       );
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.screenPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 20),
-              _buildGlucoseCard(),
-              const SizedBox(height: 16),
-              _buildReminderCard(),
-              const SizedBox(height: 20),
-              _buildHealthCardsGrid(),
-              const SizedBox(height: AppSpacing.sectionSpacing),
-              BloodSugarChart(
-                flag: true,
-                chartData: _dashboardData!.chart,
-                onSeeDetails: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const InsightsPage(),
-                    ),
-                  );
-                },
+    return BlocBuilder<SettingsCubit, SettingsState>(
+      builder: (context, settingsState) {
+        return Scaffold(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.screenPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(theme, isDark, l10n),
+                  const SizedBox(height: 20),
+                  _buildGlucoseCard(theme, isDark, l10n, settingsState),
+                  const SizedBox(height: 16),
+                  _buildReminderCard(theme, isDark, l10n),
+                  const SizedBox(height: 20),
+                  _buildHealthCardsGrid(isDark, l10n),
+                  const SizedBox(height: AppSpacing.sectionSpacing),
+                  BloodSugarChart(
+                    flag: true,
+                    chartData: _dashboardData!.chart,
+                    onSeeDetails: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const InsightsPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                ],
               ),
-              const SizedBox(height: 20),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(ThemeData theme, bool isDark, AppLocalizations l10n) {
+    // Extract name from greeting (e.g., "Hi, Sam" -> "Sam")
+    final userName = _dashboardData!.greeting.split(', ').length > 1
+        ? _dashboardData!.greeting.split(', ')[1]
+        : 'User';
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(_dashboardData!.greeting, style: AppTextStyles.greeting),
+        Text(
+          l10n.greeting(userName),
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w600,
+            color: theme.textTheme.bodyLarge?.color,
+          ),
+        ),
         Row(
           children: [
             _buildIconButton(Icons.add),
@@ -122,35 +154,54 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildGlucoseCard() {
+  Widget _buildGlucoseCard(
+    ThemeData theme,
+    bool isDark,
+    AppLocalizations l10n,
+    SettingsState settingsState,
+  ) {
     final glucose = _dashboardData!.glucose;
+    // Convert glucose value based on settings
+    final displayValue =
+        settingsState.formatGlucoseValue(glucose.value.toDouble());
+    final units = settingsState.units;
+
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: _cardDecoration(),
+      decoration: _cardDecoration(isDark),
       child: Row(
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Glucose', style: AppTextStyles.cardTitle),
+                Text(
+                  l10n.glucoseLevel,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: theme.textTheme.bodyLarge?.color,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 RichText(
                   text: TextSpan(
                     children: [
                       TextSpan(
-                        text: '${glucose.value} ',
-                        style: const TextStyle(
+                        text: '$displayValue ',
+                        style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: theme.textTheme.bodyLarge?.color,
                         ),
                       ),
                       TextSpan(
-                        text: glucose.unit,
-                        style: const TextStyle(
+                        text: units,
+                        style: TextStyle(
                           fontSize: 16,
-                          color: AppColors.textSecondary,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -175,7 +226,7 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                glucose.status,
+                l10n.youAreFine,
                 style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.primary,
@@ -189,43 +240,50 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildReminderCard() {
+  Widget _buildReminderCard(
+      ThemeData theme, bool isDark, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.cardPadding),
-      decoration: _cardDecoration(),
+      decoration: _cardDecoration(isDark),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Next Reminder',
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              Text(
+                l10n.reminders,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
-                _dashboardData!.reminder,
-                style: const TextStyle(
+                _getLocalizedReminder(_dashboardData!.reminder, l10n),
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: theme.textTheme.bodyLarge?.color,
                 ),
               ),
             ],
           ),
           Row(
-            children: const [
+            children: [
               Text(
                 '15:34:12',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: theme.textTheme.bodyLarge?.color,
                 ),
               ),
-              SizedBox(width: 8),
-              Icon(Icons.timer_outlined, color: AppColors.primary, size: 20),
+              const SizedBox(width: 8),
+              const Icon(Icons.timer_outlined,
+                  color: AppColors.primary, size: 20),
             ],
           ),
         ],
@@ -233,7 +291,39 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildHealthCardsGrid() {
+  /// Helper method to get localized reminder text
+  String _getLocalizedReminder(String reminder, AppLocalizations l10n) {
+    switch (reminder.toLowerCase()) {
+      case 'drink water':
+        return l10n.drinkWater;
+      case 'take your pill':
+        return l10n.takePill;
+      case 'check your glucose level':
+        return l10n.checkGlucose;
+      default:
+        return reminder;
+    }
+  }
+
+  /// Helper method to get localized health card title
+  String _getLocalizedHealthCardTitle(String title, AppLocalizations l10n) {
+    switch (title.toLowerCase()) {
+      case 'water':
+        return l10n.water;
+      case 'pills':
+        return l10n.pills;
+      case 'activity':
+        return l10n.activity;
+      case 'carbs':
+        return l10n.carbs;
+      case 'insulin':
+        return l10n.insulinCard;
+      default:
+        return title;
+    }
+  }
+
+  Widget _buildHealthCardsGrid(bool isDark, AppLocalizations l10n) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -245,18 +335,23 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
       itemCount: _dashboardData!.healthCards.length,
       itemBuilder: (context, index) {
-        return InfoCard(healthCard: _dashboardData!.healthCards[index]);
+        final card = _dashboardData!.healthCards[index];
+        return InfoCard(
+          healthCard: card
+              .copyWithTitle(_getLocalizedHealthCardTitle(card.title, l10n)),
+          isDark: isDark,
+        );
       },
     );
   }
 
-  BoxDecoration _cardDecoration() {
+  BoxDecoration _cardDecoration(bool isDark) {
     return BoxDecoration(
-      color: AppColors.cardBackground,
+      color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
           blurRadius: 10,
           offset: const Offset(0, 2),
         ),

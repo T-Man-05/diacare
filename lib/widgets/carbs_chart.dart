@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../l10n/app_localizations.dart';
 import 'legend_item.dart';
 import '../utils/constants.dart';
+
 class CarbsChart extends StatelessWidget {
   const CarbsChart({Key? key}) : super(key: key);
 
@@ -24,13 +26,30 @@ class CarbsChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+    final gridColor = isDark ? Colors.grey.shade700 : Colors.grey.shade300;
+    final l10n = AppLocalizations.of(context);
+
+    final days = [
+      l10n.daySat,
+      l10n.daySun,
+      l10n.dayMon,
+      l10n.dayTue,
+      l10n.dayWed,
+      l10n.dayThu,
+      l10n.dayFri,
+    ];
+
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            LegendItem(color: AppColors.primary, label: 'Normal'),
-            LegendItem(color: Color(0xFFE87B3C), label: 'Above Normal'),
+          children: [
+            LegendItem(color: AppColors.primary, label: l10n.normal),
+            LegendItem(color: const Color(0xFFE87B3C), label: l10n.aboveNormal),
           ],
         ),
         const SizedBox(height: 20),
@@ -40,7 +59,7 @@ class CarbsChart extends StatelessWidget {
             BarChartData(
               alignment: BarChartAlignment.spaceAround,
               maxY: 200,
-              barTouchData: BarTouchData(enabled: false),
+              barTouchData: const BarTouchData(enabled: false),
               titlesData: FlTitlesData(
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(
@@ -51,31 +70,30 @@ class CarbsChart extends StatelessWidget {
                       return Text(
                         value.toInt().toString(),
                         style: TextStyle(
-                          color: Colors.grey.shade600,
+                          color: textSecondary,
                           fontSize: 12,
                         ),
                       );
                     },
                   ),
                 ),
-                rightTitles: AxisTitles(
+                rightTitles: const AxisTitles(
                   sideTitles: SideTitles(showTitles: false),
                 ),
-                topTitles: AxisTitles(
+                topTitles: const AxisTitles(
                   sideTitles: SideTitles(showTitles: false),
                 ),
                 bottomTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
                     getTitlesWidget: (value, meta) {
-                      const days = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
                       if (value.toInt() >= 0 && value.toInt() < days.length) {
                         return Padding(
                           padding: const EdgeInsets.only(top: 8.0),
                           child: Text(
                             days[value.toInt()],
                             style: TextStyle(
-                              color: Colors.grey.shade600,
+                              color: textSecondary,
                               fontSize: 12,
                             ),
                           ),
@@ -92,7 +110,7 @@ class CarbsChart extends StatelessWidget {
                 horizontalInterval: 50,
                 getDrawingHorizontalLine: (value) {
                   return FlLine(
-                    color: Colors.grey.shade300,
+                    color: gridColor,
                     strokeWidth: 1,
                   );
                 },

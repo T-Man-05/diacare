@@ -27,4 +27,13 @@ class HealthCard {
       'unit': unit,
     };
   }
+
+  /// Create a copy of this HealthCard with a new title
+  HealthCard copyWithTitle(String newTitle) {
+    return HealthCard(
+      title: newTitle,
+      value: value,
+      unit: unit,
+    );
+  }
 }

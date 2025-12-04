@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../l10n/app_localizations.dart';
 import '../widgets/reminder_card_widget.dart';
 import '../widgets/reminder_status_dialog.dart';
-import 'insights_page.dart';
 import '../utils/constants.dart';
+
 class RemindersPage extends StatefulWidget {
   const RemindersPage({Key? key}) : super(key: key);
 
@@ -11,81 +13,68 @@ class RemindersPage extends StatefulWidget {
 }
 
 class _RemindersPageState extends State<RemindersPage> {
-  int _selectedIndex = 0;
   bool notificationsEnabled = true;
 
-  List<Map<String, dynamic>> reminders = [
-    {
-      'id': '1',
-      'title': 'Check Your Glucose Level',
-      'nextTime': '18H00',
-      'timeRemaining': 'in 2h6min',
-      'isLate': false,
-      'isDone': false,
-      'icon': Icons.access_time,
-    },
-    {
-      'id': '2',
-      'title': 'Drink Water',
-      'nextTime': '16H00',
-      'timeRemaining': 'in 6min',
-      'isLate': false,
-      'isDone': true,
-      'icon': Icons.check,
-    },
-    {
-      'id': '3',
-      'title': 'Take Your Pill',
-      'nextTime': '15H00',
-      'timeRemaining': '54min late',
-      'isLate': true,
-      'isDone': false,
-      'icon': Icons.info_outline,
-    },
-    {
-      'id': '4',
-      'title': 'Check Your Glucose Level',
-      'nextTime': '18H00',
-      'timeRemaining': 'in 2h6min',
-      'isLate': false,
-      'isDone': false,
-      'icon': Icons.access_time,
-    },
-    {
-      'id': '5',
-      'title': 'Drink Water',
-      'nextTime': '16H00',
-      'timeRemaining': 'in 6min',
-      'isLate': false,
-      'isDone': true,
-      'icon': Icons.check,
-    },
-    {
-      'id': '6',
-      'title': 'Take Your Pill',
-      'nextTime': '15H00',
-      'timeRemaining': '54min late',
-      'isLate': true,
-      'isDone': false,
-      'icon': Icons.info_outline,
-    },
-  ];
-
-  void _onNavItemTapped(int index) {
-    if (index == 1) {
-      // Navigate to Insights screen when Charts icon is tapped
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const InsightsPage()),
-      );
-    } else {
-      setState(() {
-        _selectedIndex = index;
-      });
-    }
+  List<Map<String, dynamic>> _getReminders(AppLocalizations l10n) {
+    return [
+      {
+        'id': '1',
+        'title': l10n.checkGlucose,
+        'nextTime': '18H00',
+        'timeRemaining': 'in 2h6min',
+        'isLate': false,
+        'isDone': false,
+        'icon': Icons.access_time,
+      },
+      {
+        'id': '2',
+        'title': l10n.drinkWater,
+        'nextTime': '16H00',
+        'timeRemaining': 'in 6min',
+        'isLate': false,
+        'isDone': true,
+        'icon': Icons.check,
+      },
+      {
+        'id': '3',
+        'title': l10n.takePill,
+        'nextTime': '15H00',
+        'timeRemaining': '54min late',
+        'isLate': true,
+        'isDone': false,
+        'icon': Icons.info_outline,
+      },
+      {
+        'id': '4',
+        'title': l10n.checkGlucose,
+        'nextTime': '18H00',
+        'timeRemaining': 'in 2h6min',
+        'isLate': false,
+        'isDone': false,
+        'icon': Icons.access_time,
+      },
+      {
+        'id': '5',
+        'title': l10n.drinkWater,
+        'nextTime': '16H00',
+        'timeRemaining': 'in 6min',
+        'isLate': false,
+        'isDone': true,
+        'icon': Icons.check,
+      },
+      {
+        'id': '6',
+        'title': l10n.takePill,
+        'nextTime': '15H00',
+        'timeRemaining': '54min late',
+        'isLate': true,
+        'isDone': false,
+        'icon': Icons.info_outline,
+      },
+    ];
   }
 
-  void _toggleNotifications() {
+  void _toggleNotifications(AppLocalizations l10n) {
     setState(() {
       notificationsEnabled = !notificationsEnabled;
     });
@@ -94,8 +83,8 @@ class _RemindersPageState extends State<RemindersPage> {
       SnackBar(
         content: Text(
           notificationsEnabled
-              ? 'Notifications enabled'
-              : 'Notifications disabled',
+              ? l10n.notificationsEnabled
+              : l10n.notificationsDisabled,
         ),
         duration: const Duration(seconds: 2),
         backgroundColor: notificationsEnabled ? Colors.green : Colors.grey,
@@ -116,28 +105,13 @@ class _RemindersPageState extends State<RemindersPage> {
   }
 
   void _handleStatusChange(String reminderId, String status) {
-    setState(() {
-      final index = reminders.indexWhere((r) => r['id'] == reminderId);
-      if (index != -1) {
-        if (status == 'done') {
-          reminders[index]['isDone'] = true;
-          reminders[index]['icon'] = Icons.check;
-        } else if (status == 'not_done') {
-          reminders[index]['isDone'] = false;
-          reminders[index]['icon'] = reminders[index]['isLate']
-              ? Icons.info_outline
-              : Icons.access_time;
-        } else if (status == 'later') {
-          reminders[index]['isDone'] = false;
-        }
-      }
-    });
+    final l10n = AppLocalizations.of(context);
 
     String message = status == 'done'
-        ? 'Reminder marked as done'
+        ? l10n.markedDone
         : status == 'not_done'
-            ? 'Reminder marked as not done'
-            : 'Reminder postponed';
+            ? l10n.markedNotDone
+            : l10n.reminderPostponed;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
@@ -146,26 +120,41 @@ class _RemindersPageState extends State<RemindersPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final backgroundColor =
+        isDark ? AppColors.darkBackground : AppColors.background;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
+    final notifBorderColor =
+        isDark ? AppColors.darkCardBackground : Colors.white;
+    final l10n = AppLocalizations.of(context);
+
+    final reminders = _getReminders(l10n);
+    final now = DateTime.now();
+    final formattedDate =
+        DateFormat('E, d MMM  HH:mm', l10n.locale.languageCode).format(now);
+
     return Scaffold(
-backgroundColor: AppColors.background,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: backgroundColor,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Reminder',
+            Text(
+              l10n.reminders,
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: textPrimary,
               ),
             ),
-            const Text(
-              'Fri, 24 Oct  15:54',
-              style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
+            Text(
+              formattedDate,
+              style: TextStyle(fontSize: 14, color: textPrimary),
             ),
           ],
         ),
@@ -183,7 +172,7 @@ backgroundColor: AppColors.background,
                     color: AppColors.primary,
                     size: 28,
                   ),
-                  onPressed: _toggleNotifications,
+                  onPressed: () => _toggleNotifications(l10n),
                 ),
                 if (notificationsEnabled)
                   Positioned(
@@ -195,7 +184,7 @@ backgroundColor: AppColors.background,
                       decoration: BoxDecoration(
                         color: Colors.teal,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
+                        border: Border.all(color: notifBorderColor, width: 2),
                       ),
                     ),
                   ),
@@ -221,46 +210,6 @@ backgroundColor: AppColors.background,
             },
           );
         },
-      ),
-      // bottomNavigationBar: Container(
-      //   decoration: BoxDecoration(
-      //     color: Colors.white,
-      //     boxShadow: [
-      //       BoxShadow(
-      //         color: Colors.grey.withOpacity(0.2),
-      //         spreadRadius: 1,
-      //         blurRadius: 10,
-      //         offset: const Offset(0, -2),
-      //       ),
-      //     ],
-      //   ),
-      //   child: SafeArea(
-      //     child: Padding(
-      //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      //       child: Row(
-      //         mainAxisAlignment: MainAxisAlignment.spaceAround,
-      //         children: [
-      //           _buildNavItem(Icons.notifications_outlined, 0),
-      //           _buildNavItem(Icons.bar_chart, 1),
-      //           _buildNavItem(Icons.home_outlined, 2),
-      //           _buildNavItem(Icons.chat_bubble_outline, 3),
-      //           _buildNavItem(Icons.person_outline, 4),
-      //         ],
-      //       ),
-      //     ),
-      //   ),
-      // ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, int index) {
-    final isSelected = _selectedIndex == index;
-    return IconButton(
-      onPressed: () => _onNavItemTapped(index),
-      icon: Icon(
-        icon,
-        color: isSelected ? Colors.teal : Colors.grey.shade400,
-        size: 28,
       ),
     );
   }

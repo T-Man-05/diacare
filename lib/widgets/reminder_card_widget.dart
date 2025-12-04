@@ -1,7 +1,6 @@
-// ========================================
-// lib/widgets/reminder_card_widget.dart
-// ========================================
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
+import '../utils/constants.dart';
 
 class ReminderCardWidget extends StatelessWidget {
   final String title;
@@ -25,13 +24,25 @@ class ReminderCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cardBackground = isDark ? AppColors.darkCardBackground : Colors.white;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+    final iconBgColor = isDark ? AppColors.darkSurface : Colors.grey.shade100;
+    final iconColor =
+        isDark ? AppColors.darkTextSecondary : Colors.grey.shade600;
+    final l10n = AppLocalizations.of(context);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBackground,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isLate ? Colors.red.shade100 : Colors.blue.shade100,
@@ -39,7 +50,7 @@ class ReminderCardWidget extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withOpacity(isDark ? 0.05 : 0.1),
               spreadRadius: 1,
               blurRadius: 4,
               offset: const Offset(0, 2),
@@ -48,7 +59,6 @@ class ReminderCardWidget extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Text section
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,26 +67,26 @@ class ReminderCardWidget extends StatelessWidget {
                     title,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey.shade600,
+                      color: textSecondary,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       Text(
-                        'Next Time: ',
+                        l10n.nextTime,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade800,
+                          color: textSecondary,
                         ),
                       ),
                       Text(
                         nextTime,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                          color: textPrimary,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -84,7 +94,7 @@ class ReminderCardWidget extends StatelessWidget {
                         timeRemaining,
                         style: TextStyle(
                           fontSize: 14,
-                          color: isLate ? Colors.red : Colors.grey.shade600,
+                          color: isLate ? Colors.red : textSecondary,
                         ),
                       ),
                     ],
@@ -92,8 +102,6 @@ class ReminderCardWidget extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Icon section
             Container(
               width: 48,
               height: 48,
@@ -102,7 +110,7 @@ class ReminderCardWidget extends StatelessWidget {
                     ? Colors.teal.shade50
                     : isLate
                         ? Colors.red.shade50
-                        : Colors.grey.shade100,
+                        : iconBgColor,
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -111,7 +119,7 @@ class ReminderCardWidget extends StatelessWidget {
                     ? Colors.teal
                     : isLate
                         ? Colors.red
-                        : Colors.grey.shade600,
+                        : iconColor,
                 size: 28,
               ),
             ),
