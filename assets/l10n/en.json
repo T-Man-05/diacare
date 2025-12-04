@@ -1,6 +1,7 @@
 {
   "app_name": "DiaCare",
   "welcome": "Welcome!",
+  "home": "Home",
   
   "login": {
     "title": "Log In",

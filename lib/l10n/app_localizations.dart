@@ -75,9 +75,9 @@ class AppLocalizations {
   // ============================================================================
 
   // App
-  String get appTitle => translate('appTitle');
+  String get appTitle => translate('app_name');
   String get welcome => translate('welcome');
-  String get welcomeBack => translate('welcomeBack');
+  String get welcomeBack => translate('welcome');
 
   // Authentication
   String get login => translate('login.title');
@@ -126,15 +126,15 @@ class AppLocalizations {
   String get profileUpdated => translate('profile.profile_updated');
 
   // Dashboard
-  String get dashboard => translate('dashboard');
+  String get dashboard => translate('home');
   String get glucoseLevel => translate('dashboard.glucose');
   String get bloodPressure => translate('bloodPressure');
   String get heartRate => translate('heartRate');
   String get steps => translate('steps');
   String get calories => translate('calories');
   String get sleep => translate('sleep');
-  String get weight => translate('weight');
-  String get height => translate('height');
+  String get weight => translate('onboarding.weight');
+  String get height => translate('onboarding.height');
   String get average => translate('average');
   String get today => translate('today');
   String get youAreFine => translate('dashboard.you_are_fine');
@@ -149,36 +149,36 @@ class AppLocalizations {
   String get insulinCard => translate('health_cards.insulin');
 
   // Onboarding
-  String get dateOfBirth => translate('dateOfBirth');
-  String get gender => translate('gender');
-  String get male => translate('male');
-  String get female => translate('female');
-  String get other => translate('other');
-  String get diabetesType => translate('diabetesType');
-  String get type1 => translate('type1');
-  String get type2 => translate('type2');
-  String get gestational => translate('gestational');
+  String get dateOfBirth => translate('onboarding.date_of_birth');
+  String get gender => translate('onboarding.gender');
+  String get male => translate('onboarding.gender_male');
+  String get female => translate('onboarding.gender_female');
+  String get other => translate('onboarding.gender_other');
+  String get diabetesType => translate('onboarding.diabetes_type');
+  String get type1 => translate('onboarding.diabetes_type_1');
+  String get type2 => translate('onboarding.diabetes_type_2');
+  String get gestational => translate('onboarding.diabetes_gestational');
   String get prediabetes => translate('prediabetes');
-  String get diagnosisDate => translate('diagnosisDate');
-  String get treatmentType => translate('treatmentType');
-  String get insulin => translate('insulin');
-  String get oralMedication => translate('oralMedication');
-  String get diet => translate('diet');
+  String get diagnosisDate => translate('onboarding.diagnosis_duration');
+  String get treatmentType => translate('onboarding.treatment_type');
+  String get insulin => translate('diabetics_profile.treatment_insulin');
+  String get oralMedication => translate('diabetics_profile.treatment_pills');
+  String get diet => translate('diabetics_profile.treatment_diet');
   String get exercise => translate('exercise');
   String get combination => translate('combination');
 
   // Glucose
-  String get targetRange => translate('targetRange');
+  String get targetRange => translate('diabetics_profile.glucose_target');
   String get lowGlucose => translate('lowGlucose');
-  String get normalGlucose => translate('normalGlucose');
-  String get highGlucose => translate('highGlucose');
+  String get normalGlucose => translate('chart.normal');
+  String get highGlucose => translate('chart.above_normal');
   String get lowRange => translate('lowRange');
-  String get normalRange => translate('normalRange');
-  String get highRange => translate('highRange');
-  String get minimum => translate('minimum');
-  String get maximum => translate('maximum');
-  String get mgdlUnit => translate('mgdlUnit');
-  String get mmolUnit => translate('mmolUnit');
+  String get normalRange => translate('chart.normal');
+  String get highRange => translate('chart.above_normal');
+  String get minimum => translate('diabetics_profile.min');
+  String get maximum => translate('diabetics_profile.max');
+  String get mgdlUnit => translate('settings.unit_mgdl');
+  String get mmolUnit => translate('settings.unit_mmol');
 
   // Profile
   String get profile => translate('profile.title');
@@ -237,8 +237,8 @@ class AppLocalizations {
   String get languageAr => translate('languages.arabic');
 
   // Insights
-  String get insights => translate('insights');
-  String get insightsTitle => translate('insightsTitle');
+  String get insights => translate('insights.title');
+  String get insightsTitle => translate('insights.title');
   String get weeklyReport => translate('weeklyReport');
   String get monthlyReport => translate('monthlyReport');
   String get glucoseTrends => translate('glucoseTrends');
