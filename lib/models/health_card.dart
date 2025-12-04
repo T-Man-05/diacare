@@ -11,11 +11,23 @@ class HealthCard {
   });
 
   factory HealthCard.fromJson(Map<String, dynamic> json) {
+    final rawValue = json['value'];
+    double parsedValue;
+    if (rawValue == null) {
+      parsedValue = 0.0;
+    } else if (rawValue is int) {
+      parsedValue = rawValue.toDouble();
+    } else if (rawValue is double) {
+      parsedValue = rawValue;
+    } else if (rawValue is num) {
+      parsedValue = rawValue.toDouble();
+    } else {
+      parsedValue = 0.0;
+    }
+
     return HealthCard(
       title: json['title'] ?? '',
-      value: (json['value'] is int)
-          ? (json['value'] as int).toDouble()
-          : (json['value'] ?? 0.0),
+      value: parsedValue,
       unit: json['unit'] ?? '',
     );
   }

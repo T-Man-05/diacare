@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/dashboard_data.dart';
 import '../blocs/blocs.dart';
-import '../repositories/app_repository.dart';
+import '../services/data_service_new.dart';
 import '../widgets/info_card.dart';
 import '../widgets/blood_sugar_chart.dart';
 import '../utils/constants.dart';
@@ -11,9 +11,7 @@ import 'insights_page.dart';
 
 /// Dashboard Page - Main screen showing health metrics
 class DashboardPage extends StatefulWidget {
-  final AppRepository repository;
-
-  const DashboardPage({Key? key, required this.repository}) : super(key: key);
+  const DashboardPage({Key? key}) : super(key: key);
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -29,14 +27,13 @@ class _DashboardPageState extends State<DashboardPage> {
     _loadData();
   }
 
-  /// Load data using single getData() function from repository
+  /// Load data from the DataService
   Future<void> _loadData() async {
     try {
-      // Call single getData() function
-      final allData = await widget.repository.getData();
+      final dataService = DataService.instance;
 
-      // Extract dashboard data
-      final dashboardJson = allData['dashboard'] as Map<String, dynamic>;
+      // Get dashboard data from SQLite
+      final dashboardJson = await dataService.getDashboardData();
 
       setState(() {
         _dashboardData = DashboardData.fromJson(dashboardJson);

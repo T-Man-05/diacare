@@ -6,7 +6,7 @@
 /// Features:
 /// - Email and password input fields
 /// - Input validation
-/// - JSON-based user authentication
+/// - SQLite-based user authentication with password hashing
 /// - Navigation to signup screen
 /// - Password recovery option
 /// - Theme-aware UI
@@ -16,7 +16,7 @@ import 'package:flutter/material.dart';
 import 'signup.dart';
 import 'home.dart';
 import '../utils/constants.dart';
-import '../services/data_service.dart';
+import '../services/data_service_new.dart';
 import '../l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -90,7 +90,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final dataService = DataService.instance;
-      final user = await dataService.authenticateUser(
+
+      // Use the new login method that saves session
+      final user = await dataService.login(
         _emailController.text.trim(),
         _passwordController.text,
       );
@@ -98,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (user != null) {
-        // Authentication successful
+        // Authentication successful - navigate to home
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const MainNavigationPage()),

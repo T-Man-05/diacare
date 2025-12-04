@@ -6,7 +6,8 @@
 /// Features:
 /// - Username, email, and password input fields
 /// - Input validation with localized messages
-/// - Email duplicate checking
+/// - Email duplicate checking with SQLite
+/// - Creates user account with hashed password
 /// - Theme-aware UI
 /// - Navigation to onboarding flow
 /// ============================================================================
@@ -14,7 +15,7 @@
 import 'package:flutter/material.dart';
 import 'date_gen.dart';
 import '../utils/constants.dart';
-import '../services/data_service.dart';
+import '../services/data_service_new.dart';
 import '../l10n/app_localizations.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -118,19 +119,33 @@ class _SignupScreen extends State<SignupScreen> {
         return;
       }
 
-      // Navigate to onboarding flow
+      // Create the user account with hashed password
+      await dataService.registerUser(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        username: _usernameController.text.trim(),
+        seedDemoData: false, // Start with empty database
+      );
+
+      if (!mounted) return;
+
+      // Navigate to onboarding flow to complete profile
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const DateGenScreen()),
       );
+    } on DataServiceException catch (e) {
+      if (mounted) {
+        setState(() {
+          _signupError = e.message;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Signup failed: $e')),
         );
-      }
-    } finally {
-      if (mounted) {
         setState(() {
           _isLoading = false;
         });

@@ -16,11 +16,11 @@ class ChartData {
       title: json['title'] ?? '',
       data: {
         'before_meal': (dataMap['before_meal'] as List<dynamic>?)
-                ?.map((e) => e as int)
+                ?.map((e) => (e is int) ? e : (e as num).toInt())
                 .toList() ??
             [],
         'after_meal': (dataMap['after_meal'] as List<dynamic>?)
-                ?.map((e) => e as int)
+                ?.map((e) => (e is int) ? e : (e as num).toInt())
                 .toList() ??
             [],
       },

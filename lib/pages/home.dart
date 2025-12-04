@@ -5,7 +5,6 @@ import 'reminders_page.dart';
 import 'insights_page.dart';
 import 'chat_page.dart';
 
-import '../repositories/local_demo_repository.dart';
 import '../utils/constants.dart';
 import '../l10n/app_localizations.dart';
 
@@ -18,19 +17,18 @@ class MainNavigationPage extends StatefulWidget {
 
 class _MainNavigationPageState extends State<MainNavigationPage> {
   int _currentIndex = 2; // Start at Home (Dashboard)
-  final repository = LocalDemoRepository();
 
   late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
-    _pages = [
-      const RemindersPage(), // Index 0 - Alarm icon
-      const InsightsPage(), // Index 1 - Bar chart icon
-      DashboardPage(repository: repository), // Index 2 - Home icon
-      const ChatPage(), // Index 3 - Chat icon
-      MyProfilePage(repository: repository), // Index 4 - Profile icon
+    _pages = const [
+      RemindersPage(), // Index 0 - Alarm icon
+      InsightsPage(), // Index 1 - Bar chart icon
+      DashboardPage(), // Index 2 - Home icon
+      ChatPage(), // Index 3 - Chat icon
+      MyProfilePage(), // Index 4 - Profile icon
     ];
   }
 

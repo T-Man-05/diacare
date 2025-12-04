@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/settings_data.dart';
-import '../repositories/app_repository.dart';
+import '../services/data_service_new.dart';
 import '../utils/constants.dart';
 import '../blocs/blocs.dart';
 import '../l10n/app_localizations.dart';
@@ -10,9 +10,7 @@ import 'diabetics_profile_page.dart';
 import 'login.dart';
 
 class MyProfilePage extends StatefulWidget {
-  final AppRepository repository;
-
-  const MyProfilePage({Key? key, required this.repository}) : super(key: key);
+  const MyProfilePage({Key? key}) : super(key: key);
 
   @override
   State<MyProfilePage> createState() => _MyProfilePageState();
@@ -30,8 +28,8 @@ class _MyProfilePageState extends State<MyProfilePage> {
 
   Future<void> _loadData() async {
     try {
-      final allData = await widget.repository.getData();
-      final settingsJson = allData['settings'] as Map<String, dynamic>;
+      final dataService = DataService.instance;
+      final settingsJson = await dataService.getSettings();
 
       setState(() {
         _settingsData = SettingsData.fromJson(settingsJson);
@@ -45,8 +43,23 @@ class _MyProfilePageState extends State<MyProfilePage> {
 
   Future<void> _saveSettings() async {
     if (_settingsData != null) {
-      await widget.repository.updateSettings(_settingsData!.toJson());
+      final dataService = DataService.instance;
+      await dataService.updateSettings(_settingsData!.toJson());
     }
+  }
+
+  /// Handle logout
+  Future<void> _handleLogout() async {
+    final dataService = DataService.instance;
+    await dataService.logout();
+
+    if (!mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   @override
@@ -190,8 +203,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      EditProfilePage(repository: widget.repository),
+                  builder: (context) => const EditProfilePage(),
                 ),
               );
               _loadData();
@@ -206,8 +218,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      DiabeticsProfilePage(repository: widget.repository),
+                  builder: (context) => const DiabeticsProfilePage(),
                 ),
               );
               _loadData();
@@ -872,16 +883,9 @@ class _MyProfilePageState extends State<MyProfilePage> {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.loggedOut)),
-              );
-              // Navigate to login
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-                (route) => false,
-              );
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog
+              await _handleLogout(); // Use the logout handler
             },
             child: Text(
               l10n.confirm,

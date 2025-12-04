@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/settings_data.dart';
 import '../blocs/blocs.dart';
-import '../repositories/app_repository.dart';
+import '../services/data_service_new.dart';
 import '../utils/constants.dart';
 import '../l10n/app_localizations.dart';
 
 class DiabeticsProfilePage extends StatefulWidget {
-  final AppRepository repository;
-
-  const DiabeticsProfilePage({Key? key, required this.repository})
-      : super(key: key);
+  const DiabeticsProfilePage({Key? key}) : super(key: key);
 
   @override
   State<DiabeticsProfilePage> createState() => _DiabeticsProfilePageState();
@@ -39,8 +36,8 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
 
   Future<void> _loadData() async {
     try {
-      final allData = await widget.repository.getData();
-      final settingsJson = allData['settings'] as Map<String, dynamic>;
+      final dataService = DataService.instance;
+      final settingsJson = await dataService.getSettings();
 
       setState(() {
         _settingsData = SettingsData.fromJson(settingsJson);
@@ -113,7 +110,8 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
         _settingsData!.diabeticProfile.maxGlucose =
             int.tryParse(_maxGlucoseController.text) ?? 180;
 
-        await widget.repository.updateSettings(_settingsData!.toJson());
+        final dataService = DataService.instance;
+        await dataService.updateSettings(_settingsData!.toJson());
 
         if (mounted) {
           final l10n = AppLocalizations.of(context);

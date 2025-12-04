@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/settings_data.dart';
-import '../repositories/app_repository.dart';
+import '../services/data_service_new.dart';
 import '../utils/constants.dart';
 import '../l10n/app_localizations.dart';
 
 class EditProfilePage extends StatefulWidget {
-  final AppRepository repository;
-
-  const EditProfilePage({Key? key, required this.repository}) : super(key: key);
+  const EditProfilePage({Key? key}) : super(key: key);
 
   @override
   State<EditProfilePage> createState() => _EditProfilePageState();
@@ -38,8 +36,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   Future<void> _loadData() async {
     try {
-      final allData = await widget.repository.getData();
-      final settingsJson = allData['settings'] as Map<String, dynamic>;
+      final dataService = DataService.instance;
+      final settingsJson = await dataService.getSettings();
 
       setState(() {
         _settingsData = SettingsData.fromJson(settingsJson);
@@ -63,7 +61,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _settingsData!.username = _usernameController.text;
         _settingsData!.email = _emailController.text;
 
-        await widget.repository.updateSettings(_settingsData!.toJson());
+        final dataService = DataService.instance;
+        await dataService.updateSettings(_settingsData!.toJson());
 
         if (mounted) {
           final l10n = AppLocalizations.of(context);

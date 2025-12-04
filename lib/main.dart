@@ -5,6 +5,10 @@
 /// This is the main entry point for the DiaCare diabetic monitoring app.
 /// It initializes the data service layer and sets up the app-wide configuration.
 ///
+/// Data Storage:
+/// - SQLite: Users, glucose readings, health cards, reminders, profiles
+/// - SharedPreferences: Theme, locale, units, session
+///
 /// State Management: Uses BLoC/Cubit pattern with flutter_bloc package
 /// ============================================================================
 
@@ -12,21 +16,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'pages/login.dart';
-import 'services/data_service.dart';
+import 'pages/home.dart';
+import 'services/data_service_new.dart';
 import 'l10n/app_localizations.dart';
 import 'blocs/blocs.dart';
 import 'utils/constants.dart';
 
 /// Main function - Entry point of the application
 /// Initializes the data service before running the app
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize the data service with JSON file data source
-  // This can be easily swapped for API, database, or other data sources
-  DataService(
-    dataSource: JsonFileDataSource('assets/data/app_data.json'),
-  );
+  // Initialize the data service with SQLite + SharedPreferences
+  await DataService.initialize();
 
   runApp(const MyApp());
 }
@@ -38,6 +40,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Check if user is already logged in
+    final dataService = DataService.instance;
+    final isLoggedIn = dataService.isLoggedIn;
+
     return MultiBlocProvider(
       providers: [
         // Settings Cubit - manages theme and units
@@ -80,8 +86,10 @@ class MyApp extends StatelessWidget {
                 // Current locale from cubit state
                 locale: localeState.locale,
 
-                // Initial route - Login screen
-                home: const LoginScreen(),
+                // Initial route - Login or Home based on session
+                home: isLoggedIn
+                    ? const MainNavigationPage()
+                    : const LoginScreen(),
 
                 // Hide debug banner in top right corner
                 debugShowCheckedModeBanner: false,
