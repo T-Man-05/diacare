@@ -290,16 +290,22 @@ class _SinglePointPainter extends CustomPainter {
       textPainter.paint(canvas, Offset(x, size.height - 20));
     }
 
-    // Draw the point at the correct day position
+    // Draw the bar at the correct day position
+    final barWidth = 32.0;
     final x = 40 + (dayIndex + 0.5) * dayWidth;
     final maxY = value * 1.5;
-    final y = chartBottom - (value / maxY * chartHeight);
+    final barHeight = (value / maxY * chartHeight);
+    final barTop = chartBottom - barHeight;
 
-    // Draw point with glow effect
-    canvas.drawCircle(Offset(x, y), 12, Paint()..color = color.withAlpha(50));
-    canvas.drawCircle(Offset(x, y), 8, paint);
+    // Draw bar with rounded top corners
+    final barRect = RRect.fromRectAndCorners(
+      Rect.fromLTWH(x - barWidth / 2, barTop, barWidth, barHeight),
+      topLeft: const Radius.circular(6),
+      topRight: const Radius.circular(6),
+    );
+    canvas.drawRRect(barRect, paint);
 
-    // Draw value text above the point
+    // Draw value text above the bar
     final valuePainter = TextPainter(
       text: TextSpan(
         text: '${value.toStringAsFixed(2)} km',
@@ -308,7 +314,7 @@ class _SinglePointPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     );
     valuePainter.layout();
-    valuePainter.paint(canvas, Offset(x - valuePainter.width / 2, y - 25));
+    valuePainter.paint(canvas, Offset(x - valuePainter.width / 2, barTop - 18));
   }
 
   @override
