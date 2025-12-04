@@ -5,15 +5,17 @@
 /// This screen allows new users to create an account in DiaCare.
 /// Features:
 /// - Username, email, and password input fields
-/// - Input validation
+/// - Input validation with localized messages
+/// - Email duplicate checking
+/// - Theme-aware UI
 /// - Navigation to onboarding flow
-/// - Centralized string management
 /// ============================================================================
 
 import 'package:flutter/material.dart';
 import 'date_gen.dart';
 import '../utils/constants.dart';
 import '../services/data_service.dart';
+import '../l10n/app_localizations.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -34,29 +36,8 @@ class _SignupScreen extends State<SignupScreen> {
   // Loading state
   bool _isLoading = false;
 
-  // App strings from centralized data
-  Map<String, dynamic>? _strings;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadStrings();
-  }
-
-  /// Load centralized strings from data service
-  Future<void> _loadStrings() async {
-    try {
-      final dataService = DataService.instance;
-      final strings = await dataService.getAppStrings();
-      if (mounted) {
-        setState(() {
-          _strings = strings;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading strings: $e');
-    }
-  }
+  // Error message for signup
+  String? _signupError;
 
   @override
   void dispose() {
@@ -68,44 +49,48 @@ class _SignupScreen extends State<SignupScreen> {
 
   /// Validate username
   String? _validateUsername(String? value) {
+    final l10n = AppLocalizations.of(context);
     if (value == null || value.isEmpty) {
-      return _strings?['validation']?['username_required'] ??
-          'Username is required';
+      return l10n.fieldRequired;
     }
     if (value.length < 3) {
-      return 'Username must be at least 3 characters';
+      return l10n.nameTooShort;
     }
     return null;
   }
 
   /// Validate email format
   String? _validateEmail(String? value) {
+    final l10n = AppLocalizations.of(context);
     if (value == null || value.isEmpty) {
-      return _strings?['validation']?['email_required'] ?? 'Email is required';
+      return l10n.emailRequired;
     }
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(value)) {
-      return _strings?['validation']?['email_invalid'] ??
-          'Please enter a valid email';
+      return l10n.invalidEmail;
     }
     return null;
   }
 
   /// Validate password
   String? _validatePassword(String? value) {
+    final l10n = AppLocalizations.of(context);
     if (value == null || value.isEmpty) {
-      return _strings?['validation']?['password_required'] ??
-          'Password is required';
+      return l10n.passwordRequired;
     }
     if (value.length < 6) {
-      return _strings?['validation']?['password_too_short'] ??
-          'Password must be at least 6 characters';
+      return l10n.passwordTooShort;
     }
     return null;
   }
 
   /// Handle signup button press
   Future<void> _handleSignup() async {
+    // Clear previous error
+    setState(() {
+      _signupError = null;
+    });
+
     // Validate form
     if (!_formKey.currentState!.validate()) {
       return;
@@ -116,16 +101,28 @@ class _SignupScreen extends State<SignupScreen> {
     });
 
     try {
-      // TODO: Implement actual user registration logic here
-      await Future.delayed(const Duration(milliseconds: 500));
+      final dataService = DataService.instance;
+      final l10n = AppLocalizations.of(context);
 
-      if (mounted) {
-        // Navigate to onboarding flow
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const DateGenScreen()),
-        );
+      // Check if email already exists
+      final emailExists =
+          await dataService.emailExists(_emailController.text.trim());
+
+      if (!mounted) return;
+
+      if (emailExists) {
+        setState(() {
+          _signupError = l10n.emailAlreadyExists;
+          _isLoading = false;
+        });
+        return;
       }
+
+      // Navigate to onboarding flow
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const DateGenScreen()),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -143,26 +140,23 @@ class _SignupScreen extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Show loading while strings are loading
-    if (_strings == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 64),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // App name
               Text(
-                _strings?['app_name'] ?? 'DiaCare',
-                style: TextStyle(
+                l10n.appTitle,
+                style: const TextStyle(
                   fontFamily: 'Borel',
                   fontWeight: FontWeight.w400,
                   fontStyle: FontStyle.normal,
@@ -178,12 +172,14 @@ class _SignupScreen extends State<SignupScreen> {
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(39),
-                  color: const Color(0xFFFFFFFD),
-                  boxShadow: const [
+                  color: theme.cardColor,
+                  boxShadow: [
                     BoxShadow(
-                      color: Color(0x40000000),
+                      color: isDark
+                          ? Colors.black.withOpacity(0.3)
+                          : const Color(0x40000000),
                       blurRadius: 13,
-                      offset: Offset(0, 4),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
@@ -199,49 +195,84 @@ class _SignupScreen extends State<SignupScreen> {
                         // Welcome text
                         Center(
                           child: Text(
-                            _strings?['welcome'] ?? 'Welcome!',
+                            l10n.welcome,
                             style: TextStyle(
                               fontFamily: 'Borel',
                               fontWeight: FontWeight.w400,
                               fontStyle: FontStyle.normal,
                               fontSize: 42,
                               height: 1.0,
-                              color: Color(0XFF5D5D5D),
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : const Color(0XFF5D5D5D),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 24),
+
+                        // Show signup error if any
+                        if (_signupError != null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                  color: Colors.red.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline,
+                                    color: Colors.red, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _signupError!,
+                                    style: const TextStyle(
+                                        color: Colors.red, fontSize: 14),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
 
                         // Username field
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            _strings?['signup']?['username_label'] ??
-                                'Username',
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              fontStyle: FontStyle.normal,
-                              fontSize: 18,
-                              height: 1.0,
-                              letterSpacing: 0.0,
-                              color: Color(0xFF5D5D5D),
-                            ),
+                        Text(
+                          l10n.username,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 18,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : const Color(0xFF5D5D5D),
                           ),
                         ),
                         const SizedBox(height: 6),
                         TextFormField(
                           controller: _usernameController,
                           validator: _validateUsername,
+                          style: TextStyle(
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
+                          ),
                           decoration: InputDecoration(
+                            filled: true,
+                            fillColor:
+                                isDark ? AppColors.darkSurface : Colors.white,
                             enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFD9D9D9), width: 1.5),
+                              borderSide: BorderSide(
+                                  color: isDark
+                                      ? Colors.grey[700]!
+                                      : const Color(0xFFD9D9D9),
+                                  width: 1.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: const BorderSide(
-                                  color: AppColors.primaryDark, width: 2),
+                                  color: AppColors.primary, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             errorBorder: OutlineInputBorder(
@@ -254,8 +285,11 @@ class _SignupScreen extends State<SignupScreen> {
                                   const BorderSide(color: Colors.red, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            hintText: _strings?['signup']?['username_hint'] ??
-                                'choose an @Username',
+                            hintText: '@username',
+                            hintStyle: TextStyle(
+                              color:
+                                  isDark ? Colors.grey[500] : Colors.grey[400],
+                            ),
                             contentPadding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 12),
                           ),
@@ -263,20 +297,14 @@ class _SignupScreen extends State<SignupScreen> {
                         const SizedBox(height: 16),
 
                         // Email field
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            _strings?['signup']?['email_label'] ??
-                                'Email Address',
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              fontStyle: FontStyle.normal,
-                              fontSize: 18,
-                              height: 1.0,
-                              letterSpacing: 0.0,
-                              color: Color(0xFF5D5D5D),
-                            ),
+                        Text(
+                          l10n.email,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 18,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : const Color(0xFF5D5D5D),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -284,15 +312,26 @@ class _SignupScreen extends State<SignupScreen> {
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
                           validator: _validateEmail,
+                          style: TextStyle(
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
+                          ),
                           decoration: InputDecoration(
+                            filled: true,
+                            fillColor:
+                                isDark ? AppColors.darkSurface : Colors.white,
                             enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFD9D9D9), width: 1.5),
+                              borderSide: BorderSide(
+                                  color: isDark
+                                      ? Colors.grey[700]!
+                                      : const Color(0xFFD9D9D9),
+                                  width: 1.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: const BorderSide(
-                                  color: AppColors.primaryDark, width: 2),
+                                  color: AppColors.primary, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             errorBorder: OutlineInputBorder(
@@ -305,8 +344,11 @@ class _SignupScreen extends State<SignupScreen> {
                                   const BorderSide(color: Colors.red, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            hintText: _strings?['signup']?['email_hint'] ??
-                                'Enter your email',
+                            hintText: l10n.email,
+                            hintStyle: TextStyle(
+                              color:
+                                  isDark ? Colors.grey[500] : Colors.grey[400],
+                            ),
                             contentPadding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 12),
                           ),
@@ -315,20 +357,14 @@ class _SignupScreen extends State<SignupScreen> {
                         const SizedBox(height: 16),
 
                         // Password field
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            _strings?['signup']?['password_label'] ??
-                                'Password',
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              fontStyle: FontStyle.normal,
-                              fontSize: 18,
-                              height: 1.0,
-                              letterSpacing: 0.0,
-                              color: Color(0xFF5D5D5D),
-                            ),
+                        Text(
+                          l10n.password,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 18,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : const Color(0xFF5D5D5D),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -336,15 +372,26 @@ class _SignupScreen extends State<SignupScreen> {
                           controller: _passwordController,
                           obscureText: true,
                           validator: _validatePassword,
+                          style: TextStyle(
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
+                          ),
                           decoration: InputDecoration(
+                            filled: true,
+                            fillColor:
+                                isDark ? AppColors.darkSurface : Colors.white,
                             enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFD9D9D9), width: 1.5),
+                              borderSide: BorderSide(
+                                  color: isDark
+                                      ? Colors.grey[700]!
+                                      : const Color(0xFFD9D9D9),
+                                  width: 1.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: const BorderSide(
-                                  color: AppColors.primaryDark, width: 2),
+                                  color: AppColors.primary, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             errorBorder: OutlineInputBorder(
@@ -357,14 +404,17 @@ class _SignupScreen extends State<SignupScreen> {
                                   const BorderSide(color: Colors.red, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            hintText: _strings?['signup']?['password_hint'] ??
-                                'Enter your password',
+                            hintText: l10n.password,
+                            hintStyle: TextStyle(
+                              color:
+                                  isDark ? Colors.grey[500] : Colors.grey[400],
+                            ),
                             contentPadding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 12),
                           ),
                         ),
 
-                        const SizedBox(height: 64),
+                        const SizedBox(height: 48),
 
                         // Signup button
                         SizedBox(
@@ -376,6 +426,7 @@ class _SignupScreen extends State<SignupScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                             child: _isLoading
                                 ? const SizedBox(
@@ -387,35 +438,19 @@ class _SignupScreen extends State<SignupScreen> {
                                     ),
                                   )
                                 : Text(
-                                    _strings?['signup']?['signup_button'] ??
-                                        'Sign up',
+                                    l10n.signup,
                                     style: const TextStyle(
-                                      fontFamily: 'Inter',
                                       fontWeight: FontWeight.w600,
-                                      fontStyle: FontStyle.normal,
                                       fontSize: 18,
-                                      height: 1.0,
-                                      letterSpacing: 0.0,
                                       color: Colors.white,
                                     ),
                                   ),
                           ),
                         ),
+                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
-                ),
-              ),
-
-              const SizedBox(height: 46),
-              const Text(
-                ' ',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w500,
-                  decoration: TextDecoration.underline,
-                  decorationColor: AppColors.primary,
-                  fontSize: 20,
                 ),
               ),
             ],

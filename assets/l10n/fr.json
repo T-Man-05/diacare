@@ -1,0 +1,223 @@
+{
+  "app_name": "DiaCare",
+  "welcome": "Bienvenue !",
+  
+  "login": {
+    "title": "Connexion",
+    "email_label": "Adresse e-mail",
+    "email_hint": "Entrez votre e-mail",
+    "password_label": "Mot de passe",
+    "password_hint": "Entrez votre mot de passe",
+    "login_button": "Se connecter",
+    "signup_button": "S'inscrire",
+    "forgot_password": "Mot de passe oublié ?"
+  },
+  
+  "signup": {
+    "title": "Inscription",
+    "username_label": "Nom d'utilisateur",
+    "username_hint": "Choisissez un @NomUtilisateur",
+    "email_label": "Adresse e-mail",
+    "email_hint": "Entrez votre e-mail",
+    "password_label": "Mot de passe",
+    "password_hint": "Entrez votre mot de passe",
+    "signup_button": "S'inscrire"
+  },
+  
+  "onboarding": {
+    "date_of_birth": "Date de naissance",
+    "date_of_birth_hint": "Sélectionnez votre date de naissance",
+    "gender": "Genre",
+    "gender_hint": "Sélectionnez votre genre",
+    "gender_male": "Homme",
+    "gender_female": "Femme",
+    "gender_other": "Autre",
+    "height": "Taille",
+    "height_hint": "Entrez votre taille",
+    "weight": "Poids",
+    "weight_hint": "Entrez votre poids",
+    "diabetes_type": "Type de diabète",
+    "diabetes_type_hint": "Sélectionnez votre type de diabète",
+    "diabetes_type_1": "Type 1",
+    "diabetes_type_2": "Type 2",
+    "diabetes_gestational": "Gestationnel",
+    "diabetes_monogenic": "Monogénique",
+    "diabetes_secondary": "Secondaire",
+    "unit_preferences": "Préférences d'unité",
+    "unit_preferences_hint": "Sélectionnez votre unité de mesure",
+    "diagnosis_duration": "Durée du diagnostic",
+    "treatment_type": "Type de traitement habituel",
+    "continue_button": "Continuer"
+  },
+  
+  "dashboard": {
+    "greeting": "Bonjour, {name}",
+    "glucose": "Glucose",
+    "next_reminder": "Prochain rappel",
+    "see_details": "Voir les détails",
+    "you_are_fine": "tout va bien"
+  },
+  
+  "health_cards": {
+    "water": "Eau",
+    "pills": "Pilules",
+    "activity": "Activité",
+    "carbs": "Glucides",
+    "insulin": "Insuline"
+  },
+  
+  "chart": {
+    "blood_sugar": "Glycémie",
+    "before_meal": "Avant repas",
+    "after_meal": "Après repas",
+    "normal": "Normal",
+    "above_normal": "Au-dessus de la normale",
+    "above_usual": "Au-dessus de l'habituel",
+    "daily_activity": "Activité quotidienne"
+  },
+  
+  "days": {
+    "sat": "Sam",
+    "sun": "Dim",
+    "mon": "Lun",
+    "tue": "Mar",
+    "wed": "Mer",
+    "thu": "Jeu",
+    "fri": "Ven"
+  },
+  
+  "reminders": {
+    "title": "Rappel",
+    "check_glucose": "Vérifiez votre taux de glucose",
+    "drink_water": "Boire de l'eau",
+    "take_pill": "Prendre votre pilule",
+    "next_time": "Prochaine fois :",
+    "in_time": "dans {time}",
+    "late": "{time} de retard",
+    "notifications_enabled": "Notifications activées",
+    "notifications_disabled": "Notifications désactivées",
+    "done": "Fait",
+    "not_done": "Non fait",
+    "do_later": "Je le ferai plus tard",
+    "marked_done": "Rappel marqué comme fait",
+    "marked_not_done": "Rappel marqué comme non fait",
+    "postponed": "Rappel reporté"
+  },
+  
+  "insights": {
+    "title": "Aperçus"
+  },
+  
+  "chat": {
+    "title": "Discussion",
+    "description": "it will be avialabe soon."
+  },
+  
+  "profile": {
+    "title": "Mon profil",
+    "my_profile": "Mon profil",
+    "edit_profile": "Modifier le profil",
+    "diabetics_profile": "Profil diabétique",
+    "settings": "Paramètres",
+    "delete_account": "Supprimer le compte",
+    "log_out": "Se déconnecter",
+    "full_name": "Nom complet",
+    "username": "Nom d'utilisateur",
+    "email": "E-mail",
+    "save_changes": "Enregistrer",
+    "profile_updated": "Profil mis à jour avec succès"
+  },
+  
+  "diabetics_profile": {
+    "title": "Profil diabétique",
+    "diabetic_type": "Type de diabète",
+    "treatment_type": "Type de traitement",
+    "glucose_target": "Plage cible de glucose",
+    "min": "Min",
+    "max": "Max",
+    "select_diabetic_type": "Sélectionnez le type de diabète",
+    "select_treatment_type": "Sélectionnez le type de traitement",
+    "treatment_diet": "Régime",
+    "treatment_pills": "Pilules",
+    "treatment_insulin": "Insuline",
+    "updated": "Profil diabétique mis à jour avec succès"
+  },
+  
+  "settings": {
+    "title": "Paramètres",
+    "theme": "Thème",
+    "theme_light": "Clair",
+    "theme_dark": "Sombre",
+    "theme_system": "Système",
+    "notifications": "Notifications",
+    "enable_notifications": "Activer les notifications",
+    "units": "Préférence d'unités",
+    "units_preference": "Préférence d'unités",
+    "unit_mgdl": "mg/dL",
+    "unit_mmol": "mmol/L",
+    "language": "Langue",
+    "select_language": "Sélectionnez la langue"
+  },
+  
+  "languages": {
+    "english": "English",
+    "french": "Français",
+    "arabic": "العربية"
+  },
+  
+  "dialogs": {
+    "delete_account_title": "Supprimer le compte",
+    "delete_account_message": "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.",
+    "delete_account_confirm": "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.",
+    "logout_title": "Déconnexion",
+    "logout_message": "Êtes-vous sûr de vouloir vous déconnecter ?",
+    "logout_confirm": "Êtes-vous sûr de vouloir vous déconnecter ?",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "done": "Terminé",
+    "account_deleted": "Compte supprimé",
+    "logged_out": "Déconnecté avec succès",
+    "logged_out_success": "Déconnecté avec succès"
+  },
+  
+  "errors": {
+    "loading_error": "Erreur de chargement des données",
+    "field_required": "Ce champ est requis",
+    "invalid_email": "Veuillez entrer une adresse e-mail valide",
+    "password_too_short": "Le mot de passe doit contenir au moins 6 caractères",
+    "username_too_short": "Le nom d'utilisateur doit contenir au moins 3 caractères",
+    "username_invalid": "Le nom d'utilisateur ne peut contenir que des lettres, des chiffres et des underscores",
+    "invalid_credentials": "E-mail ou mot de passe invalide",
+    "glucose_min_invalid": "Le glucose min doit être entre 50-150",
+    "glucose_max_invalid": "Le glucose max doit être entre 100-300",
+    "glucose_range_invalid": "Le max doit être supérieur au min",
+    "name_too_short": "Le nom doit contenir au moins 2 caractères",
+    "email_required": "L'e-mail est requis",
+    "password_required": "Le mot de passe est requis",
+    "name_required": "Le nom est requis",
+    "full_name_required": "Le nom complet est requis",
+    "full_name_min_length": "Le nom complet doit contenir au moins 2 caractères",
+    "username_required": "Le nom d'utilisateur est requis",
+    "username_min_length": "Le nom d'utilisateur doit contenir au moins 3 caractères",
+    "passwords_do_not_match": "Les mots de passe ne correspondent pas",
+    "invalid_number": "Veuillez entrer un nombre valide",
+    "number_too_low": "La valeur est trop basse",
+    "number_too_high": "La valeur est trop élevée",
+    "account_not_found": "Compte non trouvé",
+    "email_already_exists": "L'e-mail existe déjà",
+    "invalid_range": "Plage invalide",
+    "min_greater_than_max": "Le minimum doit être inférieur au maximum",
+    "validation_error": "Erreur de validation",
+    "please_fix_errors": "Veuillez corriger les erreurs avant de continuer"
+  },
+  
+  "units": {
+    "mg_dl": "mg/dL",
+    "mmol_l": "mmol/L",
+    "liters": "L",
+    "steps": "pas",
+    "calories": "cal",
+    "units": "unités",
+    "km": "km"
+  }
+}

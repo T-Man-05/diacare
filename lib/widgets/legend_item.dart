@@ -1,7 +1,5 @@
-// ========================================
-// lib/widgets/legend_item.dart
-// ========================================
 import 'package:flutter/material.dart';
+import '../utils/constants.dart';
 
 class LegendItem extends StatelessWidget {
   final Color color;
@@ -15,6 +13,11 @@ class LegendItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor =
+        isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0),
       child: Row(
@@ -31,7 +34,7 @@ class LegendItem extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.grey.shade700,
+              color: textColor,
               fontSize: 13,
             ),
           ),

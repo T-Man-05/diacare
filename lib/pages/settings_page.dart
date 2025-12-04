@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/settings_data.dart';
 import '../repositories/app_repository.dart';
 import '../utils/constants.dart';
+import '../providers/settings_provider.dart';
+import '../providers/locale_provider.dart';
+import '../l10n/app_localizations.dart';
 import 'edit_profile_page.dart';
 import 'diabetics_profile_page.dart';
+import 'login.dart';
 
 class MyProfilePage extends StatefulWidget {
   final AppRepository repository;
@@ -47,31 +52,39 @@ class _MyProfilePageState extends State<MyProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_settingsData == null) {
-      return const Scaffold(
-        body: Center(child: Text('Error loading data')),
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: Center(child: Text(l10n.error)),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back,
+              color:
+                  isDark ? AppColors.darkTextPrimary : AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'My Profile',
+        title: Text(
+          l10n.myProfile,
           style: TextStyle(
-            color: AppColors.textPrimary,
+            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
             fontSize: 20,
             fontWeight: FontWeight.w600,
           ),
@@ -83,11 +96,11 @@ class _MyProfilePageState extends State<MyProfilePage> {
           padding: const EdgeInsets.all(AppSpacing.screenPadding),
           child: Column(
             children: [
-              _buildProfileHeader(),
+              _buildProfileHeader(isDark),
               const SizedBox(height: 24),
-              _buildMainMenuSection(),
+              _buildMainMenuSection(isDark, l10n),
               const SizedBox(height: 24),
-              _buildAccountActionsSection(),
+              _buildAccountActionsSection(isDark, l10n),
             ],
           ),
         ),
@@ -95,7 +108,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
     );
   }
 
-  Widget _buildProfileHeader() {
+  Widget _buildProfileHeader(bool isDark) {
     return Row(
       children: [
         Stack(
@@ -115,14 +128,16 @@ class _MyProfilePageState extends State<MyProfilePage> {
               right: 0,
               child: Container(
                 padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkCardBackground : Colors.white,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.camera_alt,
                   size: 16,
-                  color: AppColors.textSecondary,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.textSecondary,
                 ),
               ),
             ),
@@ -135,18 +150,22 @@ class _MyProfilePageState extends State<MyProfilePage> {
             children: [
               Text(
                 _settingsData?.fullName ?? 'Charlotte King',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 _settingsData?.username ?? '@johnkinggraphics',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: AppColors.textSecondary,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.textSecondary,
                 ),
               ),
             ],
@@ -156,17 +175,18 @@ class _MyProfilePageState extends State<MyProfilePage> {
     );
   }
 
-  Widget _buildMainMenuSection() {
+  Widget _buildMainMenuSection(bool isDark, AppLocalizations l10n) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
           _buildMenuItem(
             icon: Icons.person_outline,
-            title: 'Edit Profile',
+            title: l10n.editProfile,
+            isDark: isDark,
             onTap: () async {
               await Navigator.push(
                 context,
@@ -178,10 +198,11 @@ class _MyProfilePageState extends State<MyProfilePage> {
               _loadData();
             },
           ),
-          _buildDivider(),
+          _buildDivider(isDark),
           _buildMenuItem(
             icon: Icons.favorite_outline,
-            title: 'Diabetics Profile',
+            title: l10n.diabeticProfile,
+            isDark: isDark,
             onTap: () async {
               await Navigator.push(
                 context,
@@ -193,10 +214,11 @@ class _MyProfilePageState extends State<MyProfilePage> {
               _loadData();
             },
           ),
-          _buildDivider(),
+          _buildDivider(isDark),
           _buildMenuItem(
             icon: Icons.settings_outlined,
-            title: 'Settings',
+            title: l10n.settings,
+            isDark: isDark,
             onTap: () {
               _showSettingsBottomSheet();
             },
@@ -206,27 +228,29 @@ class _MyProfilePageState extends State<MyProfilePage> {
     );
   }
 
-  Widget _buildAccountActionsSection() {
+  Widget _buildAccountActionsSection(bool isDark, AppLocalizations l10n) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
           _buildMenuItem(
             icon: Icons.delete_outline,
-            title: 'Delete account',
+            title: l10n.deleteAccount,
             iconColor: Colors.red,
             textColor: Colors.red,
+            isDark: isDark,
             onTap: _showDeleteAccountDialog,
           ),
-          _buildDivider(),
+          _buildDivider(isDark),
           _buildMenuItem(
             icon: Icons.logout,
-            title: 'Log out',
+            title: l10n.logout,
             iconColor: AppColors.primary,
             textColor: AppColors.primary,
+            isDark: isDark,
             onTap: _showLogoutDialog,
           ),
         ],
@@ -238,6 +262,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
+    required bool isDark,
     Color? iconColor,
     Color? textColor,
   }) {
@@ -259,20 +284,29 @@ class _MyProfilePageState extends State<MyProfilePage> {
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
-          color: textColor ?? AppColors.textPrimary,
+          color: textColor ??
+              (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary),
         ),
       ),
-      trailing: const Icon(
+      trailing: Icon(
         Icons.chevron_right,
-        color: AppColors.textSecondary,
+        color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
       ),
       onTap: onTap,
     );
   }
 
-  Widget _buildDivider() => const Divider(height: 1, indent: 72);
+  Widget _buildDivider(bool isDark) => Divider(
+        height: 1,
+        indent: 72,
+        color: isDark ? Colors.grey[700] : Colors.grey[300],
+      );
 
   void _showSettingsBottomSheet() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -282,9 +316,9 @@ class _MyProfilePageState extends State<MyProfilePage> {
         minChildSize: 0.5,
         maxChildSize: 0.95,
         builder: (context, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkBackground : AppColors.background,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
             children: [
@@ -293,7 +327,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: isDark ? Colors.grey[600] : Colors.grey[300],
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -302,16 +336,21 @@ class _MyProfilePageState extends State<MyProfilePage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Settings',
+                    Text(
+                      l10n.settings,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.textPrimary,
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close),
+                      icon: Icon(Icons.close,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.textPrimary),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -324,17 +363,21 @@ class _MyProfilePageState extends State<MyProfilePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildSectionHeader('Theme'),
+                      _buildSectionHeader(l10n.theme, isDark),
                       const SizedBox(height: 12),
-                      _buildThemeSection(),
+                      _buildThemeSection(isDark, l10n),
                       const SizedBox(height: 24),
-                      _buildSectionHeader('Notifications'),
+                      _buildSectionHeader(l10n.language, isDark),
                       const SizedBox(height: 12),
-                      _buildNotificationsSection(),
+                      _buildLanguageSection(isDark, l10n),
                       const SizedBox(height: 24),
-                      _buildSectionHeader('Units Preference'),
+                      _buildSectionHeader(l10n.notifications, isDark),
                       const SizedBox(height: 12),
-                      _buildUnitsSection(),
+                      _buildNotificationsSection(isDark, l10n),
+                      const SizedBox(height: 24),
+                      _buildSectionHeader(l10n.glucoseUnits, isDark),
+                      const SizedBox(height: 12),
+                      _buildUnitsSection(isDark),
                     ],
                   ),
                 ),
@@ -346,61 +389,57 @@ class _MyProfilePageState extends State<MyProfilePage> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, bool isDark) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
+        color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
       ),
     );
   }
 
-  Widget _buildThemeSection() {
+  Widget _buildThemeSection(bool isDark, AppLocalizations l10n) {
+    final settingsProvider = Provider.of<SettingsProvider>(context);
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
-          _buildRadioTile(
+          _buildThemeRadioTile(
             icon: Icons.wb_sunny_outlined,
-            title: 'Light',
-            value: 'light',
-            groupValue: _settingsData!.preferences.theme,
+            title: l10n.themeLight,
+            value: ThemeMode.light,
+            groupValue: settingsProvider.themeMode,
+            isDark: isDark,
             onChanged: (value) {
-              setState(() {
-                _settingsData!.preferences.theme = value!;
-              });
-              _saveSettings();
+              settingsProvider.setThemeMode(value!);
             },
           ),
-          _buildSettingsDivider(),
-          _buildRadioTile(
+          _buildSettingsDivider(isDark),
+          _buildThemeRadioTile(
             icon: Icons.nightlight_round,
-            title: 'Dark',
-            value: 'dark',
-            groupValue: _settingsData!.preferences.theme,
+            title: l10n.themeDark,
+            value: ThemeMode.dark,
+            groupValue: settingsProvider.themeMode,
+            isDark: isDark,
             onChanged: (value) {
-              setState(() {
-                _settingsData!.preferences.theme = value!;
-              });
-              _saveSettings();
+              settingsProvider.setThemeMode(value!);
             },
           ),
-          _buildSettingsDivider(),
-          _buildRadioTile(
+          _buildSettingsDivider(isDark),
+          _buildThemeRadioTile(
             icon: Icons.computer,
-            title: 'System',
-            value: 'system',
-            groupValue: _settingsData!.preferences.theme,
+            title: l10n.themeSystem,
+            value: ThemeMode.system,
+            groupValue: settingsProvider.themeMode,
+            isDark: isDark,
             onChanged: (value) {
-              setState(() {
-                _settingsData!.preferences.theme = value!;
-              });
-              _saveSettings();
+              settingsProvider.setThemeMode(value!);
             },
           ),
         ],
@@ -408,10 +447,54 @@ class _MyProfilePageState extends State<MyProfilePage> {
     );
   }
 
-  Widget _buildNotificationsSection() {
+  Widget _buildLanguageSection(bool isDark, AppLocalizations l10n) {
+    final localeProvider = Provider.of<LocaleProvider>(context);
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          _buildLanguageRadioTile(
+            title: l10n.languageEn,
+            value: 'en',
+            groupValue: localeProvider.languageCode,
+            isDark: isDark,
+            onChanged: (value) {
+              localeProvider.setLocale(value!);
+            },
+          ),
+          _buildSettingsDivider(isDark),
+          _buildLanguageRadioTile(
+            title: l10n.languageFr,
+            value: 'fr',
+            groupValue: localeProvider.languageCode,
+            isDark: isDark,
+            onChanged: (value) {
+              localeProvider.setLocale(value!);
+            },
+          ),
+          _buildSettingsDivider(isDark),
+          _buildLanguageRadioTile(
+            title: l10n.languageAr,
+            value: 'ar',
+            groupValue: localeProvider.languageCode,
+            isDark: isDark,
+            onChanged: (value) {
+              localeProvider.setLocale(value!);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationsSection(bool isDark, AppLocalizations l10n) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -430,13 +513,14 @@ class _MyProfilePageState extends State<MyProfilePage> {
             ),
           ),
           const SizedBox(width: 16),
-          const Expanded(
+          Expanded(
             child: Text(
-              'Enable Notifications',
+              l10n.enableNotifications,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
+                color:
+                    isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
               ),
             ),
           ),
@@ -448,47 +532,147 @@ class _MyProfilePageState extends State<MyProfilePage> {
               });
               _saveSettings();
             },
-            activeThumbColor: AppColors.primary,
+            activeColor: AppColors.primary,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildUnitsSection() {
+  Widget _buildUnitsSection(bool isDark) {
+    final settingsProvider = Provider.of<SettingsProvider>(context);
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
           _buildRadioTile(
-            title: 'g/dL',
-            value: 'g/dL',
-            groupValue: _settingsData!.preferences.units,
+            title: 'mg/dL',
+            value: 'mg/dL',
+            groupValue: settingsProvider.units,
+            isDark: isDark,
             onChanged: (value) {
-              setState(() {
-                _settingsData!.preferences.units = value!;
-              });
-              _saveSettings();
+              settingsProvider.setUnits(value!);
             },
             showIcon: false,
           ),
-          _buildSettingsDivider(),
+          _buildSettingsDivider(isDark),
           _buildRadioTile(
-            title: 'mmol/dL',
-            value: 'mmol/dL',
-            groupValue: _settingsData!.preferences.units,
+            title: 'mmol/L',
+            value: 'mmol/L',
+            groupValue: settingsProvider.units,
+            isDark: isDark,
             onChanged: (value) {
-              setState(() {
-                _settingsData!.preferences.units = value!;
-              });
-              _saveSettings();
+              settingsProvider.setUnits(value!);
             },
             showIcon: false,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildThemeRadioTile({
+    required IconData icon,
+    required String title,
+    required ThemeMode value,
+    required ThemeMode groupValue,
+    required bool isDark,
+    required ValueChanged<ThemeMode?> onChanged,
+  }) {
+    final isSelected = value == groupValue;
+
+    return InkWell(
+      onTap: () => onChanged(value),
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: AppColors.primary,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: isSelected
+                      ? (isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.textPrimary)
+                      : (isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.textSecondary),
+                ),
+              ),
+            ),
+            Radio<ThemeMode>(
+              value: value,
+              groupValue: groupValue,
+              onChanged: onChanged,
+              activeColor: AppColors.primary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageRadioTile({
+    required String title,
+    required String value,
+    required String groupValue,
+    required bool isDark,
+    required ValueChanged<String?> onChanged,
+  }) {
+    final isSelected = value == groupValue;
+
+    return InkWell(
+      onTap: () => onChanged(value),
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: isSelected
+                      ? (isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.textPrimary)
+                      : (isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.textSecondary),
+                ),
+              ),
+            ),
+            Radio<String>(
+              value: value,
+              groupValue: groupValue,
+              onChanged: onChanged,
+              activeColor: AppColors.primary,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -498,6 +682,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
     required String title,
     required String value,
     required String groupValue,
+    required bool isDark,
     required ValueChanged<String?> onChanged,
     bool showIcon = true,
   }) {
@@ -532,8 +717,12 @@ class _MyProfilePageState extends State<MyProfilePage> {
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: isSelected
-                      ? AppColors.textPrimary
-                      : AppColors.textSecondary,
+                      ? (isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.textPrimary)
+                      : (isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.textSecondary),
                 ),
               ),
             ),
@@ -549,29 +738,49 @@ class _MyProfilePageState extends State<MyProfilePage> {
     );
   }
 
-  Widget _buildSettingsDivider() =>
-      const Divider(height: 1, indent: 16, endIndent: 16);
+  Widget _buildSettingsDivider(bool isDark) => Divider(
+        height: 1,
+        indent: 16,
+        endIndent: 16,
+        color: isDark ? Colors.grey[700] : Colors.grey[300],
+      );
 
   void _showDeleteAccountDialog() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppColors.darkCardBackground : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        title: const Text(
-          'Delete Account',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.deleteAccount,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+          ),
         ),
-        content: const Text(
-          'Are you sure you want to delete your account? This action cannot be undone.',
+        content: Text(
+          l10n.deleteAccountConfirm,
+          style: TextStyle(
+            color:
+                isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: AppColors.textSecondary),
+            child: Text(
+              l10n.cancel,
+              style: TextStyle(
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.textSecondary,
+              ),
             ),
           ),
           ElevatedButton(
@@ -585,12 +794,17 @@ class _MyProfilePageState extends State<MyProfilePage> {
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Account deleted')),
+                SnackBar(content: Text(l10n.accountDeleted)),
+              );
+              // Navigate to login
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (route) => false,
               );
             },
-            child: const Text(
-              'Sure',
-              style: TextStyle(color: Colors.white),
+            child: Text(
+              l10n.confirm,
+              style: const TextStyle(color: Colors.white),
             ),
           ),
         ],
@@ -599,23 +813,41 @@ class _MyProfilePageState extends State<MyProfilePage> {
   }
 
   void _showLogoutDialog() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppColors.darkCardBackground : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        title: const Text(
-          'Log Out',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.logout,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+          ),
         ),
-        content: const Text('Are you sure you want to log out?'),
+        content: Text(
+          l10n.logoutConfirm,
+          style: TextStyle(
+            color:
+                isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: AppColors.textSecondary),
+            child: Text(
+              l10n.cancel,
+              style: TextStyle(
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.textSecondary,
+              ),
             ),
           ),
           ElevatedButton(
@@ -629,12 +861,17 @@ class _MyProfilePageState extends State<MyProfilePage> {
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Logged out successfully')),
+                SnackBar(content: Text(l10n.loggedOut)),
+              );
+              // Navigate to login
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (route) => false,
               );
             },
-            child: const Text(
-              'Sure',
-              style: TextStyle(color: Colors.white),
+            child: Text(
+              l10n.confirm,
+              style: const TextStyle(color: Colors.white),
             ),
           ),
         ],

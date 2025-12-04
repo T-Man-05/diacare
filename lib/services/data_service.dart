@@ -184,6 +184,38 @@ class DataService {
     return data['reminders'] as List<dynamic>;
   }
 
+  /// Authenticate user with email and password
+  /// Returns user data if successful, null if authentication fails
+  Future<Map<String, dynamic>?> authenticateUser(
+      String email, String password) async {
+    final data = await _dataSource.fetchData();
+    final users = data['users'] as List<dynamic>?;
+
+    if (users == null) return null;
+
+    for (final user in users) {
+      if (user['email'] == email && user['password'] == password) {
+        return Map<String, dynamic>.from(user);
+      }
+    }
+    return null;
+  }
+
+  /// Check if email already exists in users list
+  Future<bool> emailExists(String email) async {
+    final data = await _dataSource.fetchData();
+    final users = data['users'] as List<dynamic>?;
+
+    if (users == null) return false;
+
+    for (final user in users) {
+      if (user['email'] == email) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// Update a specific reminder
   Future<void> updateReminder(
       String reminderId, Map<String, dynamic> reminderData) async {

@@ -1,4 +1,27 @@
 {
+  "users": [
+    {
+      "id": "1",
+      "email": "islam@email.com",
+      "password": "benali",
+      "full_name": "Charlotte King",
+      "username": "@charlotteking"
+    },
+    {
+      "id": "2",
+      "email": "test@diacare.com",
+      "password": "test123",
+      "full_name": "Test User",
+      "username": "@testuser"
+    },
+    {
+      "id": "3",
+      "email": "demo@diacare.com",
+      "password": "demo123",
+      "full_name": "Demo User",
+      "username": "@demouser"
+    }
+  ],
   "app_strings": {
     "app_name": "DiaCare",
     "welcome": "Welcome!",

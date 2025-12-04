@@ -5,8 +5,13 @@ import '../utils/constants.dart';
 /// Reusable Info Card Widget for health metrics
 class InfoCard extends StatelessWidget {
   final HealthCard healthCard;
+  final bool isDark;
 
-  const InfoCard({Key? key, required this.healthCard}) : super(key: key);
+  const InfoCard({
+    Key? key,
+    required this.healthCard,
+    this.isDark = false,
+  }) : super(key: key);
 
   IconData _getIconForTitle(String title) {
     switch (title.toLowerCase()) {
@@ -50,11 +55,11 @@ class InfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.cardPadding),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -69,9 +74,11 @@ class InfoCard extends StatelessWidget {
             children: [
               Text(
                 healthCard.title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: AppColors.textSecondary,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -92,17 +99,21 @@ class InfoCard extends StatelessWidget {
                 TextSpan(
                   text:
                       '${healthCard.value.toStringAsFixed(healthCard.value.truncateToDouble() == healthCard.value ? 0 : 1)} ',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.textPrimary,
                   ),
                 ),
                 TextSpan(
                   text: healthCard.unit,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.textSecondary,
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.textSecondary,
                   ),
                 ),
               ],

@@ -6,9 +6,10 @@
 /// Features:
 /// - Email and password input fields
 /// - Input validation
+/// - JSON-based user authentication
 /// - Navigation to signup screen
 /// - Password recovery option
-/// - Centralized string management
+/// - Theme-aware UI
 /// ============================================================================
 
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ import 'signup.dart';
 import 'home.dart';
 import '../utils/constants.dart';
 import '../services/data_service.dart';
+import '../l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -35,29 +37,8 @@ class _LoginScreenState extends State<LoginScreen> {
   // Loading state for async operations
   bool _isLoading = false;
 
-  // App strings loaded from centralized data
-  Map<String, dynamic>? _strings;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadStrings();
-  }
-
-  /// Load centralized strings from data service
-  Future<void> _loadStrings() async {
-    try {
-      final dataService = DataService.instance;
-      final strings = await dataService.getAppStrings();
-      if (mounted) {
-        setState(() {
-          _strings = strings;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading strings: $e');
-    }
-  }
+  // Error message for authentication
+  String? _authError;
 
   @override
   void dispose() {
@@ -68,32 +49,36 @@ class _LoginScreenState extends State<LoginScreen> {
 
   /// Validate email format
   String? _validateEmail(String? value) {
+    final l10n = AppLocalizations.of(context);
     if (value == null || value.isEmpty) {
-      return _strings?['validation']?['email_required'] ?? 'Email is required';
+      return l10n.emailRequired;
     }
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(value)) {
-      return _strings?['validation']?['email_invalid'] ??
-          'Please enter a valid email';
+      return l10n.invalidEmail;
     }
     return null;
   }
 
   /// Validate password
   String? _validatePassword(String? value) {
+    final l10n = AppLocalizations.of(context);
     if (value == null || value.isEmpty) {
-      return _strings?['validation']?['password_required'] ??
-          'Password is required';
+      return l10n.passwordRequired;
     }
     if (value.length < 6) {
-      return _strings?['validation']?['password_too_short'] ??
-          'Password must be at least 6 characters';
+      return l10n.passwordTooShort;
     }
     return null;
   }
 
   /// Handle login button press
   Future<void> _handleLogin() async {
+    // Clear previous auth error
+    setState(() {
+      _authError = null;
+    });
+
     // Validate form
     if (!_formKey.currentState!.validate()) {
       return;
@@ -104,15 +89,26 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // TODO: Implement actual authentication logic here
-      // For now, just navigate to home
-      await Future.delayed(const Duration(milliseconds: 500));
+      final dataService = DataService.instance;
+      final user = await dataService.authenticateUser(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
 
-      if (mounted) {
+      if (!mounted) return;
+
+      if (user != null) {
+        // Authentication successful
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const MainNavigationPage()),
         );
+      } else {
+        // Authentication failed
+        final l10n = AppLocalizations.of(context);
+        setState(() {
+          _authError = l10n.invalidCredentials;
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -131,23 +127,21 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Show loading indicator while strings are loading
-    if (_strings == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 64),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                _strings?['app_name'] ?? 'DiaCare',
+                l10n.appTitle,
                 style: const TextStyle(
                   fontFamily: 'Borel',
                   fontWeight: FontWeight.w400,
@@ -164,12 +158,14 @@ class _LoginScreenState extends State<LoginScreen> {
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(39),
-                  color: const Color(0xFFFFFFFD),
-                  boxShadow: const [
+                  color: theme.cardColor,
+                  boxShadow: [
                     BoxShadow(
-                      color: Color(0x40000000),
+                      color: isDark
+                          ? Colors.black.withOpacity(0.3)
+                          : const Color(0x40000000),
                       blurRadius: 13,
-                      offset: Offset(0, 4),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
@@ -184,34 +180,58 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 32),
                         Center(
                           child: Text(
-                            _strings?['welcome'] ?? 'Welcome!',
-                            style: const TextStyle(
+                            l10n.welcomeBack,
+                            style: TextStyle(
                               fontFamily: 'Borel',
                               fontWeight: FontWeight.w400,
                               fontStyle: FontStyle.normal,
                               fontSize: 42,
                               height: 1.0,
-                              color: Color(0XFF5D5D5D),
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : const Color(0XFF5D5D5D),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 64),
+                        const SizedBox(height: 48),
+
+                        // Show authentication error if any
+                        if (_authError != null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                  color: Colors.red.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline,
+                                    color: Colors.red, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _authError!,
+                                    style: const TextStyle(
+                                        color: Colors.red, fontSize: 14),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
 
                         // Email field with validation
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            _strings?['login']?['email_label'] ??
-                                'Email Address',
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              fontStyle: FontStyle.normal,
-                              fontSize: 16,
-                              height: 1.0,
-                              letterSpacing: 0.0,
-                              color: Color(0xFF5D5D5D),
-                            ),
+                        Text(
+                          l10n.email,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : const Color(0xFF5D5D5D),
                           ),
                         ),
 
@@ -220,15 +240,26 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
                           validator: _validateEmail,
+                          style: TextStyle(
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
+                          ),
                           decoration: InputDecoration(
+                            filled: true,
+                            fillColor:
+                                isDark ? AppColors.darkSurface : Colors.white,
                             enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFD9D9D9), width: 1.5),
+                              borderSide: BorderSide(
+                                  color: isDark
+                                      ? Colors.grey[700]!
+                                      : const Color(0xFFD9D9D9),
+                                  width: 1.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: const BorderSide(
-                                  color: Color(0xFF0E8278), width: 2),
+                                  color: AppColors.primary, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             errorBorder: OutlineInputBorder(
@@ -241,8 +272,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                   const BorderSide(color: Colors.red, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            hintText: _strings?['login']?['email_hint'] ??
-                                'Enter your email',
+                            hintText: l10n.email,
+                            hintStyle: TextStyle(
+                              color:
+                                  isDark ? Colors.grey[500] : Colors.grey[400],
+                            ),
                             contentPadding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 12),
                           ),
@@ -251,19 +285,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 16),
 
                         // Password field with validation
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            _strings?['login']?['password_label'] ?? 'Password',
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              fontStyle: FontStyle.normal,
-                              fontSize: 16,
-                              height: 1.0,
-                              letterSpacing: 0.0,
-                              color: Color(0xFF5D5D5D),
-                            ),
+                        Text(
+                          l10n.password,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : const Color(0xFF5D5D5D),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -271,15 +300,26 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _passwordController,
                           obscureText: true,
                           validator: _validatePassword,
+                          style: TextStyle(
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
+                          ),
                           decoration: InputDecoration(
+                            filled: true,
+                            fillColor:
+                                isDark ? AppColors.darkSurface : Colors.white,
                             enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFD9D9D9), width: 1.5),
+                              borderSide: BorderSide(
+                                  color: isDark
+                                      ? Colors.grey[700]!
+                                      : const Color(0xFFD9D9D9),
+                                  width: 1.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: const BorderSide(
-                                  color: Color(0xFF0E8278), width: 2),
+                                  color: AppColors.primary, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             errorBorder: OutlineInputBorder(
@@ -292,14 +332,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                   const BorderSide(color: Colors.red, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            hintText: _strings?['login']?['password_hint'] ??
-                                'Enter your password',
+                            hintText: l10n.password,
+                            hintStyle: TextStyle(
+                              color:
+                                  isDark ? Colors.grey[500] : Colors.grey[400],
+                            ),
                             contentPadding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 12),
                           ),
                         ),
 
-                        const SizedBox(height: 64),
+                        const SizedBox(height: 48),
 
                         // Login button with validation and loading state
                         SizedBox(
@@ -311,6 +354,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                             child: _isLoading
                                 ? const SizedBox(
@@ -322,15 +366,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   )
                                 : Text(
-                                    _strings?['login']?['login_button'] ??
-                                        'Log In',
+                                    l10n.login,
                                     style: const TextStyle(
-                                      fontFamily: 'Inter',
                                       fontWeight: FontWeight.w600,
-                                      fontStyle: FontStyle.normal,
                                       fontSize: 18,
-                                      height: 1.0,
-                                      letterSpacing: 0.0,
                                       color: Colors.white,
                                     ),
                                   ),
@@ -351,22 +390,20 @@ class _LoginScreenState extends State<LoginScreen> {
                                     );
                                   },
                             style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.cardColor,
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                   side: const BorderSide(
                                     color: AppColors.primary,
                                     width: 2,
                                   )),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                             child: Text(
-                              _strings?['login']?['signup_button'] ?? 'Sign Up',
+                              l10n.signup,
                               style: const TextStyle(
-                                fontFamily: 'Inter',
                                 fontWeight: FontWeight.w600,
-                                fontStyle: FontStyle.normal,
                                 fontSize: 18,
-                                height: 1.0,
-                                letterSpacing: 0.0,
                                 color: AppColors.primary,
                               ),
                             ),
@@ -381,16 +418,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              const SizedBox(height: 8),
-              Text(
-                _strings?['login']?['forgot_password'] ??
-                    'Forgot your password?',
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w500,
-                  decoration: TextDecoration.underline,
-                  decorationColor: AppColors.primary,
-                  fontSize: 14,
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  // TODO: Implement forgot password
+                },
+                child: Text(
+                  l10n.forgotPassword,
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w500,
+                    decoration: TextDecoration.underline,
+                    decorationColor: AppColors.primary,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ],

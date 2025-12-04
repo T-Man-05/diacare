@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 import '../widgets/chart_card.dart';
 import '../widgets/blood_sugar_chart.dart';
 import '../widgets/carbs_chart.dart';
@@ -14,29 +15,43 @@ class InsightsPage extends StatefulWidget {
 }
 
 class _InsightsPageState extends State<InsightsPage> {
-  late final ChartData _bloodSugarData;
-
-  @override
-  void initState() {
-    super.initState();
-    _bloodSugarData = ChartData(
-      title: 'Blood Sugar',
+  ChartData _getBloodSugarData(AppLocalizations l10n) {
+    return ChartData(
+      title: l10n.bloodSugar,
       data: {
         'before_meal': [120, 110, 130, 125, 140, 100, 105],
         'after_meal': [160, 150, 140, 130, 145, 135, 120],
       },
-      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      days: [
+        l10n.dayMon,
+        l10n.dayTue,
+        l10n.dayWed,
+        l10n.dayThu,
+        l10n.dayFri,
+        l10n.daySat,
+        l10n.daySun,
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final backgroundColor =
+        isDark ? AppColors.darkBackground : AppColors.background;
+    final headerBackground =
+        isDark ? AppColors.darkCardBackground : Colors.white;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: backgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
+            _buildHeader(headerBackground, textPrimary, l10n),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
@@ -44,22 +59,22 @@ class _InsightsPageState extends State<InsightsPage> {
                   children: [
                     BloodSugarChart(
                       flag: false,
-                      chartData: _bloodSugarData,
+                      chartData: _getBloodSugarData(l10n),
                       onSeeDetails: () {
                         // No action needed in insights page
                       },
                     ),
                     const SizedBox(height: 16),
-                    const ChartCard(
-                      title: 'Carbs',
-                      unit: '(calories)',
-                      child: CarbsChart(),
+                    ChartCard(
+                      title: l10n.carbs,
+                      unit: '(${l10n.translate('units.calories')})',
+                      child: const CarbsChart(),
                     ),
                     const SizedBox(height: 16),
-                    const ChartCard(
-                      title: 'Daily Activity',
-                      unit: '(km)',
-                      child: ActivityChart(),
+                    ChartCard(
+                      title: l10n.dailyActivity,
+                      unit: '(${l10n.translate('units.km')})',
+                      child: const ActivityChart(),
                     ),
                     const SizedBox(height: 80),
                   ],
@@ -69,22 +84,23 @@ class _InsightsPageState extends State<InsightsPage> {
           ],
         ),
       ),
-      // bottomNavigationBar: _buildBottomNav(),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(
+      Color headerBackground, Color textPrimary, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: Colors.white,
+      color: headerBackground,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'Insights',
+          Text(
+            l10n.insightsPageTitle,
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
+              color: textPrimary,
             ),
           ),
           Container(
@@ -103,7 +119,4 @@ class _InsightsPageState extends State<InsightsPage> {
       ),
     );
   }
-
-  // Removed unused _buildBottomNav() and _buildNavItem() methods
-  // Navigation is now handled by MainNavigationPage
 }
