@@ -8,22 +8,40 @@
 /// - RTL support for Arabic
 ///
 /// Uses the Cubit pattern from flutter_bloc for simpler state management.
+/// Settings are persisted to SharedPreferences automatically.
 /// ============================================================================
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'locale_state.dart';
+import '../../services/preferences_service.dart';
 
 /// Cubit for managing application locale/language
 ///
 /// This Cubit handles language preferences and switching.
-/// It emits new states when locale is changed.
+/// It emits new states when locale is changed and persists to SharedPreferences.
 class LocaleCubit extends Cubit<LocaleState> {
+  final PreferencesService _prefs = PreferencesService();
+
   /// Supported language codes
   static const List<String> supportedLanguages = ['en', 'fr', 'ar'];
 
-  /// Constructor initializes with default locale state (English)
-  LocaleCubit() : super(const LocaleState());
+  /// Constructor initializes with default locale state, then loads saved locale
+  LocaleCubit() : super(const LocaleState()) {
+    _loadSavedLocale();
+  }
+
+  /// Load saved locale from SharedPreferences
+  Future<void> _loadSavedLocale() async {
+    try {
+      final savedLocale = _prefs.getLocale();
+      if (supportedLanguages.contains(savedLocale)) {
+        emit(state.copyWith(locale: Locale(savedLocale)));
+      }
+    } catch (e) {
+      debugPrint('Error loading saved locale: $e');
+    }
+  }
 
   // ============================================================================
   // LOCALE MANAGEMENT
@@ -35,6 +53,7 @@ class LocaleCubit extends Cubit<LocaleState> {
   void setLocale(String languageCode) {
     if (supportedLanguages.contains(languageCode)) {
       emit(state.copyWith(locale: Locale(languageCode)));
+      _prefs.setLocale(languageCode); // Save to SharedPreferences
     }
   }
 
@@ -44,6 +63,7 @@ class LocaleCubit extends Cubit<LocaleState> {
   void setLocaleFromLocale(Locale locale) {
     if (supportedLanguages.contains(locale.languageCode)) {
       emit(state.copyWith(locale: locale));
+      _prefs.setLocale(locale.languageCode); // Save to SharedPreferences
     }
   }
 
@@ -51,7 +71,10 @@ class LocaleCubit extends Cubit<LocaleState> {
   void cycleLanguage() {
     final currentIndex = supportedLanguages.indexOf(state.languageCode);
     final nextIndex = (currentIndex + 1) % supportedLanguages.length;
-    emit(state.copyWith(locale: Locale(supportedLanguages[nextIndex])));
+    final newLocale = Locale(supportedLanguages[nextIndex]);
+    emit(state.copyWith(locale: newLocale));
+    _prefs
+        .setLocale(supportedLanguages[nextIndex]); // Save to SharedPreferences
   }
 
   // ============================================================================

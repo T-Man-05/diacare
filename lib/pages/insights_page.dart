@@ -6,6 +6,7 @@ import '../widgets/carbs_chart.dart';
 import '../widgets/activity_chart.dart';
 import '../models/chart_data.dart';
 import '../utils/constants.dart';
+import '../services/data_service_new.dart';
 
 class InsightsPage extends StatefulWidget {
   const InsightsPage({Key? key}) : super(key: key);
@@ -15,23 +16,83 @@ class InsightsPage extends StatefulWidget {
 }
 
 class _InsightsPageState extends State<InsightsPage> {
-  ChartData _getBloodSugarData(AppLocalizations l10n) {
-    return ChartData(
-      title: l10n.bloodSugar,
-      data: {
-        'before_meal': [120, 110, 130, 125, 140, 100, 105],
-        'after_meal': [160, 150, 140, 130, 145, 135, 120],
-      },
-      days: [
-        l10n.dayMon,
-        l10n.dayTue,
-        l10n.dayWed,
-        l10n.dayThu,
-        l10n.dayFri,
-        l10n.daySat,
-        l10n.daySun,
-      ],
-    );
+  ChartData? _bloodSugarData;
+  Map<String, dynamic>? _carbsData;
+  Map<String, dynamic>? _activityData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadChartData();
+  }
+
+  Future<void> _loadChartData() async {
+    try {
+      final dataService = DataService.instance;
+
+      // Load all chart data
+      final glucoseData = await dataService.getGlucoseChartData();
+      final carbsData = await dataService.getCarbsChartData();
+      final activityData = await dataService.getActivityChartData();
+
+      if (!mounted) return;
+
+      setState(() {
+        // Create ChartData for blood sugar
+        _bloodSugarData = ChartData(
+          title: 'Blood Sugar',
+          data: {
+            'before_meal':
+                glucoseData['before_meal']?.map((e) => e.toInt()).toList() ??
+                    [],
+            'after_meal':
+                glucoseData['after_meal']?.map((e) => e.toInt()).toList() ?? [],
+          },
+          days: _generateDayLabels(),
+        );
+
+        _carbsData = carbsData;
+        _activityData = activityData;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading chart data: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  List<String> _generateDayLabels() {
+    final now = DateTime.now();
+    final days = <String>[];
+    for (int i = 6; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      days.add(_getDayName(date.weekday));
+    }
+    return days;
+  }
+
+  String _getDayName(int weekday) {
+    switch (weekday) {
+      case 1:
+        return 'Mon';
+      case 2:
+        return 'Tue';
+      case 3:
+        return 'Wed';
+      case 4:
+        return 'Thu';
+      case 5:
+        return 'Fri';
+      case 6:
+        return 'Sat';
+      case 7:
+        return 'Sun';
+      default:
+        return '';
+    }
   }
 
   @override
@@ -46,6 +107,49 @@ class _InsightsPageState extends State<InsightsPage> {
         isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
     final l10n = AppLocalizations.of(context);
 
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: backgroundColor,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // Default empty chart data
+    final bloodSugarData = _bloodSugarData ??
+        ChartData(
+          title: l10n.bloodSugar,
+          data: {'before_meal': [], 'after_meal': []},
+          days: _generateDayLabels(),
+        );
+
+    final carbsValues = (_carbsData?['values'] as List<dynamic>?)
+            ?.map((e) => (e as num).toDouble())
+            .toList() ??
+        [];
+    final carbsDays = (_carbsData?['days'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        [];
+    final carbsHasData = (_carbsData?['hasData'] as List<dynamic>?)
+            ?.map((e) => e as bool)
+            .toList() ??
+        [];
+    final carbsTotal = (_carbsData?['totalRecords'] as int?) ?? 0;
+
+    final activityValues = (_activityData?['values'] as List<dynamic>?)
+            ?.map((e) => (e as num).toDouble())
+            .toList() ??
+        [];
+    final activityDays = (_activityData?['days'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        [];
+    final activityHasData = (_activityData?['hasData'] as List<dynamic>?)
+            ?.map((e) => e as bool)
+            .toList() ??
+        [];
+    final activityTotal = (_activityData?['totalRecords'] as int?) ?? 0;
+
     return Scaffold(
       backgroundColor: backgroundColor,
       body: SafeArea(
@@ -59,7 +163,7 @@ class _InsightsPageState extends State<InsightsPage> {
                   children: [
                     BloodSugarChart(
                       flag: false,
-                      chartData: _getBloodSugarData(l10n),
+                      chartData: bloodSugarData,
                       onSeeDetails: () {
                         // No action needed in insights page
                       },
@@ -68,13 +172,23 @@ class _InsightsPageState extends State<InsightsPage> {
                     ChartCard(
                       title: l10n.carbs,
                       unit: '(${l10n.translate('units.calories')})',
-                      child: const CarbsChart(),
+                      child: CarbsChart(
+                        values: carbsValues,
+                        days: carbsDays,
+                        hasData: carbsHasData,
+                        totalRecords: carbsTotal,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     ChartCard(
                       title: l10n.dailyActivity,
                       unit: '(${l10n.translate('units.km')})',
-                      child: const ActivityChart(),
+                      child: ActivityChart(
+                        values: activityValues,
+                        days: activityDays,
+                        hasData: activityHasData,
+                        totalRecords: activityTotal,
+                      ),
                     ),
                     const SizedBox(height: 80),
                   ],

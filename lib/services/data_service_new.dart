@@ -395,6 +395,34 @@ class DataService {
     return await _db.getGlucoseChartData(userId);
   }
 
+  /// Get carbs chart data for the week
+  Future<Map<String, dynamic>> getCarbsChartData() async {
+    final userId = currentUserId;
+    if (userId == null) {
+      return {
+        'values': <double>[],
+        'days': <String>[],
+        'hasData': <bool>[],
+        'totalRecords': 0,
+      };
+    }
+    return await _db.getCarbsChartData(userId);
+  }
+
+  /// Get activity chart data for the week
+  Future<Map<String, dynamic>> getActivityChartData() async {
+    final userId = currentUserId;
+    if (userId == null) {
+      return {
+        'values': <double>[],
+        'days': <String>[],
+        'hasData': <bool>[],
+        'totalRecords': 0,
+      };
+    }
+    return await _db.getActivityChartData(userId);
+  }
+
   // ============================================================================
   // HEALTH CARDS
   // ============================================================================

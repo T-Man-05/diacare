@@ -8,19 +8,53 @@
 ///
 /// Uses the Cubit pattern from flutter_bloc for simpler state management
 /// when complex events are not needed.
+///
+/// Settings are persisted to SharedPreferences automatically.
 /// ============================================================================
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'settings_state.dart';
+import '../../services/preferences_service.dart';
 
 /// Cubit for managing application settings
 ///
 /// This Cubit handles theme and units preferences.
-/// It emits new states when settings are changed.
+/// It emits new states when settings are changed and persists to SharedPreferences.
 class SettingsCubit extends Cubit<SettingsState> {
-  /// Constructor initializes with default settings state
-  SettingsCubit() : super(const SettingsState());
+  final PreferencesService _prefs = PreferencesService();
+
+  /// Constructor initializes with default settings state, then loads saved settings
+  SettingsCubit() : super(const SettingsState()) {
+    _loadSavedSettings();
+  }
+
+  /// Load saved settings from SharedPreferences
+  Future<void> _loadSavedSettings() async {
+    try {
+      final savedTheme = _prefs.getTheme();
+      final savedUnits = _prefs.getUnits();
+
+      ThemeMode themeMode;
+      switch (savedTheme) {
+        case 'light':
+          themeMode = ThemeMode.light;
+          break;
+        case 'dark':
+          themeMode = ThemeMode.dark;
+          break;
+        case 'system':
+          themeMode = ThemeMode.system;
+          break;
+        default:
+          themeMode = ThemeMode.light;
+      }
+
+      emit(state.copyWith(themeMode: themeMode, units: savedUnits));
+    } catch (e) {
+      debugPrint('Error loading saved settings: $e');
+    }
+  }
 
   // ============================================================================
   // THEME MANAGEMENT
@@ -45,6 +79,7 @@ class SettingsCubit extends Cubit<SettingsState> {
         newMode = ThemeMode.light;
     }
     emit(state.copyWith(themeMode: newMode));
+    _prefs.setTheme(theme); // Save to SharedPreferences
   }
 
   /// Set theme mode directly
@@ -52,6 +87,20 @@ class SettingsCubit extends Cubit<SettingsState> {
   /// [mode] - ThemeMode enum value
   void setThemeMode(ThemeMode mode) {
     emit(state.copyWith(themeMode: mode));
+    // Save to SharedPreferences
+    String themeStr;
+    switch (mode) {
+      case ThemeMode.light:
+        themeStr = 'light';
+        break;
+      case ThemeMode.dark:
+        themeStr = 'dark';
+        break;
+      case ThemeMode.system:
+        themeStr = 'system';
+        break;
+    }
+    _prefs.setTheme(themeStr);
   }
 
   /// Toggle between light and dark themes
@@ -59,6 +108,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     final newMode =
         state.themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
     emit(state.copyWith(themeMode: newMode));
+    _prefs.setTheme(newMode == ThemeMode.light ? 'light' : 'dark');
   }
 
   // ============================================================================
@@ -71,6 +121,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   void setUnits(String units) {
     if (units == 'mg/dL' || units == 'mmol/L') {
       emit(state.copyWith(units: units));
+      _prefs.setUnits(units); // Save to SharedPreferences
     }
   }
 
@@ -78,6 +129,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   void toggleUnits() {
     final newUnits = state.units == 'mg/dL' ? 'mmol/L' : 'mg/dL';
     emit(state.copyWith(units: newUnits));
+    _prefs.setUnits(newUnits);
   }
 
   // ============================================================================

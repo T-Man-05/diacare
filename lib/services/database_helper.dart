@@ -427,6 +427,109 @@ class DatabaseHelper {
     };
   }
 
+  /// Get weekly carbs chart data
+  /// Returns a map with day names as keys and carb values
+  Future<Map<String, dynamic>> getCarbsChartData(int userId) async {
+    final db = await database;
+    final now = DateTime.now();
+
+    // Get data for the last 7 days
+    List<double> values = [];
+    List<String> days = [];
+    List<bool> hasData = [];
+
+    for (int i = 6; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      final dateStr = date.toIso8601String().split('T')[0];
+      final dayName = _getDayName(date.weekday);
+
+      final results = await db.query(
+        'health_cards',
+        where: 'user_id = ? AND card_type = ? AND recorded_date = ?',
+        whereArgs: [userId, 'carbs', dateStr],
+      );
+
+      days.add(dayName);
+      if (results.isNotEmpty) {
+        values.add((results.first['value'] as num).toDouble());
+        hasData.add(true);
+      } else {
+        values.add(0.0);
+        hasData.add(false);
+      }
+    }
+
+    return {
+      'values': values,
+      'days': days,
+      'hasData': hasData,
+      'totalRecords': hasData.where((h) => h).length,
+    };
+  }
+
+  /// Get weekly activity chart data
+  /// Returns activity data in km (converted from steps: 1 km ≈ 1312 steps)
+  Future<Map<String, dynamic>> getActivityChartData(int userId) async {
+    final db = await database;
+    final now = DateTime.now();
+
+    List<double> values = [];
+    List<String> days = [];
+    List<bool> hasData = [];
+
+    for (int i = 6; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      final dateStr = date.toIso8601String().split('T')[0];
+      final dayName = _getDayName(date.weekday);
+
+      final results = await db.query(
+        'health_cards',
+        where: 'user_id = ? AND card_type = ? AND recorded_date = ?',
+        whereArgs: [userId, 'activity', dateStr],
+      );
+
+      days.add(dayName);
+      if (results.isNotEmpty) {
+        // Convert steps to km (1 km ≈ 1312 steps)
+        final steps = (results.first['value'] as num).toDouble();
+        values.add(steps / 1312.0);
+        hasData.add(true);
+      } else {
+        values.add(0.0);
+        hasData.add(false);
+      }
+    }
+
+    return {
+      'values': values,
+      'days': days,
+      'hasData': hasData,
+      'totalRecords': hasData.where((h) => h).length,
+    };
+  }
+
+  /// Get day name from weekday number
+  String _getDayName(int weekday) {
+    switch (weekday) {
+      case 1:
+        return 'Mon';
+      case 2:
+        return 'Tue';
+      case 3:
+        return 'Wed';
+      case 4:
+        return 'Thu';
+      case 5:
+        return 'Fri';
+      case 6:
+        return 'Sat';
+      case 7:
+        return 'Sun';
+      default:
+        return '';
+    }
+  }
+
   // ============================================================================
   // HEALTH CARDS OPERATIONS
   // ============================================================================

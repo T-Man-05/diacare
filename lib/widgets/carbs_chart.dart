@@ -5,15 +5,26 @@ import 'legend_item.dart';
 import '../utils/constants.dart';
 
 class CarbsChart extends StatelessWidget {
-  const CarbsChart({Key? key}) : super(key: key);
+  final List<double> values;
+  final List<String> days;
+  final List<bool> hasData;
+  final int totalRecords;
 
-  BarChartGroupData _makeBarGroup(int x, double y, Color color) {
+  const CarbsChart({
+    Key? key,
+    required this.values,
+    required this.days,
+    required this.hasData,
+    required this.totalRecords,
+  }) : super(key: key);
+
+  BarChartGroupData _makeBarGroup(int x, double y, Color color, bool showData) {
     return BarChartGroupData(
       x: x,
       barRods: [
         BarChartRodData(
-          toY: y,
-          color: color,
+          toY: showData ? y : 0,
+          color: showData ? color : Colors.transparent,
           width: 32,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(6),
@@ -30,18 +41,35 @@ class CarbsChart extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final textSecondary =
         isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
     final gridColor = isDark ? Colors.grey.shade700 : Colors.grey.shade300;
     final l10n = AppLocalizations.of(context);
 
-    final days = [
-      l10n.daySat,
-      l10n.daySun,
-      l10n.dayMon,
-      l10n.dayTue,
-      l10n.dayWed,
-      l10n.dayThu,
-      l10n.dayFri,
-    ];
+    // Use provided days or default
+    final displayDays = days.isNotEmpty
+        ? days
+        : [
+            l10n.daySat,
+            l10n.daySun,
+            l10n.dayMon,
+            l10n.dayTue,
+            l10n.dayWed,
+            l10n.dayThu,
+            l10n.dayFri,
+          ];
+
+    // Check if we have any data
+    if (totalRecords == 0) {
+      return _buildEmptyState(l10n, textPrimary, textSecondary);
+    }
+
+    // Calculate max Y value based on data
+    double maxY = 200;
+    if (values.isNotEmpty) {
+      final maxValue = values.reduce((a, b) => a > b ? a : b);
+      maxY = (maxValue * 1.2).clamp(50, 500);
+    }
 
     return Column(
       children: [
@@ -55,80 +83,231 @@ class CarbsChart extends StatelessWidget {
         const SizedBox(height: 20),
         SizedBox(
           height: 200,
-          child: BarChart(
-            BarChartData(
-              alignment: BarChartAlignment.spaceAround,
-              maxY: 200,
-              barTouchData: const BarTouchData(enabled: false),
-              titlesData: FlTitlesData(
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: 50,
-                    reservedSize: 40,
-                    getTitlesWidget: (value, meta) {
-                      return Text(
-                        value.toInt().toString(),
-                        style: TextStyle(
-                          color: textSecondary,
-                          fontSize: 12,
+          child: totalRecords == 1
+              ? _buildSinglePointChart(l10n, textSecondary, gridColor)
+              : BarChart(
+                  BarChartData(
+                    alignment: BarChartAlignment.spaceAround,
+                    maxY: maxY,
+                    barTouchData: const BarTouchData(enabled: false),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          interval: maxY / 4,
+                          reservedSize: 40,
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              value.toInt().toString(),
+                              style: TextStyle(
+                                color: textSecondary,
+                                fontSize: 12,
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
-                ),
-                rightTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                topTitles: const AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (value, meta) {
-                      if (value.toInt() >= 0 && value.toInt() < days.length) {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            days[value.toInt()],
-                            style: TextStyle(
-                              color: textSecondary,
-                              fontSize: 12,
-                            ),
-                          ),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          getTitlesWidget: (value, meta) {
+                            final idx = value.toInt();
+                            if (idx >= 0 && idx < displayDays.length) {
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Text(
+                                  displayDays[idx],
+                                  style: TextStyle(
+                                    color: textSecondary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              );
+                            }
+                            return const Text('');
+                          },
+                        ),
+                      ),
+                    ),
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      horizontalInterval: maxY / 4,
+                      getDrawingHorizontalLine: (value) {
+                        return FlLine(
+                          color: gridColor,
+                          strokeWidth: 1,
                         );
-                      }
-                      return const Text('');
-                    },
+                      },
+                    ),
+                    borderData: FlBorderData(show: false),
+                    barGroups: _buildBarGroups(),
                   ),
                 ),
-              ),
-              gridData: FlGridData(
-                show: true,
-                drawVerticalLine: false,
-                horizontalInterval: 50,
-                getDrawingHorizontalLine: (value) {
-                  return FlLine(
-                    color: gridColor,
-                    strokeWidth: 1,
-                  );
-                },
-              ),
-              borderData: FlBorderData(show: false),
-              barGroups: [
-                _makeBarGroup(0, 130, AppColors.primary),
-                _makeBarGroup(1, 155, AppColors.primary),
-                _makeBarGroup(2, 140, AppColors.primary),
-                _makeBarGroup(3, 80, AppColors.primary),
-                _makeBarGroup(4, 165, const Color(0xFFE87B3C)),
-                _makeBarGroup(5, 145, AppColors.primary),
-                _makeBarGroup(6, 110, AppColors.primary),
-              ],
-            ),
-          ),
         ),
       ],
     );
   }
+
+  List<BarChartGroupData> _buildBarGroups() {
+    List<BarChartGroupData> groups = [];
+    for (int i = 0; i < values.length && i < 7; i++) {
+      final value = values[i];
+      final show = hasData.length > i ? hasData[i] : false;
+      // Above 150 is considered above normal
+      final color = value > 150 ? const Color(0xFFE87B3C) : AppColors.primary;
+      groups.add(_makeBarGroup(i, value, color, show));
+    }
+    return groups;
+  }
+
+  Widget _buildEmptyState(
+      AppLocalizations l10n, Color textPrimary, Color textSecondary) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.bar_chart_outlined,
+            size: 48,
+            color: textSecondary,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.noData,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Add carbs data to see the chart',
+            style: TextStyle(
+              fontSize: 12,
+              color: textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSinglePointChart(
+      AppLocalizations l10n, Color textSecondary, Color gridColor) {
+    // Find the single data point
+    int dataIndex = hasData.indexWhere((h) => h);
+    if (dataIndex == -1) dataIndex = 0;
+    final value = values.isNotEmpty ? values[dataIndex] : 0.0;
+    final color = value > 150 ? const Color(0xFFE87B3C) : AppColors.primary;
+
+    // Use provided days or default
+    final displayDays = days.isNotEmpty
+        ? days
+        : [
+            l10n.daySat,
+            l10n.daySun,
+            l10n.dayMon,
+            l10n.dayTue,
+            l10n.dayWed,
+            l10n.dayThu,
+            l10n.dayFri,
+          ];
+
+    return CustomPaint(
+      size: const Size(double.infinity, 200),
+      painter: _SinglePointPainter(
+        value: value,
+        dayIndex: dataIndex,
+        days: displayDays,
+        color: color,
+        textColor: textSecondary,
+        gridColor: gridColor,
+      ),
+    );
+  }
+}
+
+class _SinglePointPainter extends CustomPainter {
+  final double value;
+  final int dayIndex;
+  final List<String> days;
+  final Color color;
+  final Color textColor;
+  final Color gridColor;
+
+  _SinglePointPainter({
+    required this.value,
+    required this.dayIndex,
+    required this.days,
+    required this.color,
+    required this.textColor,
+    required this.gridColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    // Draw grid lines
+    final gridPaint = Paint()
+      ..color = gridColor
+      ..strokeWidth = 1;
+
+    final chartTop = 10.0;
+    final chartBottom = size.height - 30; // Leave space for day labels
+    final chartHeight = chartBottom - chartTop;
+
+    for (int i = 0; i <= 4; i++) {
+      final y = chartBottom - (chartHeight / 4 * i);
+      canvas.drawLine(Offset(40, y), Offset(size.width - 10, y), gridPaint);
+    }
+
+    // Draw day labels at bottom
+    final dayWidth = (size.width - 50) / days.length;
+    for (int i = 0; i < days.length; i++) {
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: days[i],
+          style: TextStyle(color: textColor, fontSize: 12),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      final x = 40 + (i + 0.5) * dayWidth - textPainter.width / 2;
+      textPainter.paint(canvas, Offset(x, size.height - 20));
+    }
+
+    // Draw the point at the correct day position
+    final x = 40 + (dayIndex + 0.5) * dayWidth;
+    final maxY = value * 1.5;
+    final y = chartBottom - (value / maxY * chartHeight);
+
+    // Draw point with glow effect
+    canvas.drawCircle(Offset(x, y), 12, Paint()..color = color.withAlpha(50));
+    canvas.drawCircle(Offset(x, y), 8, paint);
+
+    // Draw value text above the point
+    final valuePainter = TextPainter(
+      text: TextSpan(
+        text: value.toInt().toString(),
+        style: TextStyle(color: textColor, fontSize: 12),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    valuePainter.layout();
+    valuePainter.paint(canvas, Offset(x - valuePainter.width / 2, y - 25));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

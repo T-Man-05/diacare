@@ -16,6 +16,18 @@ class BloodSugarChart extends StatelessWidget {
     required this.flag,
   }) : super(key: key);
 
+  bool get _hasData {
+    final before = chartData.data['before_meal'] ?? [];
+    final after = chartData.data['after_meal'] ?? [];
+    return before.isNotEmpty || after.isNotEmpty;
+  }
+
+  int get _totalDataPoints {
+    final before = chartData.data['before_meal'] ?? [];
+    final after = chartData.data['after_meal'] ?? [];
+    return before.length + after.length;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -33,7 +45,7 @@ class BloodSugarChart extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+            color: Colors.black.withAlpha(isDark ? 51 : 13),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -67,38 +79,9 @@ class BloodSugarChart extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          Row(
-            children: [
-              SizedBox(
-                width: 35,
-                height: 200,
-                child: CustomPaint(
-                  painter: YAxisPainter(
-                    beforeMeal: chartData.data['before_meal'] ?? [],
-                    afterMeal: chartData.data['after_meal'] ?? [],
-                    textColor: textSecondary,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: SizedBox(
-                  height: 200,
-                  child: CustomPaint(
-                    size: const Size(double.infinity, 200),
-                    painter: LineChartPainter(
-                      beforeMeal: chartData.data['before_meal'] ?? [],
-                      afterMeal: chartData.data['after_meal'] ?? [],
-                      days: chartData.days,
-                      textColor: textSecondary,
-                      gridColor:
-                          isDark ? Colors.grey.shade700 : Colors.grey.shade300,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 35),
-            ],
-          ),
+          _hasData
+              ? _buildChart(isDark, textSecondary, l10n)
+              : _buildEmptyState(l10n, textPrimary, textSecondary),
           const SizedBox(height: 16),
           if (flag)
             Center(
@@ -128,6 +111,103 @@ class BloodSugarChart extends StatelessWidget {
     );
   }
 
+  Widget _buildChart(bool isDark, Color textSecondary, AppLocalizations l10n) {
+    final beforeMeal = chartData.data['before_meal'] ?? [];
+    final afterMeal = chartData.data['after_meal'] ?? [];
+    final isSinglePoint = beforeMeal.length <= 1 && afterMeal.length <= 1;
+
+    if (isSinglePoint) {
+      return _buildSinglePointChart(isDark, textSecondary, l10n);
+    }
+
+    return Row(
+      children: [
+        SizedBox(
+          width: 35,
+          height: 200,
+          child: CustomPaint(
+            painter: YAxisPainter(
+              beforeMeal: beforeMeal,
+              afterMeal: afterMeal,
+              textColor: textSecondary,
+            ),
+          ),
+        ),
+        Expanded(
+          child: SizedBox(
+            height: 200,
+            child: CustomPaint(
+              size: const Size(double.infinity, 200),
+              painter: LineChartPainter(
+                beforeMeal: beforeMeal,
+                afterMeal: afterMeal,
+                days: chartData.days,
+                textColor: textSecondary,
+                gridColor: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 35),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState(
+      AppLocalizations l10n, Color textPrimary, Color textSecondary) {
+    return SizedBox(
+      height: 200,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.show_chart_outlined,
+              size: 48,
+              color: textSecondary,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l10n.noData,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Add blood sugar readings to see the chart',
+              style: TextStyle(
+                fontSize: 12,
+                color: textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSinglePointChart(
+      bool isDark, Color textSecondary, AppLocalizations l10n) {
+    final beforeMeal = chartData.data['before_meal'] ?? [];
+    final afterMeal = chartData.data['after_meal'] ?? [];
+
+    return SizedBox(
+      height: 200,
+      child: CustomPaint(
+        size: const Size(double.infinity, 200),
+        painter: SinglePointChartPainter(
+          beforeMeal: beforeMeal,
+          afterMeal: afterMeal,
+          textColor: textSecondary,
+          gridColor: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+        ),
+      ),
+    );
+  }
+
   Widget _buildLegend(String label, Color color, Color textColor) {
     return Row(
       children: [
@@ -147,6 +227,115 @@ class BloodSugarChart extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Custom painter for single point display
+class SinglePointChartPainter extends CustomPainter {
+  final List<int> beforeMeal;
+  final List<int> afterMeal;
+  final Color textColor;
+  final Color gridColor;
+
+  SinglePointChartPainter({
+    required this.beforeMeal,
+    required this.afterMeal,
+    required this.textColor,
+    required this.gridColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final gridPaint = Paint()
+      ..color = gridColor
+      ..strokeWidth = 1;
+
+    // Draw grid lines
+    for (int i = 0; i <= 4; i++) {
+      final y = size.height * (i / 4) - 20;
+      if (y > 0) {
+        canvas.drawLine(Offset(40, y), Offset(size.width - 40, y), gridPaint);
+      }
+    }
+
+    // Draw before meal point if exists
+    if (beforeMeal.isNotEmpty) {
+      final value = beforeMeal.first.toDouble();
+      final paint = Paint()
+        ..color = AppColors.beforeMealColor
+        ..style = PaintingStyle.fill;
+
+      final x = size.width * 0.35;
+      final y = size.height * 0.4;
+
+      // Glow effect
+      canvas.drawCircle(Offset(x, y), 16,
+          Paint()..color = AppColors.beforeMealColor.withAlpha(50));
+      canvas.drawCircle(Offset(x, y), 10, paint);
+
+      // Value label
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: '${value.toInt()} mg/dL',
+          style: TextStyle(color: textColor, fontSize: 11),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(x - textPainter.width / 2, y - 30));
+
+      // Label
+      final labelPainter = TextPainter(
+        text: TextSpan(
+          text: 'Before',
+          style: TextStyle(color: AppColors.beforeMealColor, fontSize: 10),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      labelPainter.layout();
+      labelPainter.paint(canvas, Offset(x - labelPainter.width / 2, y + 15));
+    }
+
+    // Draw after meal point if exists
+    if (afterMeal.isNotEmpty) {
+      final value = afterMeal.first.toDouble();
+      final paint = Paint()
+        ..color = AppColors.afterMealColor
+        ..style = PaintingStyle.fill;
+
+      final x = size.width * 0.65;
+      final y = size.height * 0.5;
+
+      // Glow effect
+      canvas.drawCircle(Offset(x, y), 16,
+          Paint()..color = AppColors.afterMealColor.withAlpha(50));
+      canvas.drawCircle(Offset(x, y), 10, paint);
+
+      // Value label
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: '${value.toInt()} mg/dL',
+          style: TextStyle(color: textColor, fontSize: 11),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(x - textPainter.width / 2, y - 30));
+
+      // Label
+      final labelPainter = TextPainter(
+        text: TextSpan(
+          text: 'After',
+          style: TextStyle(color: AppColors.afterMealColor, fontSize: 10),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      labelPainter.layout();
+      labelPainter.paint(canvas, Offset(x - labelPainter.width / 2, y + 15));
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
 /// Custom painter for Y-axis labels only
