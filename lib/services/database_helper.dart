@@ -880,26 +880,27 @@ class DatabaseHelper {
   Future<void> seedDemoData(int userId) async {
     final now = DateTime.now();
 
-    // Add sample glucose readings for the past week
+    // Add sample glucose readings for the past 7 hours (one per hour)
+    final glucoseValues = [95.0, 110.0, 125.0, 105.0, 140.0, 98.0, 115.0];
+    final readingTypes = [
+      'fasting',
+      'before_meal',
+      'after_meal',
+      'before_meal',
+      'after_meal',
+      'before_meal',
+      'random'
+    ];
+
     for (int i = 6; i >= 0; i--) {
-      final date = now.subtract(Duration(days: i));
+      final readingTime = now.subtract(Duration(hours: i));
 
-      // Before meal reading
       await addGlucoseReading(
         userId: userId,
-        value: 100.0 + (i * 5) + (i % 3 * 10),
+        value: glucoseValues[6 - i],
         unit: 'mg/dL',
-        readingType: 'before_meal',
-        recordedAt: date.copyWith(hour: 8, minute: 0),
-      );
-
-      // After meal reading
-      await addGlucoseReading(
-        userId: userId,
-        value: 130.0 + (i * 5) + (i % 2 * 15),
-        unit: 'mg/dL',
-        readingType: 'after_meal',
-        recordedAt: date.copyWith(hour: 10, minute: 0),
+        readingType: readingTypes[6 - i],
+        recordedAt: readingTime,
       );
     }
 
@@ -911,9 +912,35 @@ class DatabaseHelper {
     await upsertHealthCard(
         userId: userId, cardType: 'activity', value: 3250, unit: 'steps');
     await upsertHealthCard(
-        userId: userId, cardType: 'carbs', value: 522, unit: 'cal');
+        userId: userId, cardType: 'carbs', value: 190, unit: 'g');
     await upsertHealthCard(
         userId: userId, cardType: 'insulin', value: 5, unit: 'units');
+
+    // Add daily activity and carbs data for the past 7 days (for charts)
+    final activityValues = [4500, 3200, 5800, 2900, 6100, 4000, 3250]; // steps
+    final carbsValues = [180, 220, 150, 280, 200, 250, 190]; // grams (max 500g)
+
+    for (int i = 6; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+
+      // Insert activity for each day
+      await upsertHealthCard(
+        userId: userId,
+        cardType: 'activity',
+        value: activityValues[6 - i].toDouble(),
+        unit: 'steps',
+        recordedDate: date,
+      );
+
+      // Insert carbs for each day
+      await upsertHealthCard(
+        userId: userId,
+        cardType: 'carbs',
+        value: carbsValues[6 - i].toDouble(),
+        unit: 'cal',
+        recordedDate: date,
+      );
+    }
 
     // Add sample reminders
     await addReminder(
@@ -942,5 +969,53 @@ class DatabaseHelper {
       isRecurring: true,
       recurrencePattern: 'daily',
     );
+  }
+
+  /// Seed default user: Islam Benali
+  /// Email: nonodzmakafi@gmail.com, Password: 12345678
+  Future<int?> seedDefaultUser() async {
+    final db = await database;
+
+    // Check if user already exists
+    final existing = await db.query(
+      'users',
+      where: 'email = ?',
+      whereArgs: ['helloworld@gmail.com'],
+    );
+
+    if (existing.isNotEmpty) {
+      return existing.first['id'] as int;
+    }
+
+    // Create the user
+    final userId = await createUser(
+      email: 'helloworld@gmail.com',
+      password: '12345678',
+      username: 'islambenali',
+      fullName: 'Islam Benali',
+      dateOfBirth: '1995-06-15',
+      gender: 'Male',
+      height: 175.0,
+      weight: 70.0,
+    );
+
+    // Update diabetic profile with more realistic data
+    await db.update(
+      'diabetic_profiles',
+      {
+        'diabetic_type': 'Type 2',
+        'treatment_type': 'Medication',
+        'min_glucose': 80,
+        'max_glucose': 140,
+        'updated_at': DateTime.now().toIso8601String(),
+      },
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+
+    // Seed demo data for this user
+    await seedDemoData(userId);
+
+    return userId;
   }
 }

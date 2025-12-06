@@ -113,6 +113,55 @@ class _AddDataDialogState extends State<AddDataDialog> {
     }
   }
 
+  /// Validate that values are within realistic ranges
+  String? _validateRange(String type, double value, AppLocalizations l10n) {
+    switch (type) {
+      case 'glucose':
+        // mg/dL range: 20-600, mmol/L range: 1.1-33.3
+        if (widget.currentUnits == 'mg/dL') {
+          if (value < 20 || value > 600) {
+            return 'Glucose must be between 20-600 mg/dL';
+          }
+        } else {
+          if (value < 1.1 || value > 33.3) {
+            return 'Glucose must be between 1.1-33.3 mmol/L';
+          }
+        }
+        break;
+      case 'water':
+        // Max realistic water intake: 10 liters per day
+        if (value > 10) {
+          return 'Water intake cannot exceed 10 L';
+        }
+        break;
+      case 'pills':
+        // Max realistic pills: 20 per entry
+        if (value > 20) {
+          return 'Pills cannot exceed 20';
+        }
+        break;
+      case 'activity':
+        // Max realistic steps: 100,000 per day (ultra marathon level)
+        if (value > 100000) {
+          return 'Steps cannot exceed 100,000';
+        }
+        break;
+      case 'carbs':
+        // Max realistic carbs: 500g per day
+        if (value > 500) {
+          return 'Carbs cannot exceed 500 g';
+        }
+        break;
+      case 'insulin':
+        // Max realistic insulin: 300 units per day (extreme cases)
+        if (value > 300) {
+          return 'Insulin cannot exceed 300 units';
+        }
+        break;
+    }
+    return null;
+  }
+
   /// Convert input value to storage unit
   double _convertToStorageUnit(String type, double inputValue) {
     if (type == 'glucose' && widget.currentUnits == 'mmol/L') {
@@ -372,6 +421,12 @@ class _AddDataDialogState extends State<AddDataDialog> {
                       final number = double.tryParse(value);
                       if (number == null || number < 0) {
                         return l10n.translate('invalidValue');
+                      }
+                      // Validate realistic ranges for each type
+                      final validationError =
+                          _validateRange(_selectedType!, number, l10n);
+                      if (validationError != null) {
+                        return validationError;
                       }
                       return null;
                     },
