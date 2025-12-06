@@ -132,23 +132,30 @@ class _LoginScreenState extends State<LoginScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
+    // Responsive sizing
+    final horizontalPadding = screenWidth < 600 ? 20.0 : 32.0;
+    final verticalPadding = screenHeight < 800 ? 40.0 : 64.0;
+    final titleFontSize = screenWidth < 600 ? 48.0 : 68.0;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 64),
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
                 l10n.appTitle,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Borel',
                   fontWeight: FontWeight.w400,
                   fontStyle: FontStyle.normal,
-                  fontSize: 68,
+                  fontSize: titleFontSize,
                   height: 1.0,
                   letterSpacing: 0.0,
                   color: AppColors.primary,
