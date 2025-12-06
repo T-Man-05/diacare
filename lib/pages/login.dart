@@ -101,9 +101,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (user != null) {
         // Authentication successful - navigate to home
-        Navigator.pushReplacement(
-          context,
+        Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const MainNavigationPage()),
+          (route) => false,
         );
       } else {
         // Authentication failed
