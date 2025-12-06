@@ -1,21 +1,33 @@
-// ========================================
-// lib/widgets/reminder_status_dialog.dart
-// ========================================
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
+import '../utils/constants.dart';
 
 class ReminderStatusDialog extends StatelessWidget {
   final String title;
+  final String? time;
   final Function(String) onStatusSelected;
 
   const ReminderStatusDialog({
     Key? key,
     required this.title,
+    this.time,
     required this.onStatusSelected,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final dialogBackground =
+        isDark ? AppColors.darkCardBackground : Colors.white;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+    final l10n = AppLocalizations.of(context);
+
     return Dialog(
+      backgroundColor: dialogBackground,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -24,18 +36,35 @@ class ReminderStatusDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Icon(
+              Icons.notifications_active,
+              size: 48,
+              color: AppColors.primary,
+            ),
+            const SizedBox(height: 12),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 18,
+              style: TextStyle(
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
+                color: textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
+            if (time != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                time!,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: textSecondary,
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             _buildStatusButton(
               context,
-              'Done',
+              l10n.reminderDone,
               Icons.check_circle,
               Colors.green,
               () {
@@ -46,7 +75,7 @@ class ReminderStatusDialog extends StatelessWidget {
             const SizedBox(height: 12),
             _buildStatusButton(
               context,
-              'Not Done',
+              l10n.reminderNotDone,
               Icons.cancel,
               Colors.red,
               () {
@@ -57,7 +86,7 @@ class ReminderStatusDialog extends StatelessWidget {
             const SizedBox(height: 12),
             _buildStatusButton(
               context,
-              'I Will Do It Later',
+              l10n.reminderDoLater,
               Icons.access_time,
               Colors.orange,
               () {
@@ -78,6 +107,10 @@ class ReminderStatusDialog extends StatelessWidget {
     Color color,
     VoidCallback onTap,
   ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? color.withOpacity(0.9) : color;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -85,20 +118,20 @@ class ReminderStatusDialog extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withOpacity(isDark ? 0.2 : 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withOpacity(isDark ? 0.4 : 0.3)),
         ),
         child: Row(
           children: [
-            Icon(icon, color: color, size: 24),
+            Icon(icon, color: textColor, size: 24),
             const SizedBox(width: 12),
             Text(
               label,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: color.shade700,
+                color: textColor,
               ),
             ),
           ],
@@ -106,8 +139,4 @@ class ReminderStatusDialog extends StatelessWidget {
       ),
     );
   }
-}
-
-extension on Color {
-  Color? get shade700 => null;
 }
