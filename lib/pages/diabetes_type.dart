@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'diagnosis_treateement.dart';
 import '../utils/constants.dart';
+import '../l10n/app_localizations.dart';
 
 class DiabetesTypeScreen extends StatefulWidget {
   const DiabetesTypeScreen({super.key});
@@ -10,6 +11,31 @@ class DiabetesTypeScreen extends StatefulWidget {
 }
 
 class _DiabetesTypeScreen extends State<DiabetesTypeScreen> {
+  String? _selectedDiabetesType;
+  String? _selectedUnit;
+  String? _validationError;
+
+  void _validateAndContinue() {
+    final localizations = AppLocalizations.of(context);
+    setState(() => _validationError = null);
+    
+    if (_selectedDiabetesType == null || _selectedDiabetesType!.isEmpty) {
+      setState(() => _validationError = localizations.translate('onboarding.validation_diabetes_type_required'));
+      return;
+    }
+    
+    if (_selectedUnit == null || _selectedUnit!.isEmpty) {
+      setState(() => _validationError = localizations.translate('onboarding.validation_unit_required'));
+      return;
+    }
+    
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+          builder: (context) => const DiagnosisTreatementScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -84,7 +110,7 @@ class _DiabetesTypeScreen extends State<DiabetesTypeScreen> {
 
                       // Type of diabetes
                       Text(
-                        'Type of diabetes',
+                        AppLocalizations.of(context).translate('onboarding.diabetes_type'),
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -94,9 +120,10 @@ class _DiabetesTypeScreen extends State<DiabetesTypeScreen> {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      SizedBox(
+                        SizedBox(
                         height: 42,
                         child: DropdownButtonFormField<String>(
+                          value: _selectedDiabetesType,
                           style: TextStyle(
                             color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                           ),
@@ -118,33 +145,37 @@ class _DiabetesTypeScreen extends State<DiabetesTypeScreen> {
                                 vertical: 10, horizontal: 12),
                           ),
                           hint: Text(
-                            'Select your type of diabetes',
+                            AppLocalizations.of(context).translate('onboarding.diabetes_type_hint'),
                             style: TextStyle(
                               color: isDark ? Colors.grey[500] : Colors.grey[400],
                             ),
                           ),
-                          items: const [
+                          items: [
                             DropdownMenuItem(
-                                value: 'Type 1', child: Text('Type 1')),
+                                value: 'type1',
+                                child: Text(AppLocalizations.of(context).translate('onboarding.diabetes_type_1'))),
                             DropdownMenuItem(
-                                value: 'Type 2', child: Text('Type 2')),
+                                value: 'type2',
+                                child: Text(AppLocalizations.of(context).translate('onboarding.diabetes_type_2'))),
                             DropdownMenuItem(
-                                value: 'Gestational',
-                                child: Text('Gestational')),
+                                value: 'gestational',
+                                child: Text(AppLocalizations.of(context).translate('onboarding.diabetes_gestational'))),
                             DropdownMenuItem(
-                                value: 'Monogenic', child: Text('Monogenic')),
+                                value: 'monogenic',
+                                child: Text(AppLocalizations.of(context).translate('onboarding.diabetes_monogenic'))),
                             DropdownMenuItem(
-                                value: 'Secondary', child: Text('Secondary')),
+                                value: 'secondary',
+                                child: Text(AppLocalizations.of(context).translate('onboarding.diabetes_secondary'))),
                           ],
-                          onChanged: (value) {},
+                          onChanged: (value) {
+                            setState(() => _selectedDiabetesType = value);
+                          },
                         ),
-                      ),
-
-                      const SizedBox(height: 16),
+                      ),                      const SizedBox(height: 16),
 
                       // Unit preferences
                       Text(
-                        'Unit preferences',
+                        AppLocalizations.of(context).translate('onboarding.unit_preferences'),
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -157,6 +188,7 @@ class _DiabetesTypeScreen extends State<DiabetesTypeScreen> {
                       SizedBox(
                         height: 42,
                         child: DropdownButtonFormField<String>(
+                          value: _selectedUnit,
                           style: TextStyle(
                             color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                           ),
@@ -178,35 +210,46 @@ class _DiabetesTypeScreen extends State<DiabetesTypeScreen> {
                                 vertical: 10, horizontal: 12),
                           ),
                           hint: Text(
-                            'Select your measure unit',
+                            AppLocalizations.of(context).translate('onboarding.unit_preferences_hint'),
                             style: TextStyle(
                               color: isDark ? Colors.grey[500] : Colors.grey[400],
                             ),
                           ),
-                          items: const [
+                          items: [
                             DropdownMenuItem(
-                                value: 'mg/dL', child: Text('mg/dL')),
+                                value: 'mg_dl',
+                                child: Text(AppLocalizations.of(context).translate('onboarding.mg_dl'))),
                             DropdownMenuItem(
-                                value: 'mmol/L', child: Text('mmol/L')),
+                                value: 'mmol_l',
+                                child: Text(AppLocalizations.of(context).translate('onboarding.mmol_l'))),
                           ],
-                          onChanged: (value) {},
+                          onChanged: (value) {
+                            setState(() => _selectedUnit = value);
+                          },
                         ),
                       ),
 
                       SizedBox(height: isPortrait ? 64 : 32),
 
+                      // Validation error message
+                      if (_validationError != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Text(
+                            _validationError!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+
                       // Continue button
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      const DiagnosisTreatementScreen()),
-                            );
-                          },
+                          onPressed: _validateAndContinue,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             shape: RoundedRectangleBorder(

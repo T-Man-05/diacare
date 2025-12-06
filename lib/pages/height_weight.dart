@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'diabetes_type.dart';
 import '../utils/constants.dart';
+import '../l10n/app_localizations.dart';
 
 class HeightWeightScreen extends StatefulWidget {
   const HeightWeightScreen({super.key});
@@ -12,6 +13,48 @@ class HeightWeightScreen extends StatefulWidget {
 class _HeightWeightScreen extends State<HeightWeightScreen> {
   final TextEditingController _heightController = TextEditingController();
   final TextEditingController _weightController = TextEditingController();
+  String? _validationError;
+
+  void _validateAndContinue() {
+    final localizations = AppLocalizations.of(context);
+    setState(() => _validationError = null);
+    
+    if (_heightController.text.isEmpty) {
+      setState(() => _validationError = localizations.translate('onboarding.validation_height_required'));
+      return;
+    }
+
+    // Validate height is a positive number
+    final heightValue = double.tryParse(_heightController.text);
+    if (heightValue == null || heightValue <= 0) {
+      setState(() => _validationError = localizations.translate('onboarding.validation_height_invalid'));
+      return;
+    }
+    
+    if (_weightController.text.isEmpty) {
+      setState(() => _validationError = localizations.translate('onboarding.validation_weight_required'));
+      return;
+    }
+
+    // Validate weight is a positive number
+    final weightValue = double.tryParse(_weightController.text);
+    if (weightValue == null || weightValue <= 0) {
+      setState(() => _validationError = localizations.translate('onboarding.validation_weight_invalid'));
+      return;
+    }
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const DiabetesTypeScreen()),
+    );
+  }
+
+  @override
+  void dispose() {
+    _heightController.dispose();
+    _weightController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +130,7 @@ class _HeightWeightScreen extends State<HeightWeightScreen> {
 
                       // Height
                       Text(
-                        'Height',
+                        AppLocalizations.of(context).translate('onboarding.height'),
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -101,6 +144,7 @@ class _HeightWeightScreen extends State<HeightWeightScreen> {
                         height: 42,
                         child: TextField(
                           controller: _heightController,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           style: TextStyle(
                             color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                           ),
@@ -118,7 +162,7 @@ class _HeightWeightScreen extends State<HeightWeightScreen> {
                                   color: AppColors.primary, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            hintText: 'Enter your height',
+                            hintText: AppLocalizations.of(context).translate('onboarding.height_hint'),
                             hintStyle: TextStyle(
                               color: isDark ? Colors.grey[500] : Colors.grey[400],
                             ),
@@ -132,7 +176,7 @@ class _HeightWeightScreen extends State<HeightWeightScreen> {
 
                       // Weight
                       Text(
-                        'Weight',
+                        AppLocalizations.of(context).translate('onboarding.weight'),
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -146,6 +190,7 @@ class _HeightWeightScreen extends State<HeightWeightScreen> {
                         height: 42,
                         child: TextField(
                           controller: _weightController,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           style: TextStyle(
                             color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                           ),
@@ -163,7 +208,7 @@ class _HeightWeightScreen extends State<HeightWeightScreen> {
                                   color: AppColors.primary, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            hintText: 'Enter your weight',
+                            hintText: AppLocalizations.of(context).translate('onboarding.weight_hint'),
                             hintStyle: TextStyle(
                               color: isDark ? Colors.grey[500] : Colors.grey[400],
                             ),
@@ -175,16 +220,25 @@ class _HeightWeightScreen extends State<HeightWeightScreen> {
 
                       SizedBox(height: isPortrait ? 64 : 32),
 
+                      // Validation error message
+                      if (_validationError != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Text(
+                            _validationError!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+
                       // Continue button
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const DiabetesTypeScreen()),
-                            );
-                          },
+                          onPressed: _validateAndContinue,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             shape: RoundedRectangleBorder(

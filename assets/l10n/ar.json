@@ -32,7 +32,6 @@
     "gender_hint": "اختر جنسك",
     "gender_male": "ذكر",
     "gender_female": "أنثى",
-    "gender_other": "آخر",
     "height": "الطول",
     "height_hint": "أدخل طولك",
     "weight": "الوزن",
@@ -46,9 +45,21 @@
     "diabetes_secondary": "ثانوي",
     "unit_preferences": "تفضيلات الوحدات",
     "unit_preferences_hint": "اختر وحدة القياس",
+    "mg_dl": "mg/dL",
+    "mmol_l": "mmol/L",
     "diagnosis_duration": "مدة التشخيص",
     "treatment_type": "نوع العلاج المعتاد",
-    "continue_button": "متابعة"
+    "continue_button": "متابعة",
+    "validation_date_required": "يرجى اختيار تاريخ ميلادك",
+    "validation_gender_required": "يرجى اختيار جنسك",
+    "validation_height_required": "يرجى إدخال طولك",
+    "validation_weight_required": "يرجى إدخال وزنك",
+    "validation_height_invalid": "يجب أن يكون الطول رقماً موجباً",
+    "validation_weight_invalid": "يجب أن يكون الوزن رقماً موجباً",
+    "validation_diabetes_type_required": "يرجى اختيار نوع السكري",
+    "validation_unit_required": "يرجى اختيار تفضيلات الوحدات",
+    "validation_diagnosis_required": "يرجى إدخال مدة التشخيص",
+    "validation_treatment_required": "يرجى إدخال نوع العلاج"
   },
   
   "dashboard": {
