@@ -35,12 +35,12 @@
       }
     ],
     "chart": {
-      "title": "Blood Sugar (mg/dl)",
+      "title": "Blood Sugar",
       "data": {
         "before_meal": [120, 110, 130, 125, 140, 100, 105],
         "after_meal": [160, 150, 140, 130, 145, 135, 120]
       },
-      "days": ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"]
+      "hours": ["6AM", "7AM", "8AM", "9AM", "10AM", "11AM", "12PM"]
     }
   },
  "settings": {
