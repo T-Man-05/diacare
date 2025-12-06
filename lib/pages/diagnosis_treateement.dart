@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home.dart';
-
+import '../utils/constants.dart';
 
 class DiagnosisTreatementScreen extends StatefulWidget {
   const DiagnosisTreatementScreen({super.key});
@@ -13,74 +13,87 @@ class _DiagnosisTreatementScreen extends State<DiagnosisTreatementScreen> {
   final TextEditingController _diagnosisController = TextEditingController();
   final TextEditingController _treatementController = TextEditingController();
 
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+    
+    // Responsive sizing
+    final horizontalPadding = screenWidth < 600 ? 20.0 : 32.0;
+    final verticalPadding = screenHeight < 800 ? 40.0 : 64.0;
+    final titleFontSize = screenWidth < 600 ? 48.0 : 68.0;
+    final labelFontSize = screenWidth < 600 ? 14.0 : 18.0;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 64),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 'DiaCare',
                 style: TextStyle(
                   fontFamily: 'Borel',
                   fontWeight: FontWeight.w400,
                   fontStyle: FontStyle.normal,
-                  fontSize: 68,
+                  fontSize: titleFontSize,
                   height: 1.0,
                   letterSpacing: 0.0,
-                  color: Color(0xFF16B8A8),
+                  color: AppColors.primary,
                 ),
               ),
-              const SizedBox(height: 46),
+              SizedBox(height: isPortrait ? 46 : 24),
 
               // Card container
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(39),
-                  color: const Color(0xFFFFFFFD),
-                  boxShadow: const [
+                  color: theme.cardColor,
+                  boxShadow: [
                     BoxShadow(
-                      color: Color(0x40000000),
+                      color: isDark
+                          ? Colors.black.withOpacity(0.3)
+                          : const Color(0x40000000),
                       blurRadius: 13,
-                      offset: Offset(0, 4),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(32),
+                  padding: EdgeInsets.all(isPortrait ? 32 : 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Center(
+                      Center(
                         child: Text(
                           'Welcome!',
                           style: TextStyle(
                             fontFamily: 'Borel',
                             fontWeight: FontWeight.w400,
                             fontStyle: FontStyle.normal,
-                            fontSize: 42,
+                            fontSize: isPortrait ? 42 : 32,
                             height: 1.0,
-                            color: Color(0xFF5D5D5D),
+                            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 32),
+                      SizedBox(height: isPortrait ? 32 : 20),
 
-                      // Date of Birth
-                      const Text(
+                      // Duration of diagnosis
+                      Text(
                         'Duration of the diagnosis',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
-                          fontSize: 18,
+                          fontSize: labelFontSize,
                           height: 1.0,
-                          color: Color(0xFF5D5D5D),
+                          color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -88,37 +101,44 @@ class _DiagnosisTreatementScreen extends State<DiagnosisTreatementScreen> {
                         height: 42,
                         child: TextField(
                           controller: _diagnosisController,
-                          
+                          style: TextStyle(
+                            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                          ),
                           decoration: InputDecoration(
+                            filled: true,
+                            fillColor: isDark ? AppColors.darkSurface : Colors.white,
                             enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFD9D9D9), width: 1.5),
+                              borderSide: BorderSide(
+                                  color: isDark ? Colors.grey[700]! : const Color(0xFFD9D9D9),
+                                  width: 1.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: const BorderSide(
-                                  color: Color(0xFF0E8278), width: 2),
+                                  color: AppColors.primary, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             hintText: '',
+                            hintStyle: TextStyle(
+                              color: isDark ? Colors.grey[500] : Colors.grey[400],
+                            ),
                             contentPadding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 12),
                           ),
                         ),
                       ),
 
-
                       const SizedBox(height: 16),
 
-                      // Gender
-                      const Text(
+                      // Usual treatment type
+                      Text(
                         'Usual treatment type',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
-                          fontSize: 18,
+                          fontSize: labelFontSize,
                           height: 1.0,
-                          color: Color(0xFF5D5D5D),
+                          color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -126,26 +146,34 @@ class _DiagnosisTreatementScreen extends State<DiagnosisTreatementScreen> {
                         height: 42,
                         child: TextField(
                           controller: _treatementController,
-                           
+                          style: TextStyle(
+                            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                          ),
                           decoration: InputDecoration(
+                            filled: true,
+                            fillColor: isDark ? AppColors.darkSurface : Colors.white,
                             enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFD9D9D9), width: 1.5),
+                              borderSide: BorderSide(
+                                  color: isDark ? Colors.grey[700]! : const Color(0xFFD9D9D9),
+                                  width: 1.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: const BorderSide(
-                                  color: Color(0xFF0E8278), width: 2),
+                                  color: AppColors.primary, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             hintText: '',
+                            hintStyle: TextStyle(
+                              color: isDark ? Colors.grey[500] : Colors.grey[400],
+                            ),
                             contentPadding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 12),
                           ),
                         ),
                       ),
 
-                      const SizedBox(height: 64),
+                      SizedBox(height: isPortrait ? 64 : 32),
 
                       // Continue button
                       SizedBox(
@@ -158,10 +186,11 @@ class _DiagnosisTreatementScreen extends State<DiagnosisTreatementScreen> {
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF16B8A8),
+                            backgroundColor: AppColors.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           child: const Text(
                             'Continue',
@@ -180,17 +209,7 @@ class _DiagnosisTreatementScreen extends State<DiagnosisTreatementScreen> {
                 ),
               ),
 
-              const SizedBox(height: 46),
-              const Text(
-                ' ',
-                style: TextStyle(
-                  color: Color(0xFF16B8A8),
-                  fontWeight: FontWeight.w500,
-                  decoration: TextDecoration.underline,
-                  decorationColor: Color(0xFF16B8A8),
-                  fontSize: 20,
-                ),
-              ),
+              SizedBox(height: isPortrait ? 46 : 24),
             ],
           ),
         ),

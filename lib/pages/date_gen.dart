@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'height_weight.dart';
+import '../utils/constants.dart';
 
 class DateGenScreen extends StatefulWidget {
   const DateGenScreen({super.key});
@@ -13,71 +14,85 @@ class _DateGenScreen extends State<DateGenScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+    
+    // Responsive sizing
+    final horizontalPadding = screenWidth < 600 ? 20.0 : 32.0;
+    final verticalPadding = screenHeight < 800 ? 40.0 : 64.0;
+    final titleFontSize = screenWidth < 600 ? 48.0 : 68.0;
+    final labelFontSize = screenWidth < 600 ? 14.0 : 18.0;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFFFF),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 64),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 'DiaCare',
                 style: TextStyle(
                   fontFamily: 'Borel',
                   fontWeight: FontWeight.w400,
                   fontStyle: FontStyle.normal,
-                  fontSize: 68,
+                  fontSize: titleFontSize,
                   height: 1.0,
                   letterSpacing: 0.0,
-                  color: Color(0xFF16B8A8),
+                  color: AppColors.primary,
                 ),
               ),
-              const SizedBox(height: 46),
+              SizedBox(height: isPortrait ? 46 : 24),
 
               // Card container
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(39),
-                  color: const Color(0xFFFFFFFD),
-                  boxShadow: const [
+                  color: theme.cardColor,
+                  boxShadow: [
                     BoxShadow(
-                      color: Color(0x40000000),
+                      color: isDark
+                          ? Colors.black.withOpacity(0.3)
+                          : const Color(0x40000000),
                       blurRadius: 13,
-                      offset: Offset(0, 4),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(32),
+                  padding: EdgeInsets.all(isPortrait ? 32 : 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Center(
+                      Center(
                         child: Text(
                           'Welcome!',
                           style: TextStyle(
                             fontFamily: 'Borel',
                             fontWeight: FontWeight.w400,
                             fontStyle: FontStyle.normal,
-                            fontSize: 42,
+                            fontSize: isPortrait ? 42 : 32,
                             height: 1.0,
-                            color: Color(0xFF5D5D5D),
+                            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 32),
+                      SizedBox(height: isPortrait ? 32 : 20),
 
                       // Date of Birth
-                      const Text(
+                      Text(
                         'Date of birth',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
-                          fontSize: 18,
+                          fontSize: labelFontSize,
                           height: 1.0,
-                          color: Color(0xFF5D5D5D),
+                          color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -86,21 +101,30 @@ class _DateGenScreen extends State<DateGenScreen> {
                         child: TextField(
                           controller: _dateController,
                           readOnly: true,
+                          style: TextStyle(
+                            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                          ),
                           decoration: InputDecoration(
+                            filled: true,
+                            fillColor: isDark ? AppColors.darkSurface : Colors.white,
                             enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFD9D9D9), width: 1.5),
+                              borderSide: BorderSide(
+                                  color: isDark ? Colors.grey[700]! : const Color(0xFFD9D9D9),
+                                  width: 1.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: const BorderSide(
-                                  color: Color(0xFF0E8278), width: 2),
+                                  color: AppColors.primary, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             hintText: 'Select your date of birth',
-                            suffixIcon: const Icon(
+                            hintStyle: TextStyle(
+                              color: isDark ? Colors.grey[500] : Colors.grey[400],
+                            ),
+                            suffixIcon: Icon(
                               Icons.calendar_today,
-                              color: Color(0xFF0E8278),
+                              color: AppColors.primary,
                             ),
                             contentPadding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 12),
@@ -114,10 +138,18 @@ class _DateGenScreen extends State<DateGenScreen> {
                               builder: (context, child) {
                                 return Theme(
                                   data: Theme.of(context).copyWith(
-                                    colorScheme: const ColorScheme.light(
-                                      primary: Color(0xFF16B8A8),
+                                    colorScheme: ColorScheme(
+                                      brightness: isDark ? Brightness.dark : Brightness.light,
+                                      primary: AppColors.primary,
                                       onPrimary: Colors.white,
-                                      onSurface: Color(0xFF0E8278),
+                                      secondary: AppColors.primary,
+                                      onSecondary: Colors.white,
+                                      error: Colors.red,
+                                      onError: Colors.white,
+                                      background: theme.scaffoldBackgroundColor,
+                                      onBackground: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                                      surface: theme.cardColor,
+                                      onSurface: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                                     ),
                                   ),
                                   child: child!,
@@ -138,35 +170,46 @@ class _DateGenScreen extends State<DateGenScreen> {
                       const SizedBox(height: 16),
 
                       // Gender
-                      const Text(
+                      Text(
                         'Gender',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
-                          fontSize: 18,
+                          fontSize: labelFontSize,
                           height: 1.0,
-                          color: Color(0xFF5D5D5D),
+                          color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 6),
                       SizedBox(
                         height: 42,
                         child: DropdownButtonFormField<String>(
+                          style: TextStyle(
+                            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                          ),
                           decoration: InputDecoration(
+                            filled: true,
+                            fillColor: isDark ? AppColors.darkSurface : Colors.white,
                             enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(
-                                  color: Color(0xFFD9D9D9), width: 1.5),
+                              borderSide: BorderSide(
+                                  color: isDark ? Colors.grey[700]! : const Color(0xFFD9D9D9),
+                                  width: 1.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderSide: const BorderSide(
-                                  color: Color(0xFF0E8278), width: 2),
+                                  color: AppColors.primary, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             contentPadding: const EdgeInsets.symmetric(
                                 vertical: 10, horizontal: 12),
                           ),
-                          hint: const Text('Select your gender'),
+                          hint: Text(
+                            'Select your gender',
+                            style: TextStyle(
+                              color: isDark ? Colors.grey[500] : Colors.grey[400],
+                            ),
+                          ),
                           items: const [
                             DropdownMenuItem(
                                 value: 'Male', child: Text('Male')),
@@ -181,7 +224,7 @@ class _DateGenScreen extends State<DateGenScreen> {
                         ),
                       ),
 
-                      const SizedBox(height: 64),
+                      SizedBox(height: isPortrait ? 64 : 32),
 
                       // Continue button
                       SizedBox(
@@ -196,10 +239,11 @@ class _DateGenScreen extends State<DateGenScreen> {
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF16B8A8),
+                            backgroundColor: AppColors.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           child: const Text(
                             'Continue',
@@ -218,17 +262,7 @@ class _DateGenScreen extends State<DateGenScreen> {
                 ),
               ),
 
-              const SizedBox(height: 46),
-              const Text(
-                ' ',
-                style: TextStyle(
-                  color: Color(0xFF16B8A8),
-                  fontWeight: FontWeight.w500,
-                  decoration: TextDecoration.underline,
-                  decorationColor: Color(0xFF16B8A8),
-                  fontSize: 20,
-                ),
-              ),
+              SizedBox(height: isPortrait ? 46 : 24),
             ],
           ),
         ),
