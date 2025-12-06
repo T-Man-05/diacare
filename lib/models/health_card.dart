@@ -11,11 +11,23 @@ class HealthCard {
   });
 
   factory HealthCard.fromJson(Map<String, dynamic> json) {
+    final rawValue = json['value'];
+    double parsedValue;
+    if (rawValue == null) {
+      parsedValue = 0.0;
+    } else if (rawValue is int) {
+      parsedValue = rawValue.toDouble();
+    } else if (rawValue is double) {
+      parsedValue = rawValue;
+    } else if (rawValue is num) {
+      parsedValue = rawValue.toDouble();
+    } else {
+      parsedValue = 0.0;
+    }
+
     return HealthCard(
       title: json['title'] ?? '',
-      value: (json['value'] is int)
-          ? (json['value'] as int).toDouble()
-          : (json['value'] ?? 0.0),
+      value: parsedValue,
       unit: json['unit'] ?? '',
     );
   }
@@ -26,5 +38,27 @@ class HealthCard {
       'value': value,
       'unit': unit,
     };
+  }
+
+  /// Create a copy of this HealthCard with a new title
+  HealthCard copyWithTitle(String newTitle) {
+    return HealthCard(
+      title: newTitle,
+      value: value,
+      unit: unit,
+    );
+  }
+
+  /// Create a copy of this HealthCard with optional new values
+  HealthCard copyWith({
+    String? title,
+    double? value,
+    String? unit,
+  }) {
+    return HealthCard(
+      title: title ?? this.title,
+      value: value ?? this.value,
+      unit: unit ?? this.unit,
+    );
   }
 }

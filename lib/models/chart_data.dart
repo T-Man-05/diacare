@@ -2,12 +2,12 @@
 class ChartData {
   final String title;
   final Map<String, List<int>> data;
-  final List<String> days;
+  final List<String> hours;
 
   ChartData({
     required this.title,
     required this.data,
-    required this.days,
+    required this.hours,
   });
 
   factory ChartData.fromJson(Map<String, dynamic> json) {
@@ -16,16 +16,16 @@ class ChartData {
       title: json['title'] ?? '',
       data: {
         'before_meal': (dataMap['before_meal'] as List<dynamic>?)
-                ?.map((e) => e as int)
+                ?.map((e) => (e is int) ? e : (e as num).toInt())
                 .toList() ??
             [],
         'after_meal': (dataMap['after_meal'] as List<dynamic>?)
-                ?.map((e) => e as int)
+                ?.map((e) => (e is int) ? e : (e as num).toInt())
                 .toList() ??
             [],
       },
-      days:
-          (json['days'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      hours:
+          (json['hours'] as List<dynamic>?)?.map((e) => e as String).toList() ??
               [],
     );
   }
@@ -34,7 +34,7 @@ class ChartData {
     return {
       'title': title,
       'data': data,
-      'days': days,
+      'hours': hours,
     };
   }
 }
