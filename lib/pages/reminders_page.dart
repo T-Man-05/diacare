@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../l10n/app_localizations.dart';
 import '../widgets/reminder_card_widget.dart';
 import '../widgets/reminder_status_dialog.dart';
-import 'insights_page.dart';
+import '../widgets/add_reminder_dialog.dart';
 import '../utils/constants.dart';
+import '../services/data_service_new.dart';
+
 class RemindersPage extends StatefulWidget {
   const RemindersPage({Key? key}) : super(key: key);
 
@@ -11,103 +15,159 @@ class RemindersPage extends StatefulWidget {
 }
 
 class _RemindersPageState extends State<RemindersPage> {
-  int _selectedIndex = 0;
-  bool notificationsEnabled = true;
+  List<Map<String, dynamic>> _reminders = [];
+  bool _isLoading = true;
+  bool _isSelectionMode = false;
+  final Set<String> _selectedIds = {};
 
-  List<Map<String, dynamic>> reminders = [
-    {
-      'id': '1',
-      'title': 'Check Your Glucose Level',
-      'nextTime': '18H00',
-      'timeRemaining': 'in 2h6min',
-      'isLate': false,
-      'isDone': false,
-      'icon': Icons.access_time,
-    },
-    {
-      'id': '2',
-      'title': 'Drink Water',
-      'nextTime': '16H00',
-      'timeRemaining': 'in 6min',
-      'isLate': false,
-      'isDone': true,
-      'icon': Icons.check,
-    },
-    {
-      'id': '3',
-      'title': 'Take Your Pill',
-      'nextTime': '15H00',
-      'timeRemaining': '54min late',
-      'isLate': true,
-      'isDone': false,
-      'icon': Icons.info_outline,
-    },
-    {
-      'id': '4',
-      'title': 'Check Your Glucose Level',
-      'nextTime': '18H00',
-      'timeRemaining': 'in 2h6min',
-      'isLate': false,
-      'isDone': false,
-      'icon': Icons.access_time,
-    },
-    {
-      'id': '5',
-      'title': 'Drink Water',
-      'nextTime': '16H00',
-      'timeRemaining': 'in 6min',
-      'isLate': false,
-      'isDone': true,
-      'icon': Icons.check,
-    },
-    {
-      'id': '6',
-      'title': 'Take Your Pill',
-      'nextTime': '15H00',
-      'timeRemaining': '54min late',
-      'isLate': true,
-      'isDone': false,
-      'icon': Icons.info_outline,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadReminders();
+  }
 
-  void _onNavItemTapped(int index) {
-    if (index == 1) {
-      // Navigate to Insights screen when Charts icon is tapped
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const InsightsPage()),
-      );
-    } else {
+  Future<void> _loadReminders() async {
+    try {
+      final dataService = DataService.instance;
+      final remindersData = await dataService.getReminders();
+
       setState(() {
-        _selectedIndex = index;
+        _reminders = remindersData.map((r) {
+          final reminder = r as Map<String, dynamic>;
+          final scheduledTime = reminder['scheduled_time'] ?? '';
+          final status = reminder['status'] ?? 'pending';
+          final isDone = status == 'done' || status == 'completed';
+          // Handle null case for is_enabled - default to true if null
+          final isEnabledValue = reminder['is_enabled'];
+          final bool isEnabled = isEnabledValue == 1 ||
+              isEnabledValue == true ||
+              isEnabledValue == null;
+          final isLate = _isReminderLate(scheduledTime, isDone);
+
+          return {
+            'id': reminder['id'].toString(),
+            'title': reminder['title'] ?? '',
+            'nextTime': _formatTime(scheduledTime),
+            'scheduledTime': scheduledTime,
+            'timeRemaining': _getTimeRemaining(scheduledTime, isDone),
+            'isLate': isLate,
+            'isDone': isDone,
+            'isEnabled': isEnabled,
+            'icon': _getIcon(isDone, isLate),
+            'reminderType': reminder['reminder_type'] ?? '',
+          };
+        }).toList();
+
+        // Sort: enabled first, then by time
+        _reminders.sort((a, b) {
+          final aEnabled = a['isEnabled'] as bool? ?? true;
+          final bEnabled = b['isEnabled'] as bool? ?? true;
+          if (aEnabled != bEnabled) {
+            return aEnabled ? -1 : 1;
+          }
+          return (a['scheduledTime'] as String)
+              .compareTo(b['scheduledTime'] as String);
+        });
+
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading reminders: $e');
+      setState(() {
+        _reminders = [];
+        _isLoading = false;
       });
     }
   }
 
-  void _toggleNotifications() {
-    setState(() {
-      notificationsEnabled = !notificationsEnabled;
-    });
+  Future<void> _onRefresh() async {
+    await _loadReminders();
+  }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          notificationsEnabled
-              ? 'Notifications enabled'
-              : 'Notifications disabled',
-        ),
-        duration: const Duration(seconds: 2),
-        backgroundColor: notificationsEnabled ? Colors.green : Colors.grey,
+  String _formatTime(String scheduledTime) {
+    if (scheduledTime.isEmpty) return '--:--';
+    final parts = scheduledTime.split(':');
+    if (parts.length >= 2) {
+      return '${parts[0]}:${parts[1]}';
+    }
+    return scheduledTime;
+  }
+
+  String _getTimeRemaining(String scheduledTime, bool isDone) {
+    if (isDone) return 'Done';
+    if (scheduledTime.isEmpty) return '';
+
+    try {
+      final parts = scheduledTime.split(':');
+      if (parts.length < 2) return '';
+
+      final now = DateTime.now();
+      final scheduledHour = int.parse(parts[0]);
+      final scheduledMinute = int.parse(parts[1]);
+
+      final scheduled = DateTime(
+          now.year, now.month, now.day, scheduledHour, scheduledMinute);
+      final diff = scheduled.difference(now);
+
+      if (diff.isNegative) {
+        final absDiff = diff.abs();
+        if (absDiff.inHours > 0) {
+          return '${absDiff.inHours}h ${absDiff.inMinutes % 60}m late';
+        }
+        return '${absDiff.inMinutes}m late';
+      } else {
+        if (diff.inHours > 0) {
+          return 'in ${diff.inHours}h ${diff.inMinutes % 60}m';
+        }
+        return 'in ${diff.inMinutes}m';
+      }
+    } catch (e) {
+      return '';
+    }
+  }
+
+  bool _isReminderLate(String scheduledTime, bool isDone) {
+    if (isDone || scheduledTime.isEmpty) return false;
+
+    try {
+      final parts = scheduledTime.split(':');
+      if (parts.length < 2) return false;
+
+      final now = DateTime.now();
+      final scheduledHour = int.parse(parts[0]);
+      final scheduledMinute = int.parse(parts[1]);
+
+      final scheduled = DateTime(
+          now.year, now.month, now.day, scheduledHour, scheduledMinute);
+      return now.isAfter(scheduled);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  IconData _getIcon(bool isDone, bool isLate) {
+    if (isDone) return Icons.check_circle;
+    if (isLate) return Icons.warning_amber_rounded;
+    return Icons.schedule;
+  }
+
+  void _showAddReminderDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AddReminderDialog(
+        onReminderAdded: () {
+          _loadReminders();
+        },
       ),
     );
   }
 
-  void _showStatusDialog(String reminderId, String title) {
+  void _showStatusDialog(String reminderId, String title, String time) {
     showDialog(
       context: context,
       builder: (context) => ReminderStatusDialog(
         title: title,
+        time: time,
         onStatusSelected: (status) {
           _handleStatusChange(reminderId, status);
         },
@@ -115,152 +175,311 @@ class _RemindersPageState extends State<RemindersPage> {
     );
   }
 
-  void _handleStatusChange(String reminderId, String status) {
+  Future<void> _handleStatusChange(String reminderId, String status) async {
+    final l10n = AppLocalizations.of(context);
+
+    try {
+      final dataService = DataService.instance;
+      await dataService.updateReminderStatus(
+        int.parse(reminderId),
+        status,
+      );
+
+      await _loadReminders();
+
+      if (!mounted) return;
+
+      String message = status == 'done'
+          ? l10n.markedDone
+          : status == 'not_done'
+              ? l10n.markedNotDone
+              : l10n.reminderPostponed;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Error updating reminder: $e'),
+            duration: const Duration(seconds: 2)),
+      );
+    }
+  }
+
+  Future<void> _toggleReminderEnabled(
+      String reminderId, bool currentState) async {
+    try {
+      final dataService = DataService.instance;
+      await dataService.updateReminder(reminderId, {
+        'is_enabled': currentState ? 0 : 1,
+      });
+      await _loadReminders();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Error updating reminder: $e'),
+            duration: const Duration(seconds: 2)),
+      );
+    }
+  }
+
+  void _toggleSelectionMode() {
     setState(() {
-      final index = reminders.indexWhere((r) => r['id'] == reminderId);
-      if (index != -1) {
-        if (status == 'done') {
-          reminders[index]['isDone'] = true;
-          reminders[index]['icon'] = Icons.check;
-        } else if (status == 'not_done') {
-          reminders[index]['isDone'] = false;
-          reminders[index]['icon'] = reminders[index]['isLate']
-              ? Icons.info_outline
-              : Icons.access_time;
-        } else if (status == 'later') {
-          reminders[index]['isDone'] = false;
-        }
+      _isSelectionMode = !_isSelectionMode;
+      if (!_isSelectionMode) {
+        _selectedIds.clear();
       }
     });
+  }
 
-    String message = status == 'done'
-        ? 'Reminder marked as done'
-        : status == 'not_done'
-            ? 'Reminder marked as not done'
-            : 'Reminder postponed';
+  void _toggleSelection(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+  Future<void> _deleteSelectedReminders() async {
+    if (_selectedIds.isEmpty) return;
+
+    final l10n = AppLocalizations.of(context);
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.translate('deleteReminders')),
+        content: Text(
+            '${l10n.translate('deleteRemindersConfirm')} (${_selectedIds.length})'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(l10n.translate('delete')),
+          ),
+        ],
+      ),
     );
+
+    if (confirm != true) return;
+
+    try {
+      final dataService = DataService.instance;
+      for (final id in _selectedIds) {
+        await dataService.deleteReminder(int.parse(id));
+      }
+
+      setState(() {
+        _selectedIds.clear();
+        _isSelectionMode = false;
+      });
+
+      await _loadReminders();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.translate('remindersDeleted')),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error deleting reminders: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final backgroundColor =
+        isDark ? AppColors.darkBackground : AppColors.background;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+    final l10n = AppLocalizations.of(context);
+
+    final now = DateTime.now();
+    final formattedDate =
+        DateFormat('EEEE, d MMMM', l10n.locale.languageCode).format(now);
+
     return Scaffold(
-backgroundColor: AppColors.background,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: backgroundColor,
         elevation: 0,
         automaticallyImplyLeading: false,
+        toolbarHeight: 80,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Reminder',
+            Text(
+              l10n.reminders,
               style: TextStyle(
-                fontSize: 32,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: textPrimary,
               ),
             ),
-            const Text(
-              'Fri, 24 Oct  15:54',
-              style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
+            const SizedBox(height: 4),
+            Text(
+              formattedDate,
+              style: TextStyle(fontSize: 14, color: textSecondary),
             ),
           ],
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Stack(
-              alignment: Alignment.topRight,
-              children: [
-                IconButton(
-                  icon: Icon(
-                    notificationsEnabled
-                        ? Icons.notifications_active
-                        : Icons.notifications_off,
-                    color: AppColors.primary,
-                    size: 28,
-                  ),
-                  onPressed: _toggleNotifications,
-                ),
-                if (notificationsEnabled)
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: Colors.teal,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                    ),
-                  ),
-              ],
+          if (_isSelectionMode && _selectedIds.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              onPressed: _deleteSelectedReminders,
             ),
+          IconButton(
+            icon: Icon(
+              _isSelectionMode ? Icons.close : Icons.checklist,
+              color: _isSelectionMode ? Colors.red : AppColors.primary,
+            ),
+            onPressed: _toggleSelectionMode,
           ),
+          if (!_isSelectionMode)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.add, color: Colors.white, size: 20),
+                ),
+                onPressed: _showAddReminderDialog,
+              ),
+            ),
         ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        itemCount: reminders.length,
+      body: _buildBody(l10n, textPrimary, textSecondary),
+    );
+  }
+
+  Widget _buildBody(
+      AppLocalizations l10n, Color textPrimary, Color textSecondary) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (_reminders.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.notifications_off_outlined,
+                size: 80,
+                color: textSecondary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.noReminders,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.translate('addRemindersToStayOnTrack'),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _showAddReminderDialog,
+                icon: const Icon(Icons.add),
+                label: Text(l10n.translate('addReminder')),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _onRefresh,
+      color: AppColors.primary,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(top: 8, bottom: 100),
+        itemCount: _reminders.length,
         itemBuilder: (context, index) {
-          final reminder = reminders[index];
+          final reminder = _reminders[index];
           return ReminderCardWidget(
             title: reminder['title'],
             nextTime: reminder['nextTime'],
             timeRemaining: reminder['timeRemaining'],
             isLate: reminder['isLate'],
             isDone: reminder['isDone'],
+            isEnabled: reminder['isEnabled'],
             icon: reminder['icon'],
+            isSelectionMode: _isSelectionMode,
+            isSelected: _selectedIds.contains(reminder['id']),
             onTap: () {
-              _showStatusDialog(reminder['id'], reminder['title']);
+              _showStatusDialog(
+                reminder['id'],
+                reminder['title'],
+                reminder['nextTime'],
+              );
+            },
+            onToggleEnabled: () {
+              _toggleReminderEnabled(
+                reminder['id'],
+                reminder['isEnabled'],
+              );
+            },
+            onSelectToggle: () {
+              if (!_isSelectionMode) {
+                _toggleSelectionMode();
+              }
+              _toggleSelection(reminder['id']);
             },
           );
         },
-      ),
-      // bottomNavigationBar: Container(
-      //   decoration: BoxDecoration(
-      //     color: Colors.white,
-      //     boxShadow: [
-      //       BoxShadow(
-      //         color: Colors.grey.withOpacity(0.2),
-      //         spreadRadius: 1,
-      //         blurRadius: 10,
-      //         offset: const Offset(0, -2),
-      //       ),
-      //     ],
-      //   ),
-      //   child: SafeArea(
-      //     child: Padding(
-      //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      //       child: Row(
-      //         mainAxisAlignment: MainAxisAlignment.spaceAround,
-      //         children: [
-      //           _buildNavItem(Icons.notifications_outlined, 0),
-      //           _buildNavItem(Icons.bar_chart, 1),
-      //           _buildNavItem(Icons.home_outlined, 2),
-      //           _buildNavItem(Icons.chat_bubble_outline, 3),
-      //           _buildNavItem(Icons.person_outline, 4),
-      //         ],
-      //       ),
-      //     ),
-      //   ),
-      // ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, int index) {
-    final isSelected = _selectedIndex == index;
-    return IconButton(
-      onPressed: () => _onNavItemTapped(index),
-      icon: Icon(
-        icon,
-        color: isSelected ? Colors.teal : Colors.grey.shade400,
-        size: 28,
       ),
     );
   }
