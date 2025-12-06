@@ -29,9 +29,9 @@ class _DiagnosisTreatementScreen extends State<DiagnosisTreatementScreen> {
       return;
     }
     
-    Navigator.pushReplacement(
-      context,
+    Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => const MainNavigationPage()),
+      (route) => false,
     );
   }
 
