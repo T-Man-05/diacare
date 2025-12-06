@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home.dart';
 import '../utils/constants.dart';
+import '../l10n/app_localizations.dart';
 
 class DiagnosisTreatementScreen extends StatefulWidget {
   const DiagnosisTreatementScreen({super.key});
@@ -12,6 +13,34 @@ class DiagnosisTreatementScreen extends StatefulWidget {
 class _DiagnosisTreatementScreen extends State<DiagnosisTreatementScreen> {
   final TextEditingController _diagnosisController = TextEditingController();
   final TextEditingController _treatementController = TextEditingController();
+  String? _validationError;
+
+  void _validateAndContinue() {
+    final localizations = AppLocalizations.of(context);
+    setState(() => _validationError = null);
+    
+    if (_diagnosisController.text.isEmpty) {
+      setState(() => _validationError = localizations.translate('onboarding.validation_diagnosis_required'));
+      return;
+    }
+    
+    if (_treatementController.text.isEmpty) {
+      setState(() => _validationError = localizations.translate('onboarding.validation_treatment_required'));
+      return;
+    }
+    
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const MainNavigationPage()),
+    );
+  }
+
+  @override
+  void dispose() {
+    _diagnosisController.dispose();
+    _treatementController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +116,7 @@ class _DiagnosisTreatementScreen extends State<DiagnosisTreatementScreen> {
 
                       // Duration of diagnosis
                       Text(
-                        'Duration of the diagnosis',
+                        AppLocalizations.of(context).translate('onboarding.diagnosis_duration'),
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -132,7 +161,7 @@ class _DiagnosisTreatementScreen extends State<DiagnosisTreatementScreen> {
 
                       // Usual treatment type
                       Text(
-                        'Usual treatment type',
+                        AppLocalizations.of(context).translate('onboarding.treatment_type'),
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -175,16 +204,25 @@ class _DiagnosisTreatementScreen extends State<DiagnosisTreatementScreen> {
 
                       SizedBox(height: isPortrait ? 64 : 32),
 
+                      // Validation error message
+                      if (_validationError != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Text(
+                            _validationError!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+
                       // Continue button
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const MainNavigationPage()),
-                            );
-                          },
+                          onPressed: _validateAndContinue,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             shape: RoundedRectangleBorder(

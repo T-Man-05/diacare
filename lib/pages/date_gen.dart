@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'height_weight.dart';
 import '../utils/constants.dart';
+import '../l10n/app_localizations.dart';
 
 class DateGenScreen extends StatefulWidget {
   const DateGenScreen({super.key});
@@ -11,6 +12,41 @@ class DateGenScreen extends StatefulWidget {
 
 class _DateGenScreen extends State<DateGenScreen> {
   final TextEditingController _dateController = TextEditingController();
+  String? _selectedGender;
+  String? _validationError;
+
+  void _validateAndContinue() {
+    final localizations = AppLocalizations.of(context);
+    setState(() {
+      _validationError = null;
+    });
+
+    if (_dateController.text.isEmpty) {
+      setState(() {
+        _validationError = localizations.translate('onboarding.validation_date_required');
+      });
+      return;
+    }
+
+    if (_selectedGender == null || _selectedGender!.isEmpty) {
+      setState(() {
+        _validationError = localizations.translate('onboarding.validation_gender_required');
+      });
+      return;
+    }
+
+    // All validations passed, navigate to next screen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HeightWeightScreen()),
+    );
+  }
+
+  @override
+  void dispose() {
+    _dateController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +122,7 @@ class _DateGenScreen extends State<DateGenScreen> {
 
                       // Date of Birth
                       Text(
-                        'Date of birth',
+                        AppLocalizations.of(context).translate('onboarding.date_of_birth'),
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -118,7 +154,7 @@ class _DateGenScreen extends State<DateGenScreen> {
                                   color: AppColors.primary, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            hintText: 'Select your date of birth',
+                            hintText: AppLocalizations.of(context).translate('onboarding.date_of_birth_hint'),
                             hintStyle: TextStyle(
                               color: isDark ? Colors.grey[500] : Colors.grey[400],
                             ),
@@ -171,7 +207,7 @@ class _DateGenScreen extends State<DateGenScreen> {
 
                       // Gender
                       Text(
-                        'Gender',
+                        AppLocalizations.of(context).translate('onboarding.gender'),
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
@@ -184,6 +220,7 @@ class _DateGenScreen extends State<DateGenScreen> {
                       SizedBox(
                         height: 42,
                         child: DropdownButtonFormField<String>(
+                          value: _selectedGender,
                           style: TextStyle(
                             color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                           ),
@@ -205,39 +242,48 @@ class _DateGenScreen extends State<DateGenScreen> {
                                 vertical: 10, horizontal: 12),
                           ),
                           hint: Text(
-                            'Select your gender',
+                            AppLocalizations.of(context).translate('onboarding.gender_hint'),
                             style: TextStyle(
                               color: isDark ? Colors.grey[500] : Colors.grey[400],
                             ),
                           ),
-                          items: const [
+                          items: [
                             DropdownMenuItem(
-                                value: 'Male', child: Text('Male')),
+                                value: 'male',
+                                child: Text(AppLocalizations.of(context).translate('onboarding.gender_male'))),
                             DropdownMenuItem(
-                                value: 'Female', child: Text('Female')),
-                            DropdownMenuItem(
-                                value: 'Mechanic', child: Text('Mechanic')),
-                            DropdownMenuItem(
-                                value: 'Other', child: Text('Other')),
+                                value: 'female',
+                                child: Text(AppLocalizations.of(context).translate('onboarding.gender_female'))),
                           ],
-                          onChanged: (value) {},
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedGender = value;
+                            });
+                          },
                         ),
                       ),
 
                       SizedBox(height: isPortrait ? 64 : 32),
 
+                      // Validation error message
+                      if (_validationError != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Text(
+                            _validationError!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+
                       // Continue button
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      const HeightWeightScreen()),
-                            );
-                          },
+                          onPressed: _validateAndContinue,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             shape: RoundedRectangleBorder(

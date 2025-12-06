@@ -1,0 +1,4 @@
+0000000000000000000000000000000000000000 033c52eeb74e479ac290e6039e4e36fb384bbf5c BENALI-Islam <nonodzmakafi@gmail.com> 1761853748 -0700	branch: Created from HEAD
+033c52eeb74e479ac290e6039e4e36fb384bbf5c eba961e9c819b67bdc307412fbd7f7a298139835 BENALI-Islam <nonodzmakafi@gmail.com> 1761863632 -0700	commit: feature : add main structere with settigns and dashboard
+eba961e9c819b67bdc307412fbd7f7a298139835 a40731665444d9856e507983904790a124c29c16 BENALI-Islam <nonodzmakafi@gmail.com> 1761869037 -0700	commit: fix : the settings logic to be able to save data in tun time
+a40731665444d9856e507983904790a124c29c16 0ab6d166a29dd81ef0a035b6413c444292506f1c BENALI-Islam <nonodzmakafi@gmail.com> 1762139915 -0800	pull: fast-forward

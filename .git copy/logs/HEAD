@@ -1,0 +1,33 @@
+0000000000000000000000000000000000000000 669d44dc549d6a2d4b69b4fefb8e8e27f7ccde30 BENALI-Islam <nonodzmakafi@gmail.com> 1761853695 -0700	clone: from https://github.com/T-Man-05/diacare.git
+669d44dc549d6a2d4b69b4fefb8e8e27f7ccde30 033c52eeb74e479ac290e6039e4e36fb384bbf5c BENALI-Islam <nonodzmakafi@gmail.com> 1761853698 -0700	checkout: moving from main to feature/dashboard
+033c52eeb74e479ac290e6039e4e36fb384bbf5c 033c52eeb74e479ac290e6039e4e36fb384bbf5c BENALI-Islam <nonodzmakafi@gmail.com> 1761853748 -0700	checkout: moving from feature/dashboard to features/settings_screen_with_theme_data
+033c52eeb74e479ac290e6039e4e36fb384bbf5c eba961e9c819b67bdc307412fbd7f7a298139835 BENALI-Islam <nonodzmakafi@gmail.com> 1761863632 -0700	commit: feature : add main structere with settigns and dashboard
+eba961e9c819b67bdc307412fbd7f7a298139835 a40731665444d9856e507983904790a124c29c16 BENALI-Islam <nonodzmakafi@gmail.com> 1761869037 -0700	commit: fix : the settings logic to be able to save data in tun time
+a40731665444d9856e507983904790a124c29c16 a40731665444d9856e507983904790a124c29c16 BENALI-Islam <nonodzmakafi@gmail.com> 1762125651 -0800	reset: moving to HEAD
+a40731665444d9856e507983904790a124c29c16 0f4c789ebc01919f01cf405e3b832b0c4e43cafa BENALI-Islam <nonodzmakafi@gmail.com> 1762125651 -0800	checkout: moving from features/settings_screen_with_theme_data to feature/adding_reminders_and_insights_to_otherfeatures
+0f4c789ebc01919f01cf405e3b832b0c4e43cafa 425685ca1f1bc394e9523f2fd8122223b556ee12 BENALI-Islam <nonodzmakafi@gmail.com> 1762126320 -0800	checkout: moving from feature/adding_reminders_and_insights_to_otherfeatures to origin/features/settings_screen_with_theme_data
+425685ca1f1bc394e9523f2fd8122223b556ee12 bc0fbda41de1153803d93a3fec865525a1331fbd BENALI-Islam <nonodzmakafi@gmail.com> 1762126589 -0800	checkout: moving from origin/features/settings_screen_with_theme_data to main
+bc0fbda41de1153803d93a3fec865525a1331fbd a1beba1be86bd6f570e56f97e2016150fc5e1701 BENALI-Islam <nonodzmakafi@gmail.com> 1762126955 -0800	pull: Fast-forward
+a1beba1be86bd6f570e56f97e2016150fc5e1701 367558f560d38d4ad70e493f6f33de97d7d979d5 BENALI-Islam <nonodzmakafi@gmail.com> 1762127278 -0800	commit: merging settings page with the maoin page
+367558f560d38d4ad70e493f6f33de97d7d979d5 d0d2584852ba5f44b3a74eaba50374113038db06 BENALI-Islam <nonodzmakafi@gmail.com> 1762128211 -0800	pull: Fast-forward
+d0d2584852ba5f44b3a74eaba50374113038db06 d6c55521c0dd7fe7d0041ac347b91449bba2ed94 BENALI-Islam <nonodzmakafi@gmail.com> 1762128661 -0800	commit: fix : oduble navigation bar in the reminder and the isnights page (i just commmented the builder for the nav bar )
+d6c55521c0dd7fe7d0041ac347b91449bba2ed94 eea595cb342493dcc37259b6a25c9ad04b6cc841 BENALI-Islam <nonodzmakafi@gmail.com> 1762187259 -0800	checkout: moving from main to features/login_signup_infos
+eea595cb342493dcc37259b6a25c9ad04b6cc841 eea595cb342493dcc37259b6a25c9ad04b6cc841 BENALI-Islam <nonodzmakafi@gmail.com> 1764143892 -0800	reset: moving to HEAD
+eea595cb342493dcc37259b6a25c9ad04b6cc841 afe5bbe4adb8d46b4b2ec5760cadda632f7b44d8 BENALI-Islam <nonodzmakafi@gmail.com> 1764143893 -0800	checkout: moving from features/login_signup_infos to main
+afe5bbe4adb8d46b4b2ec5760cadda632f7b44d8 afe5bbe4adb8d46b4b2ec5760cadda632f7b44d8 BENALI-Islam <nonodzmakafi@gmail.com> 1764274065 -0800	checkout: moving from main to cleanupbransh
+afe5bbe4adb8d46b4b2ec5760cadda632f7b44d8 87913724c06c22673b4276d2f2cf6212a2b1739e BENALI-Islam <nonodzmakafi@gmail.com> 1764274118 -0800	commit: still working on the clean up only finished with the login and the singup screen
+87913724c06c22673b4276d2f2cf6212a2b1739e 87913724c06c22673b4276d2f2cf6212a2b1739e BENALI-Islam <nonodzmakafi@gmail.com> 1764593741 -0800	reset: moving to HEAD
+87913724c06c22673b4276d2f2cf6212a2b1739e afe5bbe4adb8d46b4b2ec5760cadda632f7b44d8 BENALI-Islam <nonodzmakafi@gmail.com> 1764593742 -0800	checkout: moving from cleanupbransh to main
+afe5bbe4adb8d46b4b2ec5760cadda632f7b44d8 afe5bbe4adb8d46b4b2ec5760cadda632f7b44d8 BENALI-Islam <nonodzmakafi@gmail.com> 1764594173 -0800	checkout: moving from main to cleanup_the_code
+afe5bbe4adb8d46b4b2ec5760cadda632f7b44d8 afe5bbe4adb8d46b4b2ec5760cadda632f7b44d8 BENALI-Islam <nonodzmakafi@gmail.com> 1764789633 -0800	reset: moving to HEAD
+afe5bbe4adb8d46b4b2ec5760cadda632f7b44d8 afe5bbe4adb8d46b4b2ec5760cadda632f7b44d8 BENALI-Islam <nonodzmakafi@gmail.com> 1764789634 -0800	checkout: moving from cleanup_the_code to main
+afe5bbe4adb8d46b4b2ec5760cadda632f7b44d8 afe5bbe4adb8d46b4b2ec5760cadda632f7b44d8 BENALI-Islam <nonodzmakafi@gmail.com> 1764789773 -0800	checkout: moving from main to cleanup_the_code
+afe5bbe4adb8d46b4b2ec5760cadda632f7b44d8 87913724c06c22673b4276d2f2cf6212a2b1739e BENALI-Islam <nonodzmakafi@gmail.com> 1764790339 -0800	checkout: moving from cleanup_the_code to cleanupbransh
+87913724c06c22673b4276d2f2cf6212a2b1739e 7857fbe2b755366b40277a00cda2ed720676e6bb BENALI-Islam <nonodzmakafi@gmail.com> 1764841029 -0800	commit: feature: add theme to the app
+7857fbe2b755366b40277a00cda2ed720676e6bb 80a7c8eafec50ffa2ba2d49d88254a74a7f6d356 BENALI-Islam <nonodzmakafi@gmail.com> 1764841329 -0800	commit: feature: add localization to the insights and reminders page
+80a7c8eafec50ffa2ba2d49d88254a74a7f6d356 9651645111d49a0a1c3feaf9b2d3e6029f83930b BENALI-Islam <nonodzmakafi@gmail.com> 1764841739 -0800	commit: feature: add localization ot the dashboard and the settigns ans profile apge with the all the remining aopges
+9651645111d49a0a1c3feaf9b2d3e6029f83930b 6bbb3abef6756b08367c8b7b9ea78cf26330e4ab BENALI-Islam <nonodzmakafi@gmail.com> 1764842922 -0800	commit: feature: change the state managment from notifier and provider to BloC and Cubit
+6bbb3abef6756b08367c8b7b9ea78cf26330e4ab 560d23642781cca1ba28fe0e234e5f3fd558360e BENALI-Islam <nonodzmakafi@gmail.com> 1764849811 -0800	commit: feature: more work on the logoo
+560d23642781cca1ba28fe0e234e5f3fd558360e 0462ecaa2be2cd313a184fe0236339f6e98ecb71 BENALI-Islam <nonodzmakafi@gmail.com> 1764872277 -0800	commit: add the data base data fetching works only for the two pages reminder and dashboard
+0462ecaa2be2cd313a184fe0236339f6e98ecb71 26b02f5c316a79ad96608ee805a574dc8c8d794c BENALI-Islam <nonodzmakafi@gmail.com> 1764873857 -0800	commit: fix the shared preferences problem
+26b02f5c316a79ad96608ee805a574dc8c8d794c e5c5a984d0ace3d464ba1d28291b14aead4ceaad BENALI-Islam <nonodzmakafi@gmail.com> 1764873933 -0800	commit: fix the data represented in charts problem

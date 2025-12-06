@@ -32,7 +32,6 @@
     "gender_hint": "Sélectionnez votre genre",
     "gender_male": "Homme",
     "gender_female": "Femme",
-    "gender_other": "Autre",
     "height": "Taille",
     "height_hint": "Entrez votre taille",
     "weight": "Poids",
@@ -46,9 +45,21 @@
     "diabetes_secondary": "Secondaire",
     "unit_preferences": "Préférences d'unité",
     "unit_preferences_hint": "Sélectionnez votre unité de mesure",
+    "mg_dl": "mg/dL",
+    "mmol_l": "mmol/L",
     "diagnosis_duration": "Durée du diagnostic",
     "treatment_type": "Type de traitement habituel",
-    "continue_button": "Continuer"
+    "continue_button": "Continuer",
+    "validation_date_required": "Veuillez sélectionner votre date de naissance",
+    "validation_gender_required": "Veuillez sélectionner votre genre",
+    "validation_height_required": "Veuillez entrer votre taille",
+    "validation_weight_required": "Veuillez entrer votre poids",
+    "validation_height_invalid": "La taille doit être un nombre positif",
+    "validation_weight_invalid": "Le poids doit être un nombre positif",
+    "validation_diabetes_type_required": "Veuillez sélectionner votre type de diabète",
+    "validation_unit_required": "Veuillez sélectionner vos préférences d'unité",
+    "validation_diagnosis_required": "Veuillez entrer la durée du diagnostic",
+    "validation_treatment_required": "Veuillez entrer le type de traitement"
   },
   
   "dashboard": {
