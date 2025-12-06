@@ -1,0 +1,258 @@
+{
+  "app_name": "DiaCare",
+  "welcome": "Welcome!",
+  "home": "Home",
+  
+  "login": {
+    "title": "Log In",
+    "email_label": "Email Address",
+    "email_hint": "Enter your email",
+    "password_label": "Password",
+    "password_hint": "Enter your password",
+    "login_button": "Log In",
+    "signup_button": "Sign Up",
+    "forgot_password": "Forgot your password?"
+  },
+  
+  "signup": {
+    "title": "Sign Up",
+    "username_label": "Username",
+    "username_hint": "Choose an @Username",
+    "email_label": "Email Address",
+    "email_hint": "Enter your email",
+    "password_label": "Password",
+    "password_hint": "Enter your password",
+    "signup_button": "Sign up"
+  },
+  
+  "onboarding": {
+    "date_of_birth": "Date of birth",
+    "date_of_birth_hint": "Select your date of birth",
+    "gender": "Gender",
+    "gender_hint": "Select your gender",
+    "gender_male": "Male",
+    "gender_female": "Female",
+    "gender_other": "Other",
+    "height": "Height",
+    "height_hint": "Enter your height",
+    "weight": "Weight",
+    "weight_hint": "Enter your weight",
+    "diabetes_type": "Type of diabetes",
+    "diabetes_type_hint": "Select your type of diabetes",
+    "diabetes_type_1": "Type 1",
+    "diabetes_type_2": "Type 2",
+    "diabetes_gestational": "Gestational",
+    "diabetes_monogenic": "Monogenic",
+    "diabetes_secondary": "Secondary",
+    "unit_preferences": "Unit preferences",
+    "unit_preferences_hint": "Select your measure unit",
+    "diagnosis_duration": "Duration of the diagnosis",
+    "treatment_type": "Usual treatment type",
+    "continue_button": "Continue"
+  },
+  
+  "dashboard": {
+    "greeting": "Hi, {name}",
+    "glucose": "Glucose",
+    "next_reminder": "Next Reminder",
+    "see_details": "See Details",
+    "you_are_fine": "you are fine"
+  },
+  
+  "health_cards": {
+    "water": "Water",
+    "pills": "Pills",
+    "activity": "Activity",
+    "carbs": "Carbs",
+    "insulin": "Insulin"
+  },
+  
+  "chart": {
+    "blood_sugar": "Blood Sugar",
+    "before_meal": "Before Meal",
+    "after_meal": "After Meal",
+    "normal": "Normal",
+    "above_normal": "Above Normal",
+    "above_usual": "Above Usual",
+    "daily_activity": "Daily Activity"
+  },
+  
+  "days": {
+    "sat": "Sat",
+    "sun": "Sun",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri"
+  },
+  
+  "reminders": {
+    "title": "Reminder",
+    "check_glucose": "Check Your Glucose Level",
+    "drink_water": "Drink Water",
+    "take_pill": "Take Your Pill",
+    "next_time": "Next Time:",
+    "in_time": "in {time}",
+    "late": "{time} late",
+    "notifications_enabled": "Notifications enabled",
+    "notifications_disabled": "Notifications disabled",
+    "done": "Done",
+    "not_done": "Not Done",
+    "do_later": "I Will Do It Later",
+    "marked_done": "Reminder marked as done",
+    "marked_not_done": "Reminder marked as not done",
+    "postponed": "Reminder postponed"
+  },
+  
+  "insights": {
+    "title": "Insights"
+  },
+  
+  "chat": {
+    "title": "Chat",
+    "description": "it will be avialabe soon"
+  },
+  
+  "profile": {
+    "title": "My Profile",
+    "my_profile": "My Profile",
+    "edit_profile": "Edit Profile",
+    "diabetics_profile": "Diabetics Profile",
+    "settings": "Settings",
+    "delete_account": "Delete account",
+    "log_out": "Log out",
+    "full_name": "Full Name",
+    "username": "Username",
+    "email": "Email",
+    "save_changes": "Save Changes",
+    "profile_updated": "Profile updated successfully"
+  },
+  
+  "diabetics_profile": {
+    "title": "Diabetics Profile",
+    "diabetic_type": "Diabetic Type",
+    "treatment_type": "Treatment Type",
+    "glucose_target": "Glucose Target Range",
+    "min": "Min",
+    "max": "Max",
+    "select_diabetic_type": "Select Diabetic Type",
+    "select_treatment_type": "Select Treatment Type",
+    "treatment_diet": "Diet",
+    "treatment_pills": "Pills",
+    "treatment_insulin": "Insulin",
+    "updated": "Diabetic profile updated successfully"
+  },
+  
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "theme_light": "Light",
+    "theme_dark": "Dark",
+    "theme_system": "System",
+    "notifications": "Notifications",
+    "enable_notifications": "Enable Notifications",
+    "units": "Units Preference",
+    "units_preference": "Units Preference",
+    "unit_mgdl": "mg/dL",
+    "unit_mmol": "mmol/L",
+    "language": "Language",
+    "select_language": "Select Language"
+  },
+  
+  "languages": {
+    "english": "English",
+    "french": "Français",
+    "arabic": "العربية"
+  },
+  
+  "dialogs": {
+    "delete_account_title": "Delete Account",
+    "delete_account_message": "Are you sure you want to delete your account? This action cannot be undone.",
+    "delete_account_confirm": "Are you sure you want to delete your account? This action cannot be undone.",
+    "logout_title": "Log Out",
+    "logout_message": "Are you sure you want to log out?",
+    "logout_confirm": "Are you sure you want to log out?",
+    "cancel": "Cancel",
+    "confirm": "Sure",
+    "done": "Done",
+    "account_deleted": "Account deleted",
+    "logged_out": "Logged out successfully",
+    "logged_out_success": "Logged out successfully"
+  },
+  
+  "errors": {
+    "loading_error": "Error loading data",
+    "field_required": "This field is required",
+    "invalid_email": "Please enter a valid email address",
+    "password_too_short": "Password must be at least 6 characters",
+    "username_too_short": "Username must be at least 3 characters",
+    "username_invalid": "Username can only contain letters, numbers, and underscores",
+    "invalid_credentials": "Invalid email or password",
+    "glucose_min_invalid": "Min glucose must be between 50-150",
+    "glucose_max_invalid": "Max glucose must be between 100-300",
+    "glucose_range_invalid": "Max must be greater than min",
+    "name_too_short": "Name must be at least 2 characters",
+    "email_required": "Email is required",
+    "password_required": "Password is required",
+    "name_required": "Name is required",
+    "full_name_required": "Full name is required",
+    "full_name_min_length": "Full name must be at least 2 characters",
+    "username_required": "Username is required",
+    "username_min_length": "Username must be at least 3 characters",
+    "passwords_do_not_match": "Passwords do not match",
+    "invalid_number": "Please enter a valid number",
+    "number_too_low": "Value is too low",
+    "number_too_high": "Value is too high",
+    "account_not_found": "Account not found",
+    "email_already_exists": "Email already exists",
+    "invalid_range": "Invalid range",
+    "min_greater_than_max": "Minimum must be less than maximum",
+    "validation_error": "Validation error",
+    "please_fix_errors": "Please fix the errors before continuing"
+  },
+  
+  "units": {
+    "mg_dl": "mg/dL",
+    "mmol_l": "mmol/L",
+    "liters": "L",
+    "steps": "steps",
+    "calories": "cal",
+    "units": "units",
+    "km": "km"
+  },
+  
+  "addData": "Add Data",
+  "selectType": "Select Type",
+  "readingType": "Reading Type",
+  "value": "Value",
+  "pleaseEnterValue": "Please enter a value",
+  "invalidValue": "Invalid value",
+  "add": "Add",
+  
+  "addReminder": "Add Reminder",
+  "reminderType": "Reminder Type",
+  "reminderTitle": "Reminder Title",
+  "enterReminderTitle": "Enter reminder title",
+  "pleaseEnterTitle": "Please enter a title",
+  "time": "Time",
+  "repeatOn": "Repeat On",
+  "reminderAdded": "Reminder added successfully",
+  "deleteReminders": "Delete Reminders",
+  "deleteRemindersConfirm": "Are you sure you want to delete these reminders?",
+  "delete": "Delete",
+  "remindersDeleted": "Reminders deleted",
+  "selectReminders": "Select reminders",
+  "addRemindersToStayOnTrack": "Add reminders to stay on track",
+  "done": "Done",
+  "late": "Late",
+  "in": "in",
+  "glucose": "Glucose",
+  "water": "Water",
+  "pills": "Pills",
+  "activity": "Activity",
+  "meal": "Meal",
+  "custom": "Custom",
+  "lowGlucose": "Low",
+  "highGlucose": "High"
+}
