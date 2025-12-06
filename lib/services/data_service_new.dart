@@ -51,6 +51,9 @@ class DataService {
     final db = DatabaseHelper();
     // Database initializes lazily on first access
 
+    // Seed the Islam Benali test user if not already exists
+    await db.seedDefaultUser();
+
     _instance = DataService._(db, prefs);
     return _instance!;
   }
