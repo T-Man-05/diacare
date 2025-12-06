@@ -67,14 +67,11 @@ class LocalDemoRepository implements AppRepository {
   Future<void> _writeDataToFile(Map<String, dynamic> data) async {
     try {
       // Initialize if needed
-      if (_filePath == null) {
-        await getData();
-      }
-
-      final file = File(_filePath)!;
+      final file = File(_filePath);
 
       // Convert data to formatted JSON string (with indentation for readability)
-      final String jsonString = JsonEncoder.withIndent('  ').convert(data);
+      final String jsonString =
+          const JsonEncoder.withIndent('  ').convert(data);
 
       // Write to file
       await file.writeAsString(jsonString);
