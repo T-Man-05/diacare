@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/settings_data.dart';
-import '../repositories/app_repository.dart';
+import '../blocs/blocs.dart';
+import '../services/data_service_new.dart';
 import '../utils/constants.dart';
+import '../l10n/app_localizations.dart';
 
 class DiabeticsProfilePage extends StatefulWidget {
-  final AppRepository repository;
-
-  const DiabeticsProfilePage({Key? key, required this.repository})
-      : super(key: key);
+  const DiabeticsProfilePage({Key? key}) : super(key: key);
 
   @override
   State<DiabeticsProfilePage> createState() => _DiabeticsProfilePageState();
@@ -17,6 +17,7 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
   SettingsData? _settingsData;
   bool _isLoading = true;
 
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _minGlucoseController = TextEditingController();
   final TextEditingController _maxGlucoseController = TextEditingController();
 
@@ -35,8 +36,8 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
 
   Future<void> _loadData() async {
     try {
-      final allData = await widget.repository.getData();
-      final settingsJson = allData['settings'] as Map<String, dynamic>;
+      final dataService = DataService.instance;
+      final settingsJson = await dataService.getSettings();
 
       setState(() {
         _settingsData = SettingsData.fromJson(settingsJson);
@@ -52,103 +53,190 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
     }
   }
 
+  String? _validateMinGlucose(
+      String? value, AppLocalizations l10n, String units) {
+    if (value == null || value.trim().isEmpty) {
+      return l10n.fieldRequired;
+    }
+    final number = double.tryParse(value.trim());
+    if (number == null) {
+      return l10n.invalidNumber;
+    }
+    // Validate based on units (mg/dL: 50-150, mmol/L: 2.8-8.3)
+    if (units == 'mg/dL') {
+      if (number < 50 || number > 150) {
+        return l10n.numberTooLow;
+      }
+    } else {
+      if (number < 2.8 || number > 8.3) {
+        return l10n.numberTooLow;
+      }
+    }
+    return null;
+  }
+
+  String? _validateMaxGlucose(
+      String? value, AppLocalizations l10n, String units) {
+    if (value == null || value.trim().isEmpty) {
+      return l10n.fieldRequired;
+    }
+    final number = double.tryParse(value.trim());
+    if (number == null) {
+      return l10n.invalidNumber;
+    }
+    // Validate based on units (mg/dL: 100-300, mmol/L: 5.6-16.7)
+    if (units == 'mg/dL') {
+      if (number < 100 || number > 300) {
+        return l10n.numberTooHigh;
+      }
+    } else {
+      if (number < 5.6 || number > 16.7) {
+        return l10n.numberTooHigh;
+      }
+    }
+    // Check that max > min
+    final minValue = double.tryParse(_minGlucoseController.text.trim());
+    if (minValue != null && number <= minValue) {
+      return l10n.minGreaterThanMax;
+    }
+    return null;
+  }
+
   Future<void> _saveChanges() async {
-    if (_settingsData != null) {
-      _settingsData!.diabeticProfile.minGlucose =
-          int.tryParse(_minGlucoseController.text) ?? 70;
-      _settingsData!.diabeticProfile.maxGlucose =
-          int.tryParse(_maxGlucoseController.text) ?? 180;
+    if (_formKey.currentState?.validate() ?? false) {
+      if (_settingsData != null) {
+        _settingsData!.diabeticProfile.minGlucose =
+            int.tryParse(_minGlucoseController.text) ?? 70;
+        _settingsData!.diabeticProfile.maxGlucose =
+            int.tryParse(_maxGlucoseController.text) ?? 180;
 
-      await widget.repository.updateSettings(_settingsData!.toJson());
+        final dataService = DataService.instance;
+        await dataService.updateSettings(_settingsData!.toJson());
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Diabetic profile updated successfully')),
-        );
-        Navigator.pop(context);
+        if (mounted) {
+          final l10n = AppLocalizations.of(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.profileUpdated)),
+          );
+          Navigator.pop(context);
+        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
+
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: Center(
+          child: CircularProgressIndicator(color: theme.primaryColor),
+        ),
       );
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Diabetics Profile',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
+    return BlocBuilder<SettingsCubit, SettingsState>(
+      builder: (context, settingsState) {
+        final units = settingsState.units;
+        return Scaffold(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          appBar: AppBar(
+            backgroundColor: theme.scaffoldBackgroundColor,
+            elevation: 0,
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back,
+                  color: theme.textTheme.bodyLarge?.color),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: Text(
+              l10n.diabeticProfile,
+              style: TextStyle(
+                color: theme.textTheme.bodyLarge?.color,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            centerTitle: true,
           ),
-        ),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.screenPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              _buildSelectionField(
-                label: 'Diabetic Type',
-                value: _settingsData!.diabeticProfile.diabeticType,
-                onTap: () => _showDiabeticTypeDialog(),
-              ),
-              const SizedBox(height: 20),
-              _buildSelectionField(
-                label: 'Treatment Type',
-                value: _settingsData!.diabeticProfile.treatmentType,
-                onTap: () => _showTreatmentTypeDialog(),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Glucose Target Range (mg/dL)',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.screenPadding),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    _buildSelectionField(
+                      label: l10n.diabetesType,
+                      value: _settingsData!.diabeticProfile.diabeticType,
+                      isDark: isDark,
+                      theme: theme,
+                      onTap: () => _showDiabeticTypeDialog(isDark, theme, l10n),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildSelectionField(
+                      label: l10n.treatmentType,
+                      value: _settingsData!.diabeticProfile.treatmentType,
+                      isDark: isDark,
+                      theme: theme,
+                      onTap: () =>
+                          _showTreatmentTypeDialog(isDark, theme, l10n),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      '${l10n.targetRange} ($units)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: theme.textTheme.bodyLarge?.color,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildGlucoseField(
+                            l10n.minimum,
+                            _minGlucoseController,
+                            isDark,
+                            theme,
+                            (value) => _validateMinGlucose(value, l10n, units),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildGlucoseField(
+                            l10n.maximum,
+                            _maxGlucoseController,
+                            isDark,
+                            theme,
+                            (value) => _validateMaxGlucose(value, l10n, units),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 40),
+                    _buildSaveButton(l10n),
+                  ],
                 ),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildGlucoseField('Min', _minGlucoseController),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildGlucoseField('Max', _maxGlucoseController),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 40),
-              _buildSaveButton(),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
   Widget _buildSelectionField({
     required String label,
     required String value,
+    required bool isDark,
+    required ThemeData theme,
     required VoidCallback onTap,
   }) {
     return Column(
@@ -156,10 +244,10 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: theme.textTheme.bodyLarge?.color,
           ),
         ),
         const SizedBox(height: 8),
@@ -168,7 +256,9 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
+              color: isDark
+                  ? AppColors.darkCardBackground
+                  : AppColors.cardBackground,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -176,13 +266,18 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
               children: [
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
-                    color: AppColors.textPrimary,
+                    color: theme.textTheme.bodyLarge?.color,
                   ),
                 ),
-                const Icon(Icons.edit,
-                    size: 20, color: AppColors.textSecondary),
+                Icon(
+                  Icons.edit,
+                  size: 20,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.textSecondary,
+                ),
               ],
             ),
           ),
@@ -191,36 +286,46 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
     );
   }
 
-  Widget _buildGlucoseField(String label, TextEditingController controller) {
+  Widget _buildGlucoseField(
+    String label,
+    TextEditingController controller,
+    bool isDark,
+    ThemeData theme,
+    String? Function(String?)? validator,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
+            color:
+                isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
           ),
         ),
         const SizedBox(height: 8),
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: AppColors.cardBackground,
+            color: isDark
+                ? AppColors.darkCardBackground
+                : AppColors.cardBackground,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: TextField(
+          child: TextFormField(
             controller: controller,
             keyboardType: TextInputType.number,
-            style: const TextStyle(
+            validator: validator,
+            style: TextStyle(
               fontSize: 16,
-              color: AppColors.textPrimary,
+              color: theme.textTheme.bodyLarge?.color,
             ),
             decoration: const InputDecoration(
               border: InputBorder.none,
               isDense: true,
-              contentPadding: EdgeInsets.zero,
+              contentPadding: EdgeInsets.symmetric(vertical: 16),
             ),
           ),
         ),
@@ -228,7 +333,7 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
     );
   }
 
-  Widget _buildSaveButton() {
+  Widget _buildSaveButton(AppLocalizations l10n) {
     return SizedBox(
       width: double.infinity,
       height: 56,
@@ -240,9 +345,9 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
             borderRadius: BorderRadius.circular(16),
           ),
         ),
-        child: const Text(
-          'Save Changes',
-          style: TextStyle(
+        child: Text(
+          l10n.saveChanges,
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -252,60 +357,85 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
     );
   }
 
-  void _showDiabeticTypeDialog() {
+  void _showDiabeticTypeDialog(
+      bool isDark, ThemeData theme, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor:
+            isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        title: const Text(
-          'Select Diabetic Type',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.diabetesType,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: theme.textTheme.bodyLarge?.color,
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildDialogRadioOption('Type 1', 'Type 1'),
-            _buildDialogRadioOption('Type 2', 'Type 2'),
-            _buildDialogRadioOption('Gestational', 'Gestational'),
+            _buildDialogRadioOption(l10n.type1, l10n.type1, isDark, theme),
+            _buildDialogRadioOption(l10n.type2, l10n.type2, isDark, theme),
+            _buildDialogRadioOption(
+                l10n.gestational, l10n.gestational, isDark, theme),
           ],
         ),
       ),
     );
   }
 
-  void _showTreatmentTypeDialog() {
+  void _showTreatmentTypeDialog(
+      bool isDark, ThemeData theme, AppLocalizations l10n) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor:
+            isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        title: const Text(
-          'Select Treatment Type',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.treatmentType,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: theme.textTheme.bodyLarge?.color,
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildDialogRadioOption('Diet', 'Diet'),
-            _buildDialogRadioOption('Pills', 'Pills'),
-            _buildDialogRadioOption('Insulin', 'Insulin'),
+            _buildDialogRadioOption(l10n.diet, l10n.diet, isDark, theme),
+            _buildDialogRadioOption(
+                l10n.oralMedication, l10n.oralMedication, isDark, theme),
+            _buildDialogRadioOption(l10n.insulin, l10n.insulin, isDark, theme),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDialogRadioOption(String value, String title) {
+  Widget _buildDialogRadioOption(
+      String value, String title, bool isDark, ThemeData theme) {
     final isSelected = (_settingsData!.diabeticProfile.diabeticType == value) ||
         (_settingsData!.diabeticProfile.treatmentType == value);
 
     return InkWell(
       onTap: () {
         setState(() {
-          if (['Type 1', 'Type 2', 'Gestational'].contains(value)) {
+          // Check if this is a diabetic type or treatment type by checking common values
+          final diabeticTypes = [
+            'Type 1',
+            'Type 2',
+            'Gestational',
+            'النوع الأول',
+            'النوع الثاني',
+            'سكري الحمل'
+          ];
+          if (diabeticTypes
+              .any((type) => value.contains(type.split(' ').first))) {
             _settingsData!.diabeticProfile.diabeticType = value;
           } else {
             _settingsData!.diabeticProfile.treatmentType = value;
@@ -327,7 +457,10 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(fontSize: 16),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: theme.textTheme.bodyLarge?.color,
+                ),
               ),
             ),
             Radio<bool>(

@@ -9,8 +9,6 @@ class DiabetesTypeScreen extends StatefulWidget {
 }
 
 class _DiabetesTypeScreen extends State<DiabetesTypeScreen> {
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,22 +97,20 @@ class _DiabetesTypeScreen extends State<DiabetesTypeScreen> {
                                 vertical: 10, horizontal: 12),
                           ),
                           hint: const Text('Select your type of diabetes'),
-                          
-                          items: [
+                          items: const [
                             DropdownMenuItem(
                                 value: 'Type 1', child: Text('Type 1')),
                             DropdownMenuItem(
                                 value: 'Type 2', child: Text('Type 2')),
                             DropdownMenuItem(
-                                value: 'Gestational', child: Text('Gestational')),
+                                value: 'Gestational',
+                                child: Text('Gestational')),
                             DropdownMenuItem(
                                 value: 'Monogenic', child: Text('Monogenic')),
                             DropdownMenuItem(
                                 value: 'Secondary', child: Text('Secondary')),
                           ],
-                          onChanged: (value) {
-                            
-                          },
+                          onChanged: (value) {},
                         ),
                       ),
 
@@ -150,16 +146,13 @@ class _DiabetesTypeScreen extends State<DiabetesTypeScreen> {
                                 vertical: 10, horizontal: 12),
                           ),
                           hint: const Text('Select your measure unit'),
-                          
-                          items: [
+                          items: const [
                             DropdownMenuItem(
                                 value: 'mg/dL', child: Text('mg/dL')),
                             DropdownMenuItem(
                                 value: 'mmol/L', child: Text('mmol/L')),
                           ],
-                          onChanged: (value) {
-                            
-                          },
+                          onChanged: (value) {},
                         ),
                       ),
 
@@ -172,7 +165,9 @@ class _DiabetesTypeScreen extends State<DiabetesTypeScreen> {
                           onPressed: () {
                             Navigator.pushReplacement(
                               context,
-                              MaterialPageRoute(builder: (context) => const DiagnosisTreatementScreen()),
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const DiagnosisTreatementScreen()),
                             );
                           },
                           style: ElevatedButton.styleFrom(

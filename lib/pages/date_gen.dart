@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'height_weight.dart';
+
 class DateGenScreen extends StatefulWidget {
   const DateGenScreen({super.key});
 
@@ -166,8 +167,7 @@ class _DateGenScreen extends State<DateGenScreen> {
                                 vertical: 10, horizontal: 12),
                           ),
                           hint: const Text('Select your gender'),
-                          
-                          items: [
+                          items: const [
                             DropdownMenuItem(
                                 value: 'Male', child: Text('Male')),
                             DropdownMenuItem(
@@ -177,9 +177,7 @@ class _DateGenScreen extends State<DateGenScreen> {
                             DropdownMenuItem(
                                 value: 'Other', child: Text('Other')),
                           ],
-                          onChanged: (value) {
-                            
-                          },
+                          onChanged: (value) {},
                         ),
                       ),
 
@@ -191,8 +189,10 @@ class _DateGenScreen extends State<DateGenScreen> {
                         child: ElevatedButton(
                           onPressed: () {
                             Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => const HeightWeightScreen()),
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const HeightWeightScreen()),
                             );
                           },
                           style: ElevatedButton.styleFrom(

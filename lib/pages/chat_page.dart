@@ -1,16 +1,29 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
+import '../utils/constants.dart';
 
 class ChatPage extends StatelessWidget {
   const ChatPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final backgroundColor =
+        isDark ? AppColors.darkBackground : const Color(0xFFF5F5F5);
+    final appBarBackground =
+        isDark ? AppColors.darkCardBackground : Colors.white;
+    final textPrimary = isDark ? AppColors.darkTextPrimary : Colors.black87;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : Colors.grey[600];
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Chat'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        title: Text(l10n.chat),
+        backgroundColor: appBarBackground,
+        foregroundColor: textPrimary,
         elevation: 0,
         automaticallyImplyLeading: false,
       ),
@@ -23,31 +36,31 @@ class ChatPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(30),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50).withOpacity(0.1),
+                  color: AppColors.primary.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.chat_bubble_outline,
                   size: 80,
-                  color: Color(0xFF4CAF50),
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 32),
-              const Text(
-                'Chat',
+              Text(
+                l10n.chat,
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
-                ' AI assistant support for diabetes management.',
+                l10n.chatDescription,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey[600],
+                  color: textSecondary,
                   height: 1.5,
                 ),
               ),
