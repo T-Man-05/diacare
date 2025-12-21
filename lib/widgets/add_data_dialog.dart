@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/constants.dart';
-import '../services/data_service_new.dart';
+import '../services/data_service_supabase.dart';
 
 /// Dialog for adding health data (glucose, water, pills, activity, carbs, insulin)
 class AddDataDialog extends StatefulWidget {
@@ -177,7 +177,7 @@ class _AddDataDialogState extends State<AddDataDialog> {
     setState(() => _isLoading = true);
 
     try {
-      final dataService = DataService.instance;
+      final dataService = getIt<DataService>();
       final inputValue = double.parse(_valueController.text);
       final storageValue = _convertToStorageUnit(_selectedType!, inputValue);
 
@@ -203,10 +203,10 @@ class _AddDataDialogState extends State<AddDataDialog> {
       Navigator.of(context).pop();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Data added successfully'),
           backgroundColor: Colors.green,
-          duration: const Duration(seconds: 2),
+          duration: Duration(seconds: 2),
         ),
       );
     } catch (e) {

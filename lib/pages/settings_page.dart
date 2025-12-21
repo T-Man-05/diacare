@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/settings_data.dart';
-import '../services/data_service_new.dart';
+import '../services/data_service_supabase.dart';
 import '../utils/constants.dart';
 import '../blocs/blocs.dart';
 import '../l10n/app_localizations.dart';
@@ -28,7 +28,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
 
   Future<void> _loadData() async {
     try {
-      final dataService = DataService.instance;
+      final dataService = getIt<DataService>();
       final settingsJson = await dataService.getSettings();
 
       setState(() {
@@ -43,14 +43,14 @@ class _MyProfilePageState extends State<MyProfilePage> {
 
   Future<void> _saveSettings() async {
     if (_settingsData != null) {
-      final dataService = DataService.instance;
+      final dataService = getIt<DataService>();
       await dataService.updateSettings(_settingsData!.toJson());
     }
   }
 
   /// Handle logout
   Future<void> _handleLogout() async {
-    final dataService = DataService.instance;
+    final dataService = getIt<DataService>();
     await dataService.logout();
 
     if (!mounted) return;
@@ -552,7 +552,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
               });
               _saveSettings();
             },
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
           ),
         ],
       ),
@@ -820,7 +820,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
               Navigator.pop(context);
               try {
                 // Delete account from database
-                final dataService = DataService.instance;
+                final dataService = getIt<DataService>();
                 await dataService.deleteAccount();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(l10n.accountDeleted)),

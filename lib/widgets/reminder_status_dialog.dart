@@ -36,7 +36,7 @@ class ReminderStatusDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.notifications_active,
               size: 48,
               color: AppColors.primary,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/constants.dart';
-import '../services/data_service_new.dart';
+import '../services/data_service_supabase.dart';
 
 /// Dialog for adding a new reminder
 class AddReminderDialog extends StatefulWidget {
@@ -125,7 +125,7 @@ class _AddReminderDialogState extends State<AddReminderDialog> {
     setState(() => _isLoading = true);
 
     try {
-      final dataService = DataService.instance;
+      final dataService = getIt<DataService>();
       final l10n = AppLocalizations.of(context);
 
       // Get title - either from preset type or custom input
@@ -384,7 +384,7 @@ class _AddReminderDialogState extends State<AddReminderDialog> {
                               color: theme.textTheme.bodyLarge?.color,
                             ),
                           ),
-                          Icon(
+                          const Icon(
                             Icons.access_time,
                             color: AppColors.primary,
                           ),

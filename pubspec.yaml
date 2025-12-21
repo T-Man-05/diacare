@@ -20,6 +20,11 @@ dependencies:
   sqflite: ^2.3.0
   path: ^1.8.3
   crypto: ^3.0.3
+  get_it: ^7.6.4
+  supabase_flutter: ^2.8.3
+  flutter_dotenv: ^5.2.1
+  google_generative_ai: ^0.4.6
+  http: ^1.2.0
 
 dev_dependencies:
   flutter_test:
@@ -29,11 +34,12 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # Add the JSON data files as assets
   assets:
     - assets/data/demo_data.json
     - assets/data/app_data.json
     - assets/l10n/
+    - .env
+
   fonts:
     - family: Borel
       fonts:
