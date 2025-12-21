@@ -1,8 +1,10 @@
 /// ============================================================================
-/// DATA SERVICE - Abstraction Layer for Future Database Compatibility
+/// DATA SERVICE - Service Locator Pattern with GetIt
 /// ============================================================================
 ///
-/// This service provides a clean abstraction between the UI and data sources.
+/// This service uses the Service Locator pattern via GetIt for dependency
+/// injection. It provides a clean abstraction between the UI and data sources.
+///
 /// It can be easily extended to support:
 /// - REST API calls
 /// - SQL/NoSQL databases
@@ -12,10 +14,48 @@
 ///
 /// The UI layer should NEVER directly access data sources - it must always
 /// go through this service layer.
+///
+/// Usage:
+///   1. Call `setupServiceLocator()` in main.dart before runApp()
+///   2. Access services via `getIt<DataService>()` or `locator<DataService>()`
 /// ============================================================================
 
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:get_it/get_it.dart';
+
+/// Global GetIt instance - Service Locator
+final GetIt getIt = GetIt.instance;
+
+/// Alias for more readable service access
+T locator<T extends Object>() => getIt<T>();
+
+/// Setup all services in the Service Locator
+/// Call this in main.dart before runApp()
+Future<void> setupServiceLocator({
+  DataSource? customDataSource,
+  String defaultAssetPath = 'assets/data/app_data.json',
+}) async {
+  // Register DataSource
+  if (customDataSource != null) {
+    getIt.registerSingleton<DataSource>(customDataSource);
+  } else {
+    getIt.registerSingleton<DataSource>(JsonFileDataSource(defaultAssetPath));
+  }
+
+  // Register DataService as singleton (lazy by default)
+  getIt.registerLazySingleton<DataService>(
+    () => DataService(getIt<DataSource>()),
+  );
+}
+
+/// Reset all services (useful for testing)
+Future<void> resetServiceLocator() async {
+  await getIt.reset();
+}
+
+/// Check if services are registered
+bool get isServiceLocatorReady => getIt.isRegistered<DataService>();
 
 /// Abstract data source interface
 /// Implement this interface for different data source types
@@ -127,29 +167,12 @@ class SqlDatabaseDataSource implements DataSource {
 */
 
 /// Main Data Service
-/// This is the ONLY service the UI should interact with
+/// Access via: getIt<DataService>() or locator<DataService>()
 class DataService {
   final DataSource _dataSource;
 
-  // Singleton pattern for global access
-  static DataService? _instance;
-
-  DataService._(this._dataSource);
-
-  /// Factory constructor to create or return existing instance
-  factory DataService({required DataSource dataSource}) {
-    _instance ??= DataService._(dataSource);
-    return _instance!;
-  }
-
-  /// Get the current instance (must be initialized first)
-  static DataService get instance {
-    if (_instance == null) {
-      throw DataServiceException(
-          'DataService not initialized. Call DataService(dataSource: ...) first.');
-    }
-    return _instance!;
-  }
+  /// Constructor - used by GetIt for dependency injection
+  DataService(this._dataSource);
 
   // ========================================================================
   // PUBLIC API METHODS

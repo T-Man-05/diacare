@@ -1,38 +1,28 @@
 /// ============================================================================
-/// DATA SERVICE - Unified Data Access Layer with GetIt Service Locator
+/// DATA SERVICE - Unified Data Access Layer with Supabase
 /// ============================================================================
 ///
 /// This service provides a unified interface for all data operations in DiaCare.
 /// It uses the Service Locator pattern via GetIt for dependency injection.
 ///
-/// It combines:
-/// - SQLite (via DatabaseHelper) for persistent structured data
-/// - SharedPreferences (via PreferencesService) for quick-access settings
+/// Data Backend:
+/// - Primary: Supabase (PostgreSQL + Auth)
+/// - Fallback: Local SharedPreferences for offline preferences
 ///
-/// Data Distribution:
-/// ┌─────────────────────────────────────────────────────────────────────┐
-/// │                        DataService                                   │
-/// ├─────────────────────────────┬───────────────────────────────────────┤
-/// │   PreferencesService        │        DatabaseHelper                  │
-/// │   (SharedPreferences)       │        (SQLite)                        │
-/// ├─────────────────────────────┼───────────────────────────────────────┤
-/// │ • Theme                     │ • Users                               │
-/// │ • Locale                    │ • Glucose readings                    │
-/// │ • Units                     │ • Health cards                        │
-/// │ • Session (user ID)         │ • Reminders                           │
-/// │ • Notifications             │ • Diabetic profiles                   │
-/// │ • Onboarding status         │ • Chart data                          │
-/// └─────────────────────────────┴───────────────────────────────────────┘
+/// Authentication:
+/// - Supabase Auth handles all authentication
+/// - JWT tokens are automatically managed
+/// - Session persistence handled by supabase_flutter
 ///
 /// Usage:
 ///   1. Call `await setupDataServiceLocator()` in main.dart before runApp()
 ///   2. Access via: `getIt<DataService>()` or `locator<DataService>()`
 /// ============================================================================
-
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
-import 'database_helper.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'supabase_service.dart';
 import 'preferences_service.dart';
 
 /// Global GetIt instance - Service Locator
@@ -44,21 +34,18 @@ T locator<T extends Object>() => getIt<T>();
 /// Setup all data services in the Service Locator
 /// Call this in main.dart before runApp()
 Future<void> setupDataServiceLocator() async {
-  // Register PreferencesService as singleton
+  // Initialize Supabase
+  await SupabaseService.initialize();
+  getIt.registerSingleton<SupabaseService>(SupabaseService.instance);
+
+  // Initialize SharedPreferences for local settings
   final prefs = PreferencesService();
   await prefs.init();
   getIt.registerSingleton<PreferencesService>(prefs);
 
-  // Register DatabaseHelper as singleton
-  final db = DatabaseHelper();
-  getIt.registerSingleton<DatabaseHelper>(db);
-
-  // Seed the default test user
-  await db.seedDefaultUser();
-
-  // Register DataService as singleton (depends on prefs and db)
+  // Register DataService as singleton
   getIt.registerSingleton<DataService>(
-    DataService(getIt<DatabaseHelper>(), getIt<PreferencesService>()),
+    DataService(getIt<SupabaseService>(), getIt<PreferencesService>()),
   );
 }
 
@@ -73,38 +60,47 @@ bool get isDataServiceLocatorReady => getIt.isRegistered<DataService>();
 /// Main Data Service
 /// Access via: getIt<DataService>() or locator<DataService>()
 class DataService {
-  final DatabaseHelper _db;
+  final SupabaseService _supabase;
   final PreferencesService _prefs;
 
   /// Constructor - used by GetIt for dependency injection
-  DataService(this._db, this._prefs);
+  DataService(this._supabase, this._prefs);
 
   // ============================================================================
   // SESSION MANAGEMENT
   // ============================================================================
 
   /// Get the currently logged in user ID
-  int? get currentUserId => _prefs.getLoggedInUserId();
+  String? get currentUserId => _supabase.currentUserId;
 
   /// Check if a user is logged in
-  bool get isLoggedIn => _prefs.isLoggedIn();
+  bool get isLoggedIn => _supabase.isLoggedIn;
 
-  /// Login user and save session
+  /// Get current user
+  User? get currentUser => _supabase.currentUser;
+
+  /// Login user with email and password
   Future<Map<String, dynamic>?> login(String email, String password) async {
-    final user = await _db.authenticateUser(email, password);
-    if (user != null) {
-      await _prefs.setLoggedInUserId(user['id'] as int);
+    try {
+      final response = await _supabase.signIn(email: email, password: password);
+      if (response.user != null) {
+        // Get full profile
+        return await _supabase.getProfile();
+      }
+      return null;
+    } on AuthException catch (e) {
+      throw DataServiceException('Login failed: ${e.message}');
     }
-    return user;
   }
 
   /// Logout current user
   Future<void> logout() async {
+    await _supabase.signOut();
     await _prefs.clearSession();
   }
 
   /// Register a new user
-  Future<int> registerUser({
+  Future<String> registerUser({
     required String email,
     required String password,
     required String username,
@@ -115,43 +111,56 @@ class DataService {
     double? weight,
     bool seedDemoData = false,
   }) async {
-    // Check if email already exists
-    if (await _db.emailExists(email)) {
-      throw DataServiceException('Email already exists');
+    try {
+      // Check if email already exists
+      if (await _supabase.emailExists(email)) {
+        throw DataServiceException('Email already exists');
+      }
+
+      // Create the user
+      final response = await _supabase.signUp(
+        email: email,
+        password: password,
+        username: username,
+        fullName: fullName,
+        dateOfBirth: dateOfBirth,
+        gender: gender,
+        height: height,
+        weight: weight,
+      );
+
+      if (response.user == null) {
+        throw DataServiceException('Registration failed');
+      }
+
+      // Seed demo data for new user
+      if (seedDemoData) {
+        await _supabase.seedDemoData();
+      }
+
+      return response.user!.id;
+    } on AuthException catch (e) {
+      throw DataServiceException('Registration failed: ${e.message}');
     }
-
-    // Create the user
-    final userId = await _db.createUser(
-      email: email,
-      password: password,
-      username: username,
-      fullName: fullName,
-      dateOfBirth: dateOfBirth,
-      gender: gender,
-      height: height,
-      weight: weight,
-    );
-
-    // Seed demo data for new user
-    if (seedDemoData) {
-      await _db.seedDemoData(userId);
-    }
-
-    // Auto-login after registration
-    await _prefs.setLoggedInUserId(userId);
-
-    return userId;
   }
 
   /// Check if email exists
   Future<bool> emailExists(String email) async {
-    return await _db.emailExists(email);
+    return await _supabase.emailExists(email);
   }
 
-  /// Authenticate user (without saving session)
+  /// Authenticate user (without saving session) - for verification
   Future<Map<String, dynamic>?> authenticateUser(
       String email, String password) async {
-    return await _db.authenticateUser(email, password);
+    try {
+      final response = await _supabase.signIn(email: email, password: password);
+      if (response.user != null) {
+        return await _supabase.getProfile();
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
   }
 
   // ============================================================================
@@ -160,35 +169,27 @@ class DataService {
 
   /// Get current user data
   Future<Map<String, dynamic>?> getCurrentUser() async {
-    final userId = currentUserId;
-    if (userId == null) return null;
-    return await _db.getUserById(userId);
+    return await _supabase.getProfile();
   }
 
   /// Update current user profile
   Future<void> updateUserProfile(Map<String, dynamic> data) async {
-    final userId = currentUserId;
-    if (userId == null) throw DataServiceException('No user logged in');
-    await _db.updateUser(userId, data);
+    await _supabase.updateProfile(data);
   }
 
   /// Update password
   Future<void> updatePassword(String newPassword) async {
-    final userId = currentUserId;
-    if (userId == null) throw DataServiceException('No user logged in');
-    await _db.updatePassword(userId, newPassword);
+    await _supabase.updatePassword(newPassword);
   }
 
   /// Delete account
   Future<void> deleteAccount() async {
-    final userId = currentUserId;
-    if (userId == null) throw DataServiceException('No user logged in');
-    await _db.deleteUser(userId);
-    await logout();
+    await _supabase.deleteAccount();
+    await _prefs.clearAll();
   }
 
   // ============================================================================
-  // PREFERENCES (SharedPreferences)
+  // PREFERENCES (Local + Synced)
   // ============================================================================
 
   /// Get theme preference
@@ -197,6 +198,10 @@ class DataService {
   /// Set theme preference
   Future<void> setTheme(String theme) async {
     await _prefs.setTheme(theme);
+    // Sync to Supabase if logged in
+    if (isLoggedIn) {
+      await _supabase.updateUserPreferences({'theme': theme});
+    }
   }
 
   /// Get locale preference
@@ -205,6 +210,9 @@ class DataService {
   /// Set locale preference
   Future<void> setLocale(String locale) async {
     await _prefs.setLocale(locale);
+    if (isLoggedIn) {
+      await _supabase.updateUserPreferences({'locale': locale});
+    }
   }
 
   /// Get units preference
@@ -213,6 +221,9 @@ class DataService {
   /// Set units preference
   Future<void> setUnits(String units) async {
     await _prefs.setUnits(units);
+    if (isLoggedIn) {
+      await _supabase.updateUserPreferences({'units': units});
+    }
   }
 
   /// Get notifications enabled
@@ -221,6 +232,9 @@ class DataService {
   /// Set notifications enabled
   Future<void> setNotificationsEnabled(bool enabled) async {
     await _prefs.setNotificationsEnabled(enabled);
+    if (isLoggedIn) {
+      await _supabase.updateUserPreferences({'notifications_enabled': enabled});
+    }
   }
 
   /// Check if onboarding is complete
@@ -229,6 +243,9 @@ class DataService {
   /// Set onboarding complete
   Future<void> setOnboardingComplete(bool complete) async {
     await _prefs.setOnboardingComplete(complete);
+    if (isLoggedIn) {
+      await _supabase.updateUserPreferences({'onboarding_complete': complete});
+    }
   }
 
   /// Get all preferences
@@ -242,11 +259,10 @@ class DataService {
 
   /// Get dashboard data for current user
   Future<Map<String, dynamic>> getDashboardData() async {
-    final userId = currentUserId;
-    if (userId == null) {
+    if (!isLoggedIn) {
       return _getDefaultDashboardData();
     }
-    return await _db.getDashboardData(userId);
+    return await _supabase.getDashboardData();
   }
 
   /// Get default dashboard data (for non-logged-in state)
@@ -276,58 +292,37 @@ class DataService {
 
   /// Get settings data for current user
   Future<Map<String, dynamic>> getSettings() async {
-    final userId = currentUserId;
-    if (userId == null) {
+    if (!isLoggedIn) {
       throw DataServiceException('No user logged in');
     }
-
-    final settings = await _db.getSettingsData(userId);
-
-    // Override preferences from SharedPreferences
-    settings['preferences'] = {
-      'theme': _prefs.getTheme(),
-      'notifications_enabled': _prefs.getNotificationsEnabled(),
-      'units': _prefs.getUnits(),
-    };
-
-    return settings;
+    return await _supabase.getSettingsData();
   }
 
   /// Update settings
   Future<void> updateSettings(Map<String, dynamic> settings) async {
-    final userId = currentUserId;
-    if (userId == null) throw DataServiceException('No user logged in');
+    if (!isLoggedIn) throw DataServiceException('No user logged in');
 
-    // Update user data in SQLite
+    // Update profile data
     if (settings.containsKey('full_name') ||
         settings.containsKey('username') ||
         settings.containsKey('email')) {
-      await _db.updateUser(userId, {
+      await _supabase.updateProfile({
         if (settings.containsKey('full_name'))
           'full_name': settings['full_name'],
         if (settings.containsKey('username')) 'username': settings['username'],
-        if (settings.containsKey('email')) 'email': settings['email'],
       });
     }
 
-    // Update diabetic profile in SQLite
+    // Update diabetic profile
     if (settings.containsKey('diabetic_profile')) {
       final profile = settings['diabetic_profile'] as Map<String, dynamic>;
-      await _db.updateDiabeticProfile(userId, {
-        if (profile.containsKey('diabetic_type'))
-          'diabetic_type': profile['diabetic_type'],
-        if (profile.containsKey('treatment_type'))
-          'treatment_type': profile['treatment_type'],
-        if (profile.containsKey('min_glucose'))
-          'min_glucose': profile['min_glucose'],
-        if (profile.containsKey('max_glucose'))
-          'max_glucose': profile['max_glucose'],
-      });
+      await _supabase.updateDiabeticProfile(profile);
     }
 
-    // Update preferences in SharedPreferences
+    // Update preferences
     if (settings.containsKey('preferences')) {
       final prefs = settings['preferences'] as Map<String, dynamic>;
+      await _supabase.updateUserPreferences(prefs);
       await _prefs.setAllPreferences(prefs);
     }
   }
@@ -338,16 +333,12 @@ class DataService {
 
   /// Get diabetic profile for current user
   Future<Map<String, dynamic>?> getDiabeticProfile() async {
-    final userId = currentUserId;
-    if (userId == null) return null;
-    return await _db.getDiabeticProfile(userId);
+    return await _supabase.getDiabeticProfile();
   }
 
   /// Update diabetic profile
   Future<void> updateDiabeticProfile(Map<String, dynamic> profile) async {
-    final userId = currentUserId;
-    if (userId == null) throw DataServiceException('No user logged in');
-    await _db.updateDiabeticProfile(userId, profile);
+    await _supabase.updateDiabeticProfile(profile);
   }
 
   // ============================================================================
@@ -355,18 +346,14 @@ class DataService {
   // ============================================================================
 
   /// Add a glucose reading
-  Future<int> addGlucoseReading({
+  Future<Map<String, dynamic>> addGlucoseReading({
     required double value,
     String unit = 'mg/dL',
     String readingType = 'before_meal',
     String? notes,
     DateTime? recordedAt,
   }) async {
-    final userId = currentUserId;
-    if (userId == null) throw DataServiceException('No user logged in');
-
-    return await _db.addGlucoseReading(
-      userId: userId,
+    return await _supabase.addGlucoseReading(
       value: value,
       unit: unit,
       readingType: readingType,
@@ -381,11 +368,7 @@ class DataService {
     DateTime? endDate,
     int? limit,
   }) async {
-    final userId = currentUserId;
-    if (userId == null) return [];
-
-    return await _db.getGlucoseReadings(
-      userId,
+    return await _supabase.getGlucoseReadings(
       startDate: startDate,
       endDate: endDate,
       limit: limit,
@@ -394,50 +377,22 @@ class DataService {
 
   /// Get latest glucose reading
   Future<Map<String, dynamic>?> getLatestGlucoseReading() async {
-    final userId = currentUserId;
-    if (userId == null) return null;
-    return await _db.getLatestGlucoseReading(userId);
+    return await _supabase.getLatestGlucoseReading();
   }
 
   /// Get glucose chart data (last 7 hours)
   Future<Map<String, dynamic>> getGlucoseChartData() async {
-    final userId = currentUserId;
-    if (userId == null) {
-      return {
-        'before_meal': <double>[],
-        'after_meal': <double>[],
-        'hours': <String>[]
-      };
-    }
-    return await _db.getGlucoseChartData(userId);
+    return await _supabase.getGlucoseChartData();
   }
 
   /// Get carbs chart data for the week
   Future<Map<String, dynamic>> getCarbsChartData() async {
-    final userId = currentUserId;
-    if (userId == null) {
-      return {
-        'values': <double>[],
-        'days': <String>[],
-        'hasData': <bool>[],
-        'totalRecords': 0,
-      };
-    }
-    return await _db.getCarbsChartData(userId);
+    return await _supabase.getCarbsChartData();
   }
 
   /// Get activity chart data for the week
   Future<Map<String, dynamic>> getActivityChartData() async {
-    final userId = currentUserId;
-    if (userId == null) {
-      return {
-        'values': <double>[],
-        'days': <String>[],
-        'hasData': <bool>[],
-        'totalRecords': 0,
-      };
-    }
-    return await _db.getActivityChartData(userId);
+    return await _supabase.getActivityChartData();
   }
 
   // ============================================================================
@@ -450,11 +405,7 @@ class DataService {
     required double value,
     required String unit,
   }) async {
-    final userId = currentUserId;
-    if (userId == null) throw DataServiceException('No user logged in');
-
-    await _db.upsertHealthCard(
-      userId: userId,
+    await _supabase.upsertHealthCard(
       cardType: cardType,
       value: value,
       unit: unit,
@@ -463,9 +414,7 @@ class DataService {
 
   /// Get health cards for today
   Future<List<Map<String, dynamic>>> getHealthCards() async {
-    final userId = currentUserId;
-    if (userId == null) return _db.getDefaultHealthCards();
-    return await _db.getHealthCards(userId);
+    return await _supabase.getHealthCards();
   }
 
   // ============================================================================
@@ -474,13 +423,11 @@ class DataService {
 
   /// Get reminders for current user
   Future<List<dynamic>> getReminders() async {
-    final userId = currentUserId;
-    if (userId == null) return [];
-    return await _db.getReminders(userId);
+    return await _supabase.getReminders();
   }
 
   /// Add a reminder
-  Future<int> addReminder({
+  Future<Map<String, dynamic>> addReminder({
     required String title,
     required String reminderType,
     required String scheduledTime,
@@ -488,11 +435,7 @@ class DataService {
     bool isRecurring = false,
     String? recurrencePattern,
   }) async {
-    final userId = currentUserId;
-    if (userId == null) throw DataServiceException('No user logged in');
-
-    return await _db.addReminder(
-      userId: userId,
+    return await _supabase.addReminder(
       title: title,
       reminderType: reminderType,
       scheduledTime: scheduledTime,
@@ -505,17 +448,17 @@ class DataService {
   /// Update reminder
   Future<void> updateReminder(
       String reminderId, Map<String, dynamic> data) async {
-    await _db.updateReminder(int.parse(reminderId), data);
+    await _supabase.updateReminder(reminderId, data);
   }
 
   /// Update reminder status
-  Future<void> updateReminderStatus(int reminderId, String status) async {
-    await _db.updateReminderStatus(reminderId, status);
+  Future<void> updateReminderStatus(String reminderId, String status) async {
+    await _supabase.updateReminderStatus(reminderId, status);
   }
 
   /// Delete reminder
-  Future<void> deleteReminder(int reminderId) async {
-    await _db.deleteReminder(reminderId);
+  Future<void> deleteReminder(String reminderId) async {
+    await _supabase.deleteReminder(reminderId);
   }
 
   // ============================================================================
@@ -524,31 +467,20 @@ class DataService {
 
   /// Get charts data
   Future<Map<String, dynamic>> getCharts() async {
-    final userId = currentUserId;
-    if (userId == null) {
-      return {
-        'blood_sugar': {'before_meal': <double>[], 'after_meal': <double>[]},
-      };
-    }
-
-    final glucoseData = await _db.getGlucoseChartData(userId);
-    return {
-      'blood_sugar': glucoseData,
-    };
+    return await _supabase.getGlucoseChartData();
   }
 
   // ============================================================================
   // LEGACY COMPATIBILITY METHODS
-  // (For backward compatibility with existing code)
   // ============================================================================
 
-  /// Get app strings (loads from JSON asset for now)
+  /// Get app strings (loads from JSON asset)
   Future<Map<String, dynamic>> getAppStrings() async {
     try {
-      final String jsonString =
-          await rootBundle.loadString('assets/data/app_data.json');
-      final data = json.decode(jsonString) as Map<String, dynamic>;
-      return data['app_strings'] as Map<String, dynamic>? ?? {};
+      // Keep using local JSON for static strings
+      final data = await rootBundle.loadString('assets/data/app_data.json');
+      final jsonData = json.decode(data) as Map<String, dynamic>;
+      return jsonData['app_strings'] as Map<String, dynamic>? ?? {};
     } catch (e) {
       return {};
     }
@@ -603,15 +535,9 @@ class DataService {
   // UTILITY METHODS
   // ============================================================================
 
-  /// Clear all data (for testing)
+  /// Clear all local data
   Future<void> clearAllData() async {
-    await _db.clearAllData();
     await _prefs.clearAll();
-  }
-
-  /// Close database connection
-  Future<void> close() async {
-    await _db.close();
   }
 }
 
@@ -623,3 +549,5 @@ class DataServiceException implements Exception {
   @override
   String toString() => 'DataServiceException: $message';
 }
+
+// Import for rootBundle and json

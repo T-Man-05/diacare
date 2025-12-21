@@ -266,7 +266,7 @@ class _SinglePointPainter extends CustomPainter {
       ..color = gridColor
       ..strokeWidth = 1;
 
-    final chartTop = 10.0;
+    const chartTop = 10.0;
     final chartBottom = size.height - 30; // Leave space for day labels
     final chartHeight = chartBottom - chartTop;
 
@@ -291,7 +291,7 @@ class _SinglePointPainter extends CustomPainter {
     }
 
     // Draw the bar at the correct day position
-    final barWidth = 32.0;
+    const barWidth = 32.0;
     final x = 40 + (dayIndex + 0.5) * dayWidth;
     final maxY = value * 1.5;
     final barHeight = (value / maxY * chartHeight);

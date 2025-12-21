@@ -16,7 +16,7 @@ import 'package:flutter/material.dart';
 import 'date_gen.dart';
 import 'login.dart';
 import '../utils/constants.dart';
-import '../services/data_service_new.dart';
+import '../services/data_service_supabase.dart';
 import '../l10n/app_localizations.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -103,7 +103,7 @@ class _SignupScreen extends State<SignupScreen> {
     });
 
     try {
-      final dataService = DataService.instance;
+      final dataService = getIt<DataService>();
       final l10n = AppLocalizations.of(context);
 
       // Check if email already exists
@@ -161,7 +161,7 @@ class _SignupScreen extends State<SignupScreen> {
     final l10n = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    
+
     // Responsive sizing
     final horizontalPadding = screenWidth < 600 ? 20.0 : 32.0;
     final verticalPadding = screenHeight < 800 ? 40.0 : 64.0;
@@ -171,7 +171,8 @@ class _SignupScreen extends State<SignupScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+          padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding, vertical: verticalPadding),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,

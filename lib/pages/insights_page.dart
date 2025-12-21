@@ -9,7 +9,7 @@ import '../widgets/carbs_chart.dart';
 import '../widgets/activity_chart.dart';
 import '../models/chart_data.dart';
 import '../utils/constants.dart';
-import '../services/data_service_new.dart';
+import '../services/data_service_supabase.dart';
 
 class InsightsPage extends StatefulWidget {
   const InsightsPage({Key? key}) : super(key: key);
@@ -32,7 +32,7 @@ class _InsightsPageState extends State<InsightsPage> {
 
   Future<void> _loadChartData() async {
     try {
-      final dataService = DataService.instance;
+      final dataService = getIt<DataService>();
 
       // Load all chart data
       final glucoseData = await dataService.getGlucoseChartData();

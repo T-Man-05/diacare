@@ -6,8 +6,8 @@
 /// It initializes the data service layer and sets up the app-wide configuration.
 ///
 /// Data Storage:
-/// - SQLite: Users, glucose readings, health cards, reminders, profiles
-/// - SharedPreferences: Theme, locale, units, session
+/// - Supabase: Users, glucose readings, health cards, reminders, profiles
+/// - SharedPreferences: Theme, locale, units (local cache)
 ///
 /// State Management: Uses BLoC/Cubit pattern with flutter_bloc package
 /// ============================================================================
@@ -17,18 +17,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'pages/login.dart';
 import 'pages/home.dart';
-import 'services/data_service_new.dart';
+import 'services/data_service_supabase.dart';
 import 'l10n/app_localizations.dart';
 import 'blocs/blocs.dart';
 import 'utils/constants.dart';
 
 /// Main function - Entry point of the application
-/// Initializes the data service before running the app
+/// Initializes the service locator before running the app
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize the data service with SQLite + SharedPreferences
-  await DataService.initialize();
+  // Initialize the service locator with all services
+  await setupDataServiceLocator();
 
   runApp(const MyApp());
 }
@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Check if user is already logged in
-    final dataService = DataService.instance;
+    final dataService = getIt<DataService>();
     final isLoggedIn = dataService.isLoggedIn;
 
     return MultiBlocProvider(

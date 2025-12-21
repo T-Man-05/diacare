@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/settings_data.dart';
-import '../services/data_service_new.dart';
+import '../services/data_service_supabase.dart';
 import '../utils/constants.dart';
 import '../l10n/app_localizations.dart';
 
@@ -36,7 +36,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   Future<void> _loadData() async {
     try {
-      final dataService = DataService.instance;
+      final dataService = getIt<DataService>();
       final settingsJson = await dataService.getSettings();
 
       setState(() {
@@ -61,7 +61,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _settingsData!.username = _usernameController.text;
         _settingsData!.email = _emailController.text;
 
-        final dataService = DataService.instance;
+        final dataService = getIt<DataService>();
         await dataService.updateSettings(_settingsData!.toJson());
 
         if (mounted) {

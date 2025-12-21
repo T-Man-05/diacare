@@ -23,14 +23,16 @@ class _DateGenScreen extends State<DateGenScreen> {
 
     if (_dateController.text.isEmpty) {
       setState(() {
-        _validationError = localizations.translate('onboarding.validation_date_required');
+        _validationError =
+            localizations.translate('onboarding.validation_date_required');
       });
       return;
     }
 
     if (_selectedGender == null || _selectedGender!.isEmpty) {
       setState(() {
-        _validationError = localizations.translate('onboarding.validation_gender_required');
+        _validationError =
+            localizations.translate('onboarding.validation_gender_required');
       });
       return;
     }
@@ -54,8 +56,9 @@ class _DateGenScreen extends State<DateGenScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
-    
+    final isPortrait =
+        MediaQuery.of(context).orientation == Orientation.portrait;
+
     // Responsive sizing
     final horizontalPadding = screenWidth < 600 ? 20.0 : 32.0;
     final verticalPadding = screenHeight < 800 ? 40.0 : 64.0;
@@ -66,7 +69,8 @@ class _DateGenScreen extends State<DateGenScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
+          padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding, vertical: verticalPadding),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -114,7 +118,9 @@ class _DateGenScreen extends State<DateGenScreen> {
                             fontStyle: FontStyle.normal,
                             fontSize: isPortrait ? 42 : 32,
                             height: 1.0,
-                            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -122,13 +128,16 @@ class _DateGenScreen extends State<DateGenScreen> {
 
                       // Date of Birth
                       Text(
-                        AppLocalizations.of(context).translate('onboarding.date_of_birth'),
+                        AppLocalizations.of(context)
+                            .translate('onboarding.date_of_birth'),
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
                           fontSize: labelFontSize,
                           height: 1.0,
-                          color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -138,14 +147,19 @@ class _DateGenScreen extends State<DateGenScreen> {
                           controller: _dateController,
                           readOnly: true,
                           style: TextStyle(
-                            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
                           ),
                           decoration: InputDecoration(
                             filled: true,
-                            fillColor: isDark ? AppColors.darkSurface : Colors.white,
+                            fillColor:
+                                isDark ? AppColors.darkSurface : Colors.white,
                             enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
-                                  color: isDark ? Colors.grey[700]! : const Color(0xFFD9D9D9),
+                                  color: isDark
+                                      ? Colors.grey[700]!
+                                      : const Color(0xFFD9D9D9),
                                   width: 1.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -154,11 +168,13 @@ class _DateGenScreen extends State<DateGenScreen> {
                                   color: AppColors.primary, width: 2),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            hintText: AppLocalizations.of(context).translate('onboarding.date_of_birth_hint'),
+                            hintText: AppLocalizations.of(context)
+                                .translate('onboarding.date_of_birth_hint'),
                             hintStyle: TextStyle(
-                              color: isDark ? Colors.grey[500] : Colors.grey[400],
+                              color:
+                                  isDark ? Colors.grey[500] : Colors.grey[400],
                             ),
-                            suffixIcon: Icon(
+                            suffixIcon: const Icon(
                               Icons.calendar_today,
                               color: AppColors.primary,
                             ),
@@ -175,17 +191,19 @@ class _DateGenScreen extends State<DateGenScreen> {
                                 return Theme(
                                   data: Theme.of(context).copyWith(
                                     colorScheme: ColorScheme(
-                                      brightness: isDark ? Brightness.dark : Brightness.light,
+                                      brightness: isDark
+                                          ? Brightness.dark
+                                          : Brightness.light,
                                       primary: AppColors.primary,
                                       onPrimary: Colors.white,
                                       secondary: AppColors.primary,
                                       onSecondary: Colors.white,
                                       error: Colors.red,
                                       onError: Colors.white,
-                                      background: theme.scaffoldBackgroundColor,
-                                      onBackground: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                                       surface: theme.cardColor,
-                                      onSurface: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                                      onSurface: isDark
+                                          ? AppColors.darkTextPrimary
+                                          : AppColors.textPrimary,
                                     ),
                                   ),
                                   child: child!,
@@ -207,29 +225,37 @@ class _DateGenScreen extends State<DateGenScreen> {
 
                       // Gender
                       Text(
-                        AppLocalizations.of(context).translate('onboarding.gender'),
+                        AppLocalizations.of(context)
+                            .translate('onboarding.gender'),
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontWeight: FontWeight.w500,
                           fontSize: labelFontSize,
                           height: 1.0,
-                          color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 6),
                       SizedBox(
                         height: 42,
                         child: DropdownButtonFormField<String>(
-                          value: _selectedGender,
+                          initialValue: _selectedGender,
                           style: TextStyle(
-                            color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
                           ),
                           decoration: InputDecoration(
                             filled: true,
-                            fillColor: isDark ? AppColors.darkSurface : Colors.white,
+                            fillColor:
+                                isDark ? AppColors.darkSurface : Colors.white,
                             enabledBorder: OutlineInputBorder(
                               borderSide: BorderSide(
-                                  color: isDark ? Colors.grey[700]! : const Color(0xFFD9D9D9),
+                                  color: isDark
+                                      ? Colors.grey[700]!
+                                      : const Color(0xFFD9D9D9),
                                   width: 1.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -242,18 +268,22 @@ class _DateGenScreen extends State<DateGenScreen> {
                                 vertical: 10, horizontal: 12),
                           ),
                           hint: Text(
-                            AppLocalizations.of(context).translate('onboarding.gender_hint'),
+                            AppLocalizations.of(context)
+                                .translate('onboarding.gender_hint'),
                             style: TextStyle(
-                              color: isDark ? Colors.grey[500] : Colors.grey[400],
+                              color:
+                                  isDark ? Colors.grey[500] : Colors.grey[400],
                             ),
                           ),
                           items: [
                             DropdownMenuItem(
                                 value: 'male',
-                                child: Text(AppLocalizations.of(context).translate('onboarding.gender_male'))),
+                                child: Text(AppLocalizations.of(context)
+                                    .translate('onboarding.gender_male'))),
                             DropdownMenuItem(
                                 value: 'female',
-                                child: Text(AppLocalizations.of(context).translate('onboarding.gender_female'))),
+                                child: Text(AppLocalizations.of(context)
+                                    .translate('onboarding.gender_female'))),
                           ],
                           onChanged: (value) {
                             setState(() {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/settings_data.dart';
 import '../blocs/blocs.dart';
-import '../services/data_service_new.dart';
+import '../services/data_service_supabase.dart';
 import '../utils/constants.dart';
 import '../l10n/app_localizations.dart';
 
@@ -36,7 +36,7 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
 
   Future<void> _loadData() async {
     try {
-      final dataService = DataService.instance;
+      final dataService = getIt<DataService>();
       final settingsJson = await dataService.getSettings();
 
       setState(() {
@@ -110,7 +110,7 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
         _settingsData!.diabeticProfile.maxGlucose =
             int.tryParse(_maxGlucoseController.text) ?? 180;
 
-        final dataService = DataService.instance;
+        final dataService = getIt<DataService>();
         await dataService.updateSettings(_settingsData!.toJson());
 
         if (mounted) {

@@ -7,7 +7,7 @@
 /// ============================================================================
 
 // Data Service - Main unified data access layer
-export 'data_service_new.dart';
+export 'data_service_supabase.dart';
 
 // Database Helper - SQLite database operations
 export 'database_helper.dart';

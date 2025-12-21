@@ -5,7 +5,7 @@ import '../widgets/reminder_card_widget.dart';
 import '../widgets/reminder_status_dialog.dart';
 import '../widgets/add_reminder_dialog.dart';
 import '../utils/constants.dart';
-import '../services/data_service_new.dart';
+import '../services/data_service_supabase.dart';
 
 class RemindersPage extends StatefulWidget {
   const RemindersPage({Key? key}) : super(key: key);
@@ -28,7 +28,7 @@ class _RemindersPageState extends State<RemindersPage> {
 
   Future<void> _loadReminders() async {
     try {
-      final dataService = DataService.instance;
+      final dataService = getIt<DataService>();
       final remindersData = await dataService.getReminders();
 
       setState(() {
@@ -179,9 +179,9 @@ class _RemindersPageState extends State<RemindersPage> {
     final l10n = AppLocalizations.of(context);
 
     try {
-      final dataService = DataService.instance;
+      final dataService = getIt<DataService>();
       await dataService.updateReminderStatus(
-        int.parse(reminderId),
+        reminderId,
         status,
       );
 
@@ -211,7 +211,7 @@ class _RemindersPageState extends State<RemindersPage> {
   Future<void> _toggleReminderEnabled(
       String reminderId, bool currentState) async {
     try {
-      final dataService = DataService.instance;
+      final dataService = getIt<DataService>();
       await dataService.updateReminder(reminderId, {
         'is_enabled': currentState ? 0 : 1,
       });
@@ -273,9 +273,9 @@ class _RemindersPageState extends State<RemindersPage> {
     if (confirm != true) return;
 
     try {
-      final dataService = DataService.instance;
+      final dataService = getIt<DataService>();
       for (final id in _selectedIds) {
-        await dataService.deleteReminder(int.parse(id));
+        await dataService.deleteReminder(id);
       }
 
       setState(() {
