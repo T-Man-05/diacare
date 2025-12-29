@@ -182,20 +182,21 @@ class ActivityChart extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            l10n.noData,
+            '🏃 Time to get moving!',
             style: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
               color: textPrimary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            'Add activity data to see the chart',
+            'Your sneakers are getting dusty! Log some activity 👟',
             style: TextStyle(
               fontSize: 12,
               color: textSecondary,
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),

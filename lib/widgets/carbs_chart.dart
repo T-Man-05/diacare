@@ -180,20 +180,21 @@ class CarbsChart extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            l10n.noData,
+            '🍕 Where are the carbs?',
             style: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
               color: textPrimary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            'Add carbs data to see the chart',
+            'Log your meals and I\'ll keep count! 🧮',
             style: TextStyle(
               fontSize: 12,
               color: textSecondary,
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
