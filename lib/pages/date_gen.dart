@@ -72,7 +72,7 @@ class _DateGenScreen extends State<DateGenScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                'DiaCare',
+                AppLocalizations.of(context).appTitle,
                 style: TextStyle(
                   fontFamily: 'Borel',
                   fontWeight: FontWeight.w400,
@@ -88,7 +88,7 @@ class _DateGenScreen extends State<DateGenScreen> {
               // Card container
               Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(39),
+                  borderRadius: BorderRadius.circular(AppSpacing.authCardRadius),
                   color: theme.cardColor,
                   boxShadow: [
                     BoxShadow(
@@ -107,7 +107,7 @@ class _DateGenScreen extends State<DateGenScreen> {
                     children: [
                       Center(
                         child: Text(
-                          'Welcome!',
+                          AppLocalizations.of(context).welcome,
                           style: TextStyle(
                             fontFamily: 'Borel',
                             fontWeight: FontWeight.w400,
