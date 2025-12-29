@@ -323,60 +323,112 @@ class _RemindersPageState extends State<RemindersPage> {
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      appBar: AppBar(
-        backgroundColor: backgroundColor,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        toolbarHeight: 80,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: Column(
           children: [
-            Text(
-              l10n.reminders,
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: textPrimary,
+            // Header matching Dashboard style with color
+            Padding(
+              padding: const EdgeInsets.only(
+                left: AppSpacing.screenPadding,
+                right: AppSpacing.screenPadding,
+                top: 8,
+                bottom: 4,
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.pillsColor.withOpacity(isDark ? 0.15 : 0.1),
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: AppColors.orangeGradient,
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.alarm,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.reminders,
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w600,
+                                  color: textPrimary,
+                                ),
+                              ),
+                              Text(
+                                formattedDate,
+                                style: TextStyle(fontSize: 12, color: textSecondary),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                    children: [
+                      if (_isSelectionMode && _selectedIds.isNotEmpty)
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, color: Colors.red),
+                          onPressed: _deleteSelectedReminders,
+                        ),
+                      IconButton(
+                        icon: Icon(
+                          _isSelectionMode ? Icons.close : Icons.checklist,
+                          color: _isSelectionMode ? Colors.red : AppColors.primary,
+                        ),
+                        onPressed: _toggleSelectionMode,
+                      ),
+                      if (!_isSelectionMode)
+                        IconButton(
+                          icon: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.add, color: Colors.white, size: 20),
+                          ),
+                          onPressed: _showAddReminderDialog,
+                        ),
+                    ],
+                  ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              formattedDate,
-              style: TextStyle(fontSize: 14, color: textSecondary),
+            const SizedBox(height: 8),
+            Expanded(
+              child: _buildBody(l10n, textPrimary, textSecondary),
             ),
           ],
         ),
-        actions: [
-          if (_isSelectionMode && _selectedIds.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              onPressed: _deleteSelectedReminders,
-            ),
-          IconButton(
-            icon: Icon(
-              _isSelectionMode ? Icons.close : Icons.checklist,
-              color: _isSelectionMode ? Colors.red : AppColors.primary,
-            ),
-            onPressed: _toggleSelectionMode,
-          ),
-          if (!_isSelectionMode)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.add, color: Colors.white, size: 20),
-                ),
-                onPressed: _showAddReminderDialog,
-              ),
-            ),
-        ],
       ),
-      body: _buildBody(l10n, textPrimary, textSecondary),
     );
   }
 
@@ -402,17 +454,17 @@ class _RemindersPageState extends State<RemindersPage> {
               ),
               const SizedBox(height: 16),
               Text(
-                l10n.noReminders,
+                '🔔 Shhh... It\'s too quiet here!',
                 style: TextStyle(
                   fontSize: 18,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: textPrimary,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
-                l10n.translate('addRemindersToStayOnTrack'),
+                'Your future self will thank you for setting reminders! ⏰',
                 style: TextStyle(
                   fontSize: 14,
                   color: textSecondary,

@@ -210,33 +210,56 @@ class _InsightsPageState extends State<InsightsPage> {
 
   Widget _buildHeader(
       Color headerBackground, Color textPrimary, AppLocalizations l10n) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      color: headerBackground,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            l10n.insightsPageTitle,
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: textPrimary,
-            ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: AppSpacing.screenPadding,
+        right: AppSpacing.screenPadding,
+        top: 8,
+        bottom: 4,
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.waterColor.withOpacity(isDark ? 0.15 : 0.1),
+              Colors.transparent,
+            ],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
           ),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: AppColors.blueGradient,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.bar_chart,
+                color: Colors.white,
+                size: 20,
+              ),
             ),
-            child: const Icon(
-              Icons.notifications,
-              color: Colors.white,
-              size: 24,
+            const SizedBox(width: 12),
+            Text(
+              l10n.insightsPageTitle,
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w600,
+                color: textPrimary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

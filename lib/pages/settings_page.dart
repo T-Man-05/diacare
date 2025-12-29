@@ -125,15 +125,26 @@ class _MyProfilePageState extends State<MyProfilePage> {
       children: [
         Stack(
           children: [
-            CircleAvatar(
-              radius: 40,
-              backgroundImage: _settingsData?.profileImageUrl != null
-                  ? NetworkImage(_settingsData!.profileImageUrl!)
-                  : null,
-              backgroundColor: Colors.grey[300],
-              child: _settingsData?.profileImageUrl == null
-                  ? const Icon(Icons.person, size: 40, color: Colors.white)
-                  : null,
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: AppColors.primaryGradient,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: CircleAvatar(
+                radius: 38,
+                backgroundImage: _settingsData?.profileImageUrl != null
+                    ? NetworkImage(_settingsData!.profileImageUrl!)
+                    : null,
+                backgroundColor: isDark ? AppColors.darkCardBackground : Colors.grey[200],
+                child: _settingsData?.profileImageUrl == null
+                    ? Icon(Icons.person, size: 40, color: isDark ? AppColors.darkTextSecondary : Colors.grey[600])
+                    : null,
+              ),
             ),
             Positioned(
               bottom: 0,
@@ -190,8 +201,19 @@ class _MyProfilePageState extends State<MyProfilePage> {
   Widget _buildMainMenuSection(bool isDark, AppLocalizations l10n) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withOpacity(isDark ? 0.08 : 0.05),
+            isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+        border: Border.all(
+          color: AppColors.primary.withOpacity(0.15),
+          width: 1,
+        ),
       ),
       child: Column(
         children: [
@@ -199,6 +221,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
             icon: Icons.person_outline,
             title: l10n.editProfile,
             isDark: isDark,
+            iconColor: AppColors.waterColor,
             onTap: () async {
               await Navigator.push(
                 context,
@@ -214,6 +237,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
             icon: Icons.favorite_outline,
             title: l10n.diabeticProfile,
             isDark: isDark,
+            iconColor: AppColors.carbsColor,
             onTap: () async {
               await Navigator.push(
                 context,
@@ -229,6 +253,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
             icon: Icons.settings_outlined,
             title: l10n.settings,
             isDark: isDark,
+            iconColor: AppColors.insulinColor,
             onTap: () {
               _showSettingsBottomSheet();
             },
@@ -242,7 +267,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
       ),
       child: Column(
         children: [
