@@ -29,13 +29,33 @@ class AppColors {
   // Chart colors
   static const Color beforeMealColor = Color(0xFF4CAF50);
   static const Color afterMealColor = Color(0xFF2196F3);
+
+  // Accent colors for gradients
+  static const Color primaryLight = Color(0xFF81C784);
+  static const Color accentTeal = Color(0xFF26A69A);
+  static const Color accentBlue = Color(0xFF42A5F5);
+  static const Color accentPurple = Color(0xFF7E57C2);
+  static const Color accentOrange = Color(0xFFFFB74D);
+  static const Color successGreen = Color(0xFF66BB6A);
+  static const Color warningYellow = Color(0xFFFFCA28);
+
+  // Gradients
+  static const List<Color> primaryGradient = [primary, accentTeal];
+  static const List<Color> blueGradient = [waterColor, Color(0xFF1976D2)];
+  static const List<Color> purpleGradient = [insulinColor, Color(0xFF7B1FA2)];
+  static const List<Color> orangeGradient = [pillsColor, Color(0xFFF57C00)];
+  static const List<Color> pinkGradient = [carbsColor, Color(0xFFC2185B)];
 }
 
 class AppSpacing {
   static const double screenPadding = 20.0;
-  static const double cardPadding = 10.0;
+  static const double cardPadding = 16.0;
+  static const double cardPaddingSmall = 12.0;
   static const double gridSpacing = 12.0;
   static const double sectionSpacing = 24.0;
+  static const double cardRadius = 16.0;
+  static const double buttonRadius = 12.0;
+  static const double authCardRadius = 24.0;
 }
 
 class AppTextStyles {
