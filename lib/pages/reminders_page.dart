@@ -6,6 +6,8 @@ import '../widgets/reminder_status_dialog.dart';
 import '../widgets/add_reminder_dialog.dart';
 import '../utils/constants.dart';
 import '../services/data_service_supabase.dart';
+import '../services/alarm_notification_service.dart';
+import 'alarm_ringing_page.dart';
 
 class RemindersPage extends StatefulWidget {
   const RemindersPage({Key? key}) : super(key: key);
@@ -71,12 +73,50 @@ class _RemindersPageState extends State<RemindersPage> {
 
         _isLoading = false;
       });
+
+      // Schedule alarms for all enabled, non-completed reminders
+      await _scheduleAlarmsForReminders();
     } catch (e) {
       debugPrint('Error loading reminders: $e');
       setState(() {
         _reminders = [];
         _isLoading = false;
       });
+    }
+  }
+
+  /// Schedule alarms for all active reminders
+  Future<void> _scheduleAlarmsForReminders() async {
+    for (final reminder in _reminders) {
+      final isEnabled = reminder['isEnabled'] as bool? ?? true;
+      final isDone = reminder['isDone'] as bool? ?? false;
+      final scheduledTime = reminder['scheduledTime'] as String? ?? '';
+
+      if (isEnabled && !isDone && scheduledTime.isNotEmpty) {
+        // Parse the time
+        final timeOfDay =
+            AlarmNotificationService.parseTimeString(scheduledTime);
+        if (timeOfDay != null) {
+          // Generate unique alarm ID from reminder ID
+          final alarmId =
+              AlarmNotificationService.generateAlarmId(reminder['id']);
+
+          // Schedule the alarm
+          await AlarmNotificationService.scheduleDailyAlarm(
+            id: alarmId,
+            title: reminder['title'] ?? 'Reminder',
+            body:
+                'Tap to view your ${_getRepeatTypeLabel(reminder['reminderType'])} reminder',
+            scheduledTime: timeOfDay,
+            payload: '${reminder['id']}|${reminder['title']}|$scheduledTime',
+          );
+        }
+      } else {
+        // Cancel alarm for disabled or completed reminders
+        final alarmId =
+            AlarmNotificationService.generateAlarmId(reminder['id']);
+        await AlarmNotificationService.cancelAlarm(alarmId);
+      }
     }
   }
 
@@ -205,6 +245,49 @@ class _RemindersPageState extends State<RemindersPage> {
             content: Text('Error updating reminder: $e'),
             duration: const Duration(seconds: 2)),
       );
+    }
+  }
+
+  /// Shows the alarm ringing screen for a specific reminder
+  /// This can be triggered when a reminder time is reached
+  void _showAlarmRingingScreen(Map<String, dynamic> reminder) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AlarmRingingPage(
+          alarmTime:
+              reminder['scheduledTime'] ?? reminder['nextTime'] ?? '00:00',
+          alarmLabel: reminder['title'] ?? 'Reminder',
+          repeatType: _getRepeatTypeLabel(reminder['reminderType']),
+          onStop: () {
+            // Mark reminder as done when stopped
+            _handleStatusChange(reminder['id'], 'done');
+          },
+          onSnooze: () {
+            // Postpone reminder when snoozed
+            _handleStatusChange(reminder['id'], 'postponed');
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Converts reminder type to a user-friendly label
+  String _getRepeatTypeLabel(String? reminderType) {
+    switch (reminderType?.toLowerCase()) {
+      case 'daily':
+        return 'Everyday';
+      case 'weekly':
+        return 'Weekly';
+      case 'once':
+        return 'Once';
+      case 'medication':
+        return 'Medication';
+      case 'glucose':
+        return 'Glucose Check';
+      case 'meal':
+        return 'Meal Reminder';
+      default:
+        return 'Once';
     }
   }
 
@@ -460,11 +543,16 @@ class _RemindersPageState extends State<RemindersPage> {
             isSelectionMode: _isSelectionMode,
             isSelected: _selectedIds.contains(reminder['id']),
             onTap: () {
-              _showStatusDialog(
-                reminder['id'],
-                reminder['title'],
-                reminder['nextTime'],
-              );
+              // If reminder is late and not done, show alarm screen
+              if (reminder['isLate'] == true && reminder['isDone'] != true) {
+                _showAlarmRingingScreen(reminder);
+              } else {
+                _showStatusDialog(
+                  reminder['id'],
+                  reminder['title'],
+                  reminder['nextTime'],
+                );
+              }
             },
             onToggleEnabled: () {
               _toggleReminderEnabled(

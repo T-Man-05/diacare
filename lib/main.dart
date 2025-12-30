@@ -17,10 +17,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'pages/login.dart';
 import 'pages/home.dart';
+import 'pages/alarm_ringing_page.dart';
 import 'services/data_service_supabase.dart';
+import 'services/alarm_notification_service.dart';
 import 'l10n/app_localizations.dart';
 import 'blocs/blocs.dart';
 import 'utils/constants.dart';
+
+/// Global navigator key for handling notification taps
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 /// Main function - Entry point of the application
 /// Initializes the service locator before running the app
@@ -30,7 +35,47 @@ void main() async {
   // Initialize the service locator with all services
   await setupDataServiceLocator();
 
+  // Initialize alarm notification service
+  await AlarmNotificationService.initialize();
+
+  // Request notification permissions
+  await AlarmNotificationService.requestPermissions();
+
+  // Set up notification tap handler to show alarm screen
+  AlarmNotificationService.onNotificationTap = _handleNotificationTap;
+
   runApp(const MyApp());
+}
+
+/// Handle notification tap - opens the alarm ringing screen
+void _handleNotificationTap(String? payload) {
+  if (payload != null && navigatorKey.currentState != null) {
+    // Parse payload: "id|title|time"
+    final parts = payload.split('|');
+    final title = parts.length > 1 ? parts[1] : 'Reminder';
+    final time = parts.length > 2 ? parts[2] : '00:00';
+
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (context) => AlarmRingingPage(
+          alarmTime: time,
+          alarmLabel: title,
+          repeatType: 'Reminder',
+          onStop: () {
+            // Cancel the notification
+            if (parts.isNotEmpty) {
+              final id = AlarmNotificationService.generateAlarmId(parts[0]);
+              AlarmNotificationService.cancelAlarm(id);
+            }
+          },
+          onSnooze: () {
+            // Reschedule for 9 minutes later
+            debugPrint('Alarm snoozed');
+          },
+        ),
+      ),
+    );
+  }
 }
 
 /// Root application widget
@@ -60,6 +105,9 @@ class MyApp extends StatelessWidget {
           return BlocBuilder<LocaleCubit, LocaleState>(
             builder: (context, localeState) {
               return MaterialApp(
+                // Navigator key for handling notification taps
+                navigatorKey: navigatorKey,
+
                 // App title shown in task manager
                 title: 'DiaCare',
 
