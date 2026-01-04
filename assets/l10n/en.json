@@ -3,6 +3,59 @@
   "welcome": "Welcome!",
   "home": "Home",
   
+  "tips": {
+    "daily_tip": "DAILY TIP",
+    "hydration_title": "Stay Hydrated",
+    "hydration": "Drinking water helps regulate blood sugar levels and supports kidney function.",
+    "exercise_title": "Move More",
+    "exercise": "Regular physical activity helps your body use insulin more effectively.",
+    "diet_title": "Balanced Meals",
+    "diet": "Include fiber-rich foods to slow sugar absorption and maintain stable levels.",
+    "monitoring_title": "Track Regularly",
+    "monitoring": "Consistent monitoring helps you understand patterns and make better decisions.",
+    "sleep_title": "Quality Sleep",
+    "sleep": "Poor sleep can affect blood sugar control. Aim for 7-8 hours nightly.",
+    "stress_title": "Manage Stress",
+    "stress": "Stress hormones can raise blood sugar. Try relaxation techniques daily.",
+    "medication_title": "Stay Consistent",
+    "medication": "Take medications at the same time daily for optimal blood sugar control."
+  },
+  
+  "stats": {
+    "today_summary": "Today's Summary",
+    "readings": "Readings",
+    "reminders": "Tasks",
+    "km_walked": "km walked"
+  },
+  
+  "health_tips": {
+    "title": "Health Tips",
+    "understanding_diabetes": "Understanding Diabetes",
+    "understanding_diabetes_desc": "Learn the basics of managing your condition effectively.",
+    "healthy_eating": "Healthy Eating",
+    "healthy_eating_desc": "Discover balanced meal plans and smart food choices.",
+    "staying_active": "Staying Active",
+    "staying_active_desc": "Find exercise routines that work for you.",
+    "monitoring_glucose": "Monitoring Glucose",
+    "monitoring_glucose_desc": "Best practices for tracking your blood sugar levels.",
+    "medication_management": "Medication Management",
+    "medication_management_desc": "Tips for staying on track with your treatment.",
+    "mental_wellness": "Mental Wellness",
+    "mental_wellness_desc": "Managing stress and emotional health with diabetes."
+  },
+  
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "q1": "What is a normal blood sugar range?",
+    "a1": "For most adults with diabetes, target ranges are 80-130 mg/dL before meals and less than 180 mg/dL two hours after meals.",
+    "q2": "How often should I check my blood sugar?",
+    "a2": "This depends on your treatment plan. Many people check before meals and at bedtime. Consult your doctor for personalized advice.",
+    "q3": "What should I do if my blood sugar is too high?",
+    "a3": "Drink water, take a walk if safe, and follow your doctor's instructions. Seek medical help if levels remain high.",
+    "q4": "Can I eat sweets with diabetes?",
+    "a4": "In moderation and as part of a balanced meal plan. Count carbs and monitor how sweets affect your blood sugar."
+  },
+  
   "login": {
     "title": "Log In",
     "email_label": "Email Address",

@@ -48,11 +48,17 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           color: isDark ? AppColors.darkCardBackground : Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
+              color: AppColors.primary.withOpacity(isDark ? 0.1 : 0.08),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
             ),
           ],
+          border: Border(
+            top: BorderSide(
+              color: AppColors.primary.withOpacity(0.15),
+              width: 1,
+            ),
+          ),
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
@@ -69,25 +75,99 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           showSelectedLabels: false,
           showUnselectedLabels: false,
           elevation: 0,
+          selectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
           items: [
             BottomNavigationBarItem(
-              icon: const Icon(Icons.alarm),
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _currentIndex == 0 
+                      ? AppColors.pillsColor.withOpacity(0.15)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.alarm,
+                  color: _currentIndex == 0 
+                      ? AppColors.pillsColor 
+                      : (isDark ? AppColors.darkTextSecondary : Colors.grey),
+                ),
+              ),
               label: l10n.reminders,
             ),
             BottomNavigationBarItem(
-              icon: const Icon(Icons.bar_chart),
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _currentIndex == 1 
+                      ? AppColors.waterColor.withOpacity(0.15)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.bar_chart,
+                  color: _currentIndex == 1 
+                      ? AppColors.waterColor 
+                      : (isDark ? AppColors.darkTextSecondary : Colors.grey),
+                ),
+              ),
               label: l10n.insights,
             ),
             BottomNavigationBarItem(
-              icon: const Icon(Icons.home),
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _currentIndex == 2 
+                      ? AppColors.primary.withOpacity(0.15)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.home,
+                  color: _currentIndex == 2 
+                      ? AppColors.primary 
+                      : (isDark ? AppColors.darkTextSecondary : Colors.grey),
+                ),
+              ),
               label: l10n.dashboard,
             ),
             BottomNavigationBarItem(
-              icon: const Icon(Icons.chat_bubble_outline),
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _currentIndex == 3 
+                      ? AppColors.insulinColor.withOpacity(0.15)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.chat_bubble_outline,
+                  color: _currentIndex == 3 
+                      ? AppColors.insulinColor 
+                      : (isDark ? AppColors.darkTextSecondary : Colors.grey),
+                ),
+              ),
               label: l10n.chat,
             ),
             BottomNavigationBarItem(
-              icon: const Icon(Icons.person_outline),
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _currentIndex == 4 
+                      ? AppColors.carbsColor.withOpacity(0.15)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.person_outline,
+                  color: _currentIndex == 4 
+                      ? AppColors.carbsColor 
+                      : (isDark ? AppColors.darkTextSecondary : Colors.grey),
+                ),
+              ),
               label: l10n.profile,
             ),
           ],

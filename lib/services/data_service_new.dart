@@ -399,6 +399,23 @@ class DataService {
     return await _db.getLatestGlucoseReading(userId);
   }
 
+  /// Get today's glucose readings count
+  Future<int> getTodayGlucoseReadingsCount() async {
+    final userId = currentUserId;
+    if (userId == null) return 0;
+    
+    final today = DateTime.now();
+    final startOfDay = DateTime(today.year, today.month, today.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+    
+    final readings = await _db.getGlucoseReadings(
+      userId,
+      startDate: startOfDay,
+      endDate: endOfDay,
+    );
+    return readings.length;
+  }
+
   /// Get glucose chart data (last 7 hours)
   Future<Map<String, dynamic>> getGlucoseChartData() async {
     final userId = currentUserId;

@@ -195,7 +195,7 @@ class _SignupScreen extends State<SignupScreen> {
               // Card container
               Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(39),
+                  borderRadius: BorderRadius.circular(AppSpacing.authCardRadius),
                   color: theme.cardColor,
                   boxShadow: [
                     BoxShadow(

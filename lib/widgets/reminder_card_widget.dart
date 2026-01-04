@@ -61,7 +61,7 @@ class ReminderCardWidget extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: isEnabled ? cardBackground : cardBackground.withOpacity(0.6),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
           border: Border.all(
             color: isSelected ? AppColors.primary : borderColor,
             width: isSelected ? 2.5 : 1.5,

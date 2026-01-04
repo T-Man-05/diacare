@@ -66,7 +66,7 @@ class _DiagnosisTreatementScreen extends State<DiagnosisTreatementScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                'DiaCare',
+                AppLocalizations.of(context).appTitle,
                 style: TextStyle(
                   fontFamily: 'Borel',
                   fontWeight: FontWeight.w400,
@@ -82,7 +82,7 @@ class _DiagnosisTreatementScreen extends State<DiagnosisTreatementScreen> {
               // Card container
               Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(39),
+                  borderRadius: BorderRadius.circular(AppSpacing.authCardRadius),
                   color: theme.cardColor,
                   boxShadow: [
                     BoxShadow(

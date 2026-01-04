@@ -3,6 +3,59 @@
   "welcome": "Bienvenue !",
   "home": "Accueil",
   
+  "tips": {
+    "daily_tip": "CONSEIL DU JOUR",
+    "hydration_title": "Restez Hydraté",
+    "hydration": "Boire de l'eau aide à réguler la glycémie et soutient la fonction rénale.",
+    "exercise_title": "Bougez Plus",
+    "exercise": "L'activité physique régulière aide votre corps à mieux utiliser l'insuline.",
+    "diet_title": "Repas Équilibrés",
+    "diet": "Incluez des aliments riches en fibres pour ralentir l'absorption du sucre.",
+    "monitoring_title": "Surveillez Régulièrement",
+    "monitoring": "Un suivi régulier vous aide à comprendre les tendances et prendre de meilleures décisions.",
+    "sleep_title": "Sommeil de Qualité",
+    "sleep": "Un mauvais sommeil peut affecter le contrôle de la glycémie. Visez 7-8 heures par nuit.",
+    "stress_title": "Gérez le Stress",
+    "stress": "Les hormones de stress peuvent augmenter la glycémie. Essayez des techniques de relaxation.",
+    "medication_title": "Soyez Régulier",
+    "medication": "Prenez vos médicaments à la même heure chaque jour pour un contrôle optimal."
+  },
+  
+  "stats": {
+    "today_summary": "Résumé du Jour",
+    "readings": "Lectures",
+    "reminders": "Tâches",
+    "km_walked": "km parcourus"
+  },
+  
+  "health_tips": {
+    "title": "Conseils Santé",
+    "understanding_diabetes": "Comprendre le Diabète",
+    "understanding_diabetes_desc": "Apprenez les bases pour gérer efficacement votre condition.",
+    "healthy_eating": "Alimentation Saine",
+    "healthy_eating_desc": "Découvrez des plans de repas équilibrés et des choix alimentaires.",
+    "staying_active": "Rester Actif",
+    "staying_active_desc": "Trouvez des routines d'exercice qui vous conviennent.",
+    "monitoring_glucose": "Surveillance de la Glycémie",
+    "monitoring_glucose_desc": "Meilleures pratiques pour suivre votre taux de sucre.",
+    "medication_management": "Gestion des Médicaments",
+    "medication_management_desc": "Conseils pour rester sur la bonne voie avec votre traitement.",
+    "mental_wellness": "Bien-être Mental",
+    "mental_wellness_desc": "Gérer le stress et la santé émotionnelle avec le diabète."
+  },
+  
+  "faq": {
+    "title": "Questions Fréquentes",
+    "q1": "Quelle est la plage de glycémie normale ?",
+    "a1": "Pour la plupart des adultes diabétiques, les cibles sont de 80-130 mg/dL avant les repas et moins de 180 mg/dL deux heures après.",
+    "q2": "À quelle fréquence dois-je vérifier ma glycémie ?",
+    "a2": "Cela dépend de votre plan de traitement. Consultez votre médecin pour des conseils personnalisés.",
+    "q3": "Que faire si ma glycémie est trop élevée ?",
+    "a3": "Buvez de l'eau, marchez si possible, et suivez les instructions de votre médecin.",
+    "q4": "Puis-je manger des sucreries avec le diabète ?",
+    "a4": "Avec modération et dans le cadre d'un plan alimentaire équilibré. Comptez les glucides."
+  },
+  
   "login": {
     "title": "Connexion",
     "email_label": "Adresse e-mail",

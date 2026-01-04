@@ -7,6 +7,8 @@ import '../services/data_service_supabase.dart';
 import '../widgets/info_card.dart';
 import '../widgets/blood_sugar_chart.dart';
 import '../widgets/add_data_dialog.dart';
+import '../widgets/daily_tip_card.dart';
+import '../widgets/quick_stats_card.dart';
 import '../utils/constants.dart';
 import '../l10n/app_localizations.dart';
 import 'insights_page.dart';
@@ -27,6 +29,12 @@ class _DashboardPageState extends State<DashboardPage> {
   int _maxGlucose = 180;
   Map<String, dynamic>? _closestReminder;
   String _timeUntilReminder = '';
+  
+  // Stats for quick summary
+  int _readingsToday = 0;
+  int _remindersCompleted = 0;
+  int _totalReminders = 0;
+  double _activityKm = 0.0;
 
   @override
   void initState() {
@@ -99,11 +107,44 @@ class _DashboardPageState extends State<DashboardPage> {
         }
       }
 
+      // Calculate stats for quick summary
+      int completedReminders = 0;
+      int totalActiveReminders = 0;
+      for (final r in reminders) {
+        final reminder = r as Map<String, dynamic>;
+        final isEnabled = reminder['is_enabled'] == 1 ||
+            reminder['is_enabled'] == true ||
+            reminder['is_enabled'] == null;
+        if (!isEnabled) continue;
+        totalActiveReminders++;
+        final status = reminder['status'] ?? 'pending';
+        if (status == 'done' || status == 'completed') {
+          completedReminders++;
+        }
+      }
+
+      // Get today's glucose readings count
+      final todayReadings = await dataService.getTodayGlucoseReadingsCount();
+      
+      // Get activity from health cards
+      double activityValue = 0.0;
+      final dashboardData = DashboardData.fromJson(dashboardJson);
+      for (final card in dashboardData.healthCards) {
+        if (card.title.toLowerCase() == 'activity') {
+          activityValue = card.value;
+          break;
+        }
+      }
+
       setState(() {
-        _dashboardData = DashboardData.fromJson(dashboardJson);
+        _dashboardData = dashboardData;
         _lateRemindersCount = lateCount;
         _closestReminder = closestReminder;
         _timeUntilReminder = timeUntil;
+        _readingsToday = todayReadings;
+        _remindersCompleted = completedReminders;
+        _totalReminders = totalActiveReminders;
+        _activityKm = activityValue;
         _isLoading = false;
       });
     } catch (e) {
@@ -164,11 +205,24 @@ class _DashboardPageState extends State<DashboardPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeader(theme, isDark, l10n),
-                    const SizedBox(height: 20),
-                    _buildGlucoseCard(theme, isDark, l10n, settingsState),
+                    const SizedBox(height: 16),
+                    // Quick Stats Summary
+                    QuickStatsCard(
+                      readingsToday: _readingsToday,
+                      remindersCompleted: _remindersCompleted,
+                      totalReminders: _totalReminders,
+                      activityKm: _activityKm,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 16),
+                    // Daily Health Tip (moved up)
+                    DailyTipCard(isDark: isDark),
                     const SizedBox(height: 16),
                     _buildReminderCard(theme, isDark, l10n),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
+                    // Glucose card now part of health cards section
+                    _buildGlucoseCard(theme, isDark, l10n, settingsState),
+                    const SizedBox(height: 12),
                     _buildHealthCardsGrid(isDark, l10n),
                     const SizedBox(height: 16),
                     _buildAddDataCard(isDark, l10n, settingsState),
@@ -203,23 +257,58 @@ class _DashboardPageState extends State<DashboardPage> {
         ? _dashboardData!.greeting.split(', ')[1]
         : 'User';
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          l10n.greeting(userName),
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w600,
-            color: theme.textTheme.bodyLarge?.color,
-          ),
-        ),
-        Row(
-          children: [
-            _buildNotificationIcon(),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withOpacity(isDark ? 0.15 : 0.1),
+            Colors.transparent,
           ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
-      ],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: AppColors.primaryGradient,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.favorite,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                l10n.greeting(userName),
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w600,
+                  color: theme.textTheme.bodyLarge?.color,
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              _buildNotificationIcon(),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -300,33 +389,78 @@ class _DashboardPageState extends State<DashboardPage> {
       statusIcon = Icons.check;
     }
 
+    // Gradient colors based on status
+    List<Color> cardGradient;
+    if (glucoseValue < _minGlucose) {
+      cardGradient = [AppColors.accentOrange.withOpacity(0.15), AppColors.accentOrange.withOpacity(0.05)];
+    } else if (glucoseValue > _maxGlucose) {
+      cardGradient = [AppColors.activityColor.withOpacity(0.15), AppColors.activityColor.withOpacity(0.05)];
+    } else {
+      cardGradient = [AppColors.primary.withOpacity(0.15), AppColors.accentTeal.withOpacity(0.05)];
+    }
+
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: _cardDecoration(isDark),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: cardGradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+        border: Border.all(
+          color: statusColor.withOpacity(0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: statusColor.withOpacity(isDark ? 0.15 : 0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  l10n.glucoseLevel,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: theme.textTheme.bodyLarge?.color,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.bloodtype,
+                        color: statusColor,
+                        size: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.glucoseLevel,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: theme.textTheme.bodyLarge?.color,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 RichText(
                   text: TextSpan(
                     children: [
                       TextSpan(
                         text: '$displayValue ',
                         style: TextStyle(
-                          fontSize: 32,
+                          fontSize: 36,
                           fontWeight: FontWeight.bold,
-                          color: theme.textTheme.bodyLarge?.color,
+                          color: statusColor,
                         ),
                       ),
                       TextSpan(
@@ -347,24 +481,35 @@ class _DashboardPageState extends State<DashboardPage> {
           Column(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  gradient: LinearGradient(
+                    colors: [
+                      statusColor.withOpacity(0.3),
+                      statusColor.withOpacity(0.1),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   shape: BoxShape.circle,
+                  border: Border.all(
+                    color: statusColor.withOpacity(0.5),
+                    width: 2,
+                  ),
                 ),
                 child: Icon(
                   statusIcon,
                   color: statusColor,
-                  size: 20,
+                  size: 24,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 statusText,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   color: statusColor,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -528,7 +673,7 @@ class _DashboardPageState extends State<DashboardPage> {
         crossAxisCount: 2,
         crossAxisSpacing: AppSpacing.gridSpacing,
         mainAxisSpacing: AppSpacing.gridSpacing,
-        childAspectRatio: 2,
+        childAspectRatio: 1.8,
       ),
       itemCount: _dashboardData!.healthCards.length,
       itemBuilder: (context, index) {
@@ -614,7 +759,7 @@ class _DashboardPageState extends State<DashboardPage> {
   BoxDecoration _cardDecoration(bool isDark) {
     return BoxDecoration(
       color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
       boxShadow: [
         BoxShadow(
           color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),

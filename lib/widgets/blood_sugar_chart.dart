@@ -35,10 +35,10 @@ class BloodSugarChart extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(AppSpacing.cardPadding),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBackground : AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(isDark ? 51 : 13),
@@ -166,20 +166,21 @@ class BloodSugarChart extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              l10n.noData,
+              '📊 Chart is feeling lonely!',
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: textPrimary,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'Add blood sugar readings to see the chart',
+              'Feed me some glucose readings and watch me dance! 💃',
               style: TextStyle(
                 fontSize: 12,
                 color: textSecondary,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

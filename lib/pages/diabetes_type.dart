@@ -64,7 +64,7 @@ class _DiabetesTypeScreen extends State<DiabetesTypeScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                'DiaCare',
+                AppLocalizations.of(context).appTitle,
                 style: TextStyle(
                   fontFamily: 'Borel',
                   fontWeight: FontWeight.w400,
@@ -80,7 +80,7 @@ class _DiabetesTypeScreen extends State<DiabetesTypeScreen> {
               // Card container
               Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(39),
+                  borderRadius: BorderRadius.circular(AppSpacing.authCardRadius),
                   color: theme.cardColor,
                   boxShadow: [
                     BoxShadow(
