@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/constants.dart';
-import '../services/data_service_new.dart';
+import '../services/data_service_supabase.dart';
+import '../services/alarm_notification_service.dart';
 
 /// Dialog for adding a new reminder
 class AddReminderDialog extends StatefulWidget {
@@ -125,7 +126,7 @@ class _AddReminderDialogState extends State<AddReminderDialog> {
     setState(() => _isLoading = true);
 
     try {
-      final dataService = DataService.instance;
+      final dataService = getIt<DataService>();
       final l10n = AppLocalizations.of(context);
 
       // Get title - either from preset type or custom input
@@ -136,12 +137,28 @@ class _AddReminderDialogState extends State<AddReminderDialog> {
         title = _titleController.text.trim();
       }
 
-      await dataService.addReminder(
+      // Save reminder to database
+      final result = await dataService.addReminder(
         title: title,
         reminderType: _selectedType,
         scheduledTime: _formatTimeOfDay(_selectedTime),
         isRecurring: _selectedDays.length < 7,
         recurrencePattern: _getRecurrencePattern(),
+      );
+
+      // Get the reminder ID from the result
+      final reminderId = result['id']?.toString() ??
+          DateTime.now().millisecondsSinceEpoch.toString();
+
+      // Schedule alarm notification for this reminder
+      final alarmId = AlarmNotificationService.generateAlarmId(reminderId);
+
+      await AlarmNotificationService.scheduleDailyAlarm(
+        id: alarmId,
+        title: title,
+        body: 'Tap to view your reminder',
+        scheduledTime: _selectedTime,
+        payload: '$reminderId|$title|${_formatTimeOfDay(_selectedTime)}',
       );
 
       if (!mounted) return;
@@ -384,7 +401,7 @@ class _AddReminderDialogState extends State<AddReminderDialog> {
                               color: theme.textTheme.bodyLarge?.color,
                             ),
                           ),
-                          Icon(
+                          const Icon(
                             Icons.access_time,
                             color: AppColors.primary,
                           ),

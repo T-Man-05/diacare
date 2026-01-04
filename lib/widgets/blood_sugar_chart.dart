@@ -302,7 +302,8 @@ class SinglePointChartPainter extends CustomPainter {
       final labelPainter = TextPainter(
         text: TextSpan(
           text: beforeLabel,
-          style: TextStyle(color: AppColors.beforeMealColor, fontSize: 10),
+          style:
+              const TextStyle(color: AppColors.beforeMealColor, fontSize: 10),
         ),
         textDirection: TextDirection.ltr,
       );
@@ -340,7 +341,7 @@ class SinglePointChartPainter extends CustomPainter {
       final labelPainter = TextPainter(
         text: TextSpan(
           text: afterLabel,
-          style: TextStyle(color: AppColors.afterMealColor, fontSize: 10),
+          style: const TextStyle(color: AppColors.afterMealColor, fontSize: 10),
         ),
         textDirection: TextDirection.ltr,
       );

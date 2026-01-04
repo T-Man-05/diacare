@@ -22,7 +22,7 @@ class AppLocalizations {
 
   /// Factory method to create AppLocalizations from data service
   static Future<AppLocalizations> load() async {
-    final dataService = DataService.instance;
+    final dataService = getIt<DataService>();
     final strings = await dataService.getAppStrings();
     return AppLocalizations._(strings);
   }

@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/dashboard_data.dart';
 import '../blocs/blocs.dart';
 import '../blocs/locale/locale_cubit.dart';
-import '../services/data_service_new.dart';
+import '../services/data_service_supabase.dart';
 import '../widgets/info_card.dart';
 import '../widgets/blood_sugar_chart.dart';
 import '../widgets/add_data_dialog.dart';
@@ -45,7 +45,7 @@ class _DashboardPageState extends State<DashboardPage> {
   /// Load data from the DataService
   Future<void> _loadData() async {
     try {
-      final dataService = DataService.instance;
+      final dataService = getIt<DataService>();
 
       // Get dashboard data from SQLite
       final dashboardJson = await dataService.getDashboardData();
@@ -596,7 +596,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   if (_timeUntilReminder.isNotEmpty)
                     Text(
                       'in $_timeUntilReminder',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.primary,
                         fontWeight: FontWeight.w500,
@@ -730,7 +730,7 @@ class _DashboardPageState extends State<DashboardPage> {
             const SizedBox(width: 12),
             Text(
               l10n.translate('addData'),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: AppColors.primary,
