@@ -16,7 +16,10 @@ import 'package:flutter/material.dart';
 import 'date_gen.dart';
 import 'login.dart';
 import '../utils/constants.dart';
-import '../services/data_service_supabase.dart';
+import '../data/service_locator.dart';
+import '../domain/app_data_source.dart';
+import '../domain/models/models.dart';
+import '../domain/inputs/inputs.dart';
 import '../l10n/app_localizations.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -103,12 +106,12 @@ class _SignupScreen extends State<SignupScreen> {
     });
 
     try {
-      final dataService = getIt<DataService>();
+      final dataSource = getIt<AppDataSource>();
       final l10n = AppLocalizations.of(context);
 
       // Check if email already exists
       final emailExists =
-          await dataService.emailExists(_emailController.text.trim());
+          await dataSource.emailExists(_emailController.text.trim());
 
       if (!mounted) return;
 
@@ -121,11 +124,12 @@ class _SignupScreen extends State<SignupScreen> {
       }
 
       // Create the user account with hashed password
-      await dataService.registerUser(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        username: _usernameController.text.trim(),
-        seedDemoData: false, // Start with empty database
+      await dataSource.registerUser(
+        RegisterUserInput(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          username: _usernameController.text.trim(),
+        ),
       );
 
       if (!mounted) return;
@@ -135,7 +139,7 @@ class _SignupScreen extends State<SignupScreen> {
         context,
         MaterialPageRoute(builder: (context) => const DateGenScreen()),
       );
-    } on DataServiceException catch (e) {
+    } on DataSourceException catch (e) {
       if (mounted) {
         setState(() {
           _signupError = e.message;

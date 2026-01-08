@@ -7,9 +7,10 @@ import '../widgets/chart_card.dart';
 import '../widgets/blood_sugar_chart.dart';
 import '../widgets/carbs_chart.dart';
 import '../widgets/activity_chart.dart';
-import '../models/chart_data.dart';
 import '../utils/constants.dart';
-import '../services/data_service_supabase.dart';
+import '../data/service_locator.dart';
+import '../domain/app_data_source.dart';
+import '../domain/models/models.dart';
 
 class InsightsPage extends StatefulWidget {
   const InsightsPage({Key? key}) : super(key: key);
@@ -19,9 +20,9 @@ class InsightsPage extends StatefulWidget {
 }
 
 class _InsightsPageState extends State<InsightsPage> {
-  ChartData? _bloodSugarData;
-  Map<String, dynamic>? _carbsData;
-  Map<String, dynamic>? _activityData;
+  BloodSugarChartData? _bloodSugarData;
+  CarbsChartData? _carbsData;
+  ActivityChartData? _activityData;
   bool _isLoading = true;
 
   @override
@@ -32,30 +33,22 @@ class _InsightsPageState extends State<InsightsPage> {
 
   Future<void> _loadChartData() async {
     try {
-      final dataService = getIt<DataService>();
+      final dataSource = getIt<AppDataSource>();
 
       // Load all chart data
-      final glucoseData = await dataService.getGlucoseChartData();
-      final carbsData = await dataService.getCarbsChartData();
-      final activityData = await dataService.getActivityChartData();
+      final glucoseData = await dataSource.getGlucoseChartData();
+      final carbsData = await dataSource.getCarbsChartData();
+      final activityData = await dataSource.getActivityChartData();
 
       if (!mounted) return;
 
       setState(() {
-        // Create ChartData for blood sugar with hour labels
-        final beforeMealList =
-            glucoseData['before_meal'] as List<dynamic>? ?? [];
-        final afterMealList = glucoseData['after_meal'] as List<dynamic>? ?? [];
-        final hoursList = glucoseData['hours'] as List<dynamic>? ?? [];
-
-        _bloodSugarData = ChartData(
+        // Create BloodSugarChartData from GlucoseChartData
+        _bloodSugarData = BloodSugarChartData(
           title: 'Blood Sugar',
-          data: {
-            'before_meal':
-                beforeMealList.map((e) => (e as num).toInt()).toList(),
-            'after_meal': afterMealList.map((e) => (e as num).toInt()).toList(),
-          },
-          hours: hoursList.map((e) => e.toString()).toList(),
+          beforeMealValues: glucoseData.beforeMealValues,
+          afterMealValues: glucoseData.afterMealValues,
+          labels: glucoseData.hours,
         );
 
         _carbsData = carbsData;
@@ -113,39 +106,24 @@ class _InsightsPageState extends State<InsightsPage> {
 
     // Default empty chart data
     final bloodSugarData = _bloodSugarData ??
-        ChartData(
+        BloodSugarChartData(
           title: l10n.bloodSugar,
-          data: {'before_meal': [], 'after_meal': []},
-          hours: _generateHourLabels(),
+          beforeMealValues: [],
+          afterMealValues: [],
+          labels: _generateHourLabels(),
         );
 
-    final carbsValues = (_carbsData?['values'] as List<dynamic>?)
-            ?.map((e) => (e as num).toDouble())
-            .toList() ??
-        [];
-    final carbsDays = (_carbsData?['days'] as List<dynamic>?)
-            ?.map((e) => e.toString())
-            .toList() ??
-        [];
-    final carbsHasData = (_carbsData?['hasData'] as List<dynamic>?)
-            ?.map((e) => e as bool)
-            .toList() ??
-        [];
-    final carbsTotal = (_carbsData?['totalRecords'] as int?) ?? 0;
+    final carbsValues = _carbsData?.values ?? [];
+    final carbsDays = _carbsData?.days ?? [];
+    // Generate hasData list based on values (non-zero values have data)
+    final carbsHasData = carbsValues.map((v) => v > 0).toList();
+    final carbsTotal = _carbsData?.totalRecords ?? 0;
 
-    final activityValues = (_activityData?['values'] as List<dynamic>?)
-            ?.map((e) => (e as num).toDouble())
-            .toList() ??
-        [];
-    final activityDays = (_activityData?['days'] as List<dynamic>?)
-            ?.map((e) => e.toString())
-            .toList() ??
-        [];
-    final activityHasData = (_activityData?['hasData'] as List<dynamic>?)
-            ?.map((e) => e as bool)
-            .toList() ??
-        [];
-    final activityTotal = (_activityData?['totalRecords'] as int?) ?? 0;
+    final activityValues = _activityData?.values ?? [];
+    final activityDays = _activityData?.hours ?? [];
+    // Generate hasData list based on values (non-zero values have data)
+    final activityHasData = activityValues.map((v) => v > 0).toList();
+    final activityTotal = _activityData?.totalRecords ?? 0;
 
     return Scaffold(
       backgroundColor: backgroundColor,

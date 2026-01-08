@@ -16,7 +16,10 @@ import 'package:flutter/material.dart';
 import 'signup.dart';
 import 'home.dart';
 import '../utils/constants.dart';
-import '../services/data_service_supabase.dart';
+import '../data/service_locator.dart';
+import '../domain/app_data_source.dart';
+import '../domain/models/models.dart';
+import '../domain/inputs/inputs.dart';
 import '../l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -89,12 +92,14 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final dataService = getIt<DataService>();
+      final dataSource = getIt<AppDataSource>();
 
       // Use the new login method that saves session
-      final user = await dataService.login(
-        _emailController.text.trim(),
-        _passwordController.text,
+      final user = await dataSource.login(
+        LoginInput(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        ),
       );
 
       if (!mounted) return;

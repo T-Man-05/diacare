@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/constants.dart';
-import '../services/data_service_supabase.dart';
+import '../data/service_locator.dart';
+import '../domain/app_data_source.dart';
+import '../domain/inputs/inputs.dart';
 
 /// Dialog for adding health data (glucose, water, pills, activity, carbs, insulin)
 class AddDataDialog extends StatefulWidget {
@@ -177,24 +179,26 @@ class _AddDataDialogState extends State<AddDataDialog> {
     setState(() => _isLoading = true);
 
     try {
-      final dataService = getIt<DataService>();
+      final dataSource = getIt<AppDataSource>();
       final inputValue = double.parse(_valueController.text);
       final storageValue = _convertToStorageUnit(_selectedType!, inputValue);
 
       if (_selectedType == 'glucose') {
-        // Add glucose reading
-        await dataService.addGlucoseReading(
+        // Add glucose reading using typed input DTO
+        final input = CreateGlucoseReadingInput(
           value: storageValue,
           unit: 'mg/dL', // Always store in mg/dL
           readingType: _readingType,
         );
+        await dataSource.addGlucoseReading(input);
       } else {
-        // Add health card data
-        await dataService.updateHealthCard(
+        // Update health card using typed input DTO
+        final input = UpdateHealthCardInput(
           cardType: _selectedType!,
           value: storageValue,
           unit: _dataTypes[_selectedType]!['storageUnit'] as String,
         );
+        await dataSource.updateHealthCard(input);
       }
 
       if (!mounted) return;

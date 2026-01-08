@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/health_card.dart';
+import '../domain/models/models.dart';
 import '../utils/constants.dart';
 
 /// Reusable Info Card Widget for health metrics

@@ -19,12 +19,14 @@
 ///
 /// Dependencies:
 /// - ai_chat_service.dart: Handles AI communication
-/// - data_service_supabase.dart: Fetches user health data
+/// - AppDataSource: Fetches user health data via domain abstraction
 /// ============================================================================
 
 import 'package:flutter/material.dart';
 import '../services/ai_chat_service.dart';
-import '../services/data_service_supabase.dart';
+import '../data/service_locator.dart';
+import '../domain/app_data_source.dart';
+import '../domain/models/models.dart';
 import '../utils/constants.dart';
 
 /// ============================================================================
@@ -74,7 +76,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   Map<String, dynamic> _userContext = {};
 
   /// User's profile data for display
-  Map<String, dynamic>? _userProfile;
+  UserProfile? _userProfile;
 
   /// Animation controller for typing indicator
   late AnimationController _typingAnimationController;
@@ -113,63 +115,55 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   /// This includes profile, glucose readings, health cards, etc.
   Future<void> _loadUserContext() async {
     try {
-      final dataService = getIt<DataService>();
+      final dataSource = getIt<AppDataSource>();
 
       // Get user profile
-      final profile = await dataService.getCurrentUser();
+      final profile = await dataSource.getCurrentUser();
       _userProfile = profile;
 
       // Get diabetic profile
-      final diabeticProfile = await dataService.getDiabeticProfile();
+      final diabeticProfile = await dataSource.getDiabeticProfile();
 
       // Get latest glucose reading
-      final latestGlucose = await dataService.getLatestGlucoseReading();
+      final latestGlucose = await dataSource.getLatestGlucoseReading();
 
       // Get recent glucose readings (last 7)
-      final recentReadings = await dataService.getGlucoseReadings(limit: 7);
+      final recentReadings = await dataSource.getGlucoseReadings(limit: 7);
 
       // Get today's health cards
-      final healthCards = await dataService.getHealthCards();
+      final healthCards = await dataSource.getHealthCards();
 
-      // Calculate age from date of birth if available
-      String age = 'Not specified';
-      if (profile?['date_of_birth'] != null) {
-        try {
-          final dob = DateTime.parse(profile!['date_of_birth']);
-          final now = DateTime.now();
-          age = (now.year - dob.year).toString();
-        } catch (_) {}
-      }
+      // Calculate age from date of birth using typed model
+      final age = profile?.age?.toString() ?? 'Not specified';
 
-      // Build comprehensive user context
+      // Build comprehensive user context using typed domain models
       setState(() {
         _userContext = {
-          // Profile data
-          'full_name': profile?['full_name'] ?? '',
-          'username': profile?['username'] ?? '',
-          'email': profile?['email'] ?? '',
+          // Profile data (using typed UserProfile properties)
+          'full_name': profile?.fullName ?? '',
+          'username': profile?.username ?? '',
+          'email': profile?.email ?? '',
           'age': age,
-          'gender': profile?['gender'] ?? 'Not specified',
-          'height': profile?['height'] ?? 'Not specified',
-          'weight': profile?['weight'] ?? 'Not specified',
-          'profile_image_url': profile?['profile_image_url'],
+          'gender': profile?.gender ?? 'Not specified',
+          'height': profile?.height?.toString() ?? 'Not specified',
+          'weight': profile?.weight?.toString() ?? 'Not specified',
+          'profile_image_url': profile?.profileImageUrl,
 
-          // Diabetic profile
-          'diabetic_type': diabeticProfile?['diabetic_type'] ?? 'Type 2',
-          'treatment_type':
-              diabeticProfile?['treatment_type'] ?? 'Not specified',
-          'min_glucose': diabeticProfile?['min_glucose'] ?? 70,
-          'max_glucose': diabeticProfile?['max_glucose'] ?? 180,
+          // Diabetic profile (using typed DiabeticProfile properties)
+          'diabetic_type': diabeticProfile?.diabeticType ?? 'Type 2',
+          'treatment_type': diabeticProfile?.treatmentType ?? 'Not specified',
+          'min_glucose': diabeticProfile?.minGlucose ?? 70,
+          'max_glucose': diabeticProfile?.maxGlucose ?? 180,
 
-          // Latest glucose
-          'latest_glucose': latestGlucose?['value'] ?? 'No reading',
-          'glucose_unit': latestGlucose?['unit'] ?? 'mg/dL',
-          'latest_reading_type': latestGlucose?['reading_type'] ?? '',
+          // Latest glucose (using typed LatestGlucose properties)
+          'latest_glucose': latestGlucose?.value ?? 'No reading',
+          'glucose_unit': latestGlucose?.unit ?? 'mg/dL',
+          'latest_reading_type': latestGlucose?.readingType?.name ?? '',
 
-          // Health cards
+          // Health cards (List<HealthCard>)
           'health_cards': healthCards,
 
-          // Recent readings
+          // Recent readings (List<GlucoseReading>)
           'recent_glucose_readings': recentReadings,
         };
         _isInitializing = false;
@@ -278,11 +272,9 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Get user's name for greeting
-    final userName = _userContext['full_name']?.toString().isNotEmpty == true
-        ? _userContext['full_name']
-        : _userContext['username'] ?? 'there';
-    final firstName = userName.toString().split(' ').first;
+    // Get user's name for greeting using typed UserProfile model
+    final userName = _userProfile?.displayName ?? 'there';
+    final firstName = userName.split(' ').first;
 
     return Scaffold(
       // Use transparent background to show gradient
@@ -374,7 +366,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
 
   /// Builds the user's profile picture widget
   Widget _buildProfilePicture(bool isDark) {
-    final imageUrl = _userProfile?['profile_image_url'];
+    final imageUrl = _userProfile?.profileImageUrl;
 
     return Container(
       width: 48,
@@ -425,8 +417,9 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
 
   /// Gets the user's initials for the default avatar
   String _getInitials() {
-    final fullName = _userContext['full_name']?.toString() ?? '';
-    final username = _userContext['username']?.toString() ?? '';
+    // Use typed UserProfile model instead of raw map access
+    final fullName = _userProfile?.fullName ?? '';
+    final username = _userProfile?.username ?? '';
     final name = fullName.isNotEmpty ? fullName : username;
 
     if (name.isEmpty) return 'U';

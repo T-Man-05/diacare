@@ -6,7 +6,7 @@
 /// It initializes the data service layer and sets up the app-wide configuration.
 ///
 /// Data Storage:
-/// - Supabase: Users, glucose readings, health cards, reminders, profiles
+/// - AppDataSource abstraction: Can use Supabase, Fake data, or any backend
 /// - SharedPreferences: Theme, locale, units (local cache)
 ///
 /// State Management: Uses BLoC/Cubit pattern with flutter_bloc package
@@ -18,7 +18,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'pages/login.dart';
 import 'pages/home.dart';
 import 'pages/alarm_ringing_page.dart';
-import 'services/data_service_supabase.dart';
+import 'data/service_locator.dart';
+import 'domain/app_data_source.dart';
 import 'services/alarm_notification_service.dart';
 import 'l10n/app_localizations.dart';
 import 'blocs/blocs.dart';
@@ -32,8 +33,8 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize the service locator with all services
-  await setupDataServiceLocator();
+  // Initialize the service locator with AppDataSource (Supabase)
+  await setupServiceLocator();
 
   // Initialize alarm notification service
   await AlarmNotificationService.initialize();
@@ -86,8 +87,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Check if user is already logged in
-    final dataService = getIt<DataService>();
-    final isLoggedIn = dataService.isLoggedIn;
+    final dataSource = getIt<AppDataSource>();
+    final isLoggedIn = dataSource.isLoggedIn;
 
     return MultiBlocProvider(
       providers: [

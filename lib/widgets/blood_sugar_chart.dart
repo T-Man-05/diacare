@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
-import '../models/chart_data.dart';
+import '../domain/models/models.dart';
 import '../utils/constants.dart';
 
 /// Blood Sugar Chart Widget with CustomPainter
 class BloodSugarChart extends StatelessWidget {
-  final ChartData chartData;
+  final BloodSugarChartData chartData;
   final VoidCallback onSeeDetails;
   final bool flag;
   final String units;
@@ -18,11 +18,7 @@ class BloodSugarChart extends StatelessWidget {
     this.units = 'mg/dL',
   }) : super(key: key);
 
-  bool get _hasData {
-    final before = chartData.data['before_meal'] ?? [];
-    final after = chartData.data['after_meal'] ?? [];
-    return before.isNotEmpty || after.isNotEmpty;
-  }
+  bool get _hasData => chartData.hasData;
 
   @override
   Widget build(BuildContext context) {
@@ -108,8 +104,8 @@ class BloodSugarChart extends StatelessWidget {
   }
 
   Widget _buildChart(bool isDark, Color textSecondary, AppLocalizations l10n) {
-    final beforeMeal = chartData.data['before_meal'] ?? [];
-    final afterMeal = chartData.data['after_meal'] ?? [];
+    final beforeMeal = chartData.beforeMealValues;
+    final afterMeal = chartData.afterMealValues;
     final isSinglePoint = beforeMeal.length <= 1 && afterMeal.length <= 1;
 
     if (isSinglePoint) {
@@ -138,7 +134,7 @@ class BloodSugarChart extends StatelessWidget {
               painter: LineChartPainter(
                 beforeMeal: beforeMeal,
                 afterMeal: afterMeal,
-                hours: chartData.hours,
+                hours: chartData.labels,
                 textColor: textSecondary,
                 gridColor: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
                 units: units,
@@ -189,8 +185,8 @@ class BloodSugarChart extends StatelessWidget {
 
   Widget _buildSinglePointChart(
       bool isDark, Color textSecondary, AppLocalizations l10n) {
-    final beforeMeal = chartData.data['before_meal'] ?? [];
-    final afterMeal = chartData.data['after_meal'] ?? [];
+    final beforeMeal = chartData.beforeMealValues;
+    final afterMeal = chartData.afterMealValues;
 
     return SizedBox(
       height: 200,
@@ -232,8 +228,8 @@ class BloodSugarChart extends StatelessWidget {
 
 /// Custom painter for single point display
 class SinglePointChartPainter extends CustomPainter {
-  final List<int> beforeMeal;
-  final List<int> afterMeal;
+  final List<double> beforeMeal;
+  final List<double> afterMeal;
   final Color textColor;
   final Color gridColor;
   final String beforeLabel;
@@ -355,8 +351,8 @@ class SinglePointChartPainter extends CustomPainter {
 
 /// Custom painter for Y-axis labels only
 class YAxisPainter extends CustomPainter {
-  final List<int> beforeMeal;
-  final List<int> afterMeal;
+  final List<double> beforeMeal;
+  final List<double> afterMeal;
   final Color textColor;
   final String units;
 
@@ -381,8 +377,8 @@ class YAxisPainter extends CustomPainter {
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
     final allValues = [...beforeMeal, ...afterMeal];
-    final minValue = allValues.reduce((a, b) => a < b ? a : b).toDouble();
-    final maxValue = allValues.reduce((a, b) => a > b ? a : b).toDouble();
+    final minValue = allValues.reduce((a, b) => a < b ? a : b);
+    final maxValue = allValues.reduce((a, b) => a > b ? a : b);
     final range = maxValue - minValue;
     final padding = range * 0.2;
 
@@ -415,8 +411,8 @@ class YAxisPainter extends CustomPainter {
 
 /// Custom painter for line chart
 class LineChartPainter extends CustomPainter {
-  final List<int> beforeMeal;
-  final List<int> afterMeal;
+  final List<double> beforeMeal;
+  final List<double> afterMeal;
   final List<String> hours;
   final Color textColor;
   final Color gridColor;

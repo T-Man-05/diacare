@@ -13,17 +13,18 @@
 /// ============================================================================
 
 import 'package:flutter/material.dart';
-import 'data_service.dart';
+import '../data/service_locator.dart';
+import '../domain/app_data_source.dart';
 
 class AppLocalizations {
   final Map<String, dynamic> _strings;
 
   AppLocalizations._(this._strings);
 
-  /// Factory method to create AppLocalizations from data service
+  /// Factory method to create AppLocalizations from data source
   static Future<AppLocalizations> load() async {
-    final dataService = getIt<DataService>();
-    final strings = await dataService.getAppStrings();
+    final dataSource = getIt<AppDataSource>();
+    final strings = await dataSource.getAppStrings();
     return AppLocalizations._(strings);
   }
 

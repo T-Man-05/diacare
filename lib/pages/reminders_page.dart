@@ -5,7 +5,10 @@ import '../widgets/reminder_card_widget.dart';
 import '../widgets/reminder_status_dialog.dart';
 import '../widgets/add_reminder_dialog.dart';
 import '../utils/constants.dart';
-import '../services/data_service_supabase.dart';
+import '../data/service_locator.dart';
+import '../domain/app_data_source.dart';
+import '../domain/models/models.dart';
+import '../domain/inputs/inputs.dart';
 import '../services/alarm_notification_service.dart';
 import 'alarm_ringing_page.dart';
 
@@ -17,7 +20,7 @@ class RemindersPage extends StatefulWidget {
 }
 
 class _RemindersPageState extends State<RemindersPage> {
-  List<Map<String, dynamic>> _reminders = [];
+  List<Reminder> _reminders = [];
   bool _isLoading = true;
   bool _isSelectionMode = false;
   final Set<String> _selectedIds = {};
@@ -30,45 +33,18 @@ class _RemindersPageState extends State<RemindersPage> {
 
   Future<void> _loadReminders() async {
     try {
-      final dataService = getIt<DataService>();
-      final remindersData = await dataService.getReminders();
+      final dataSource = getIt<AppDataSource>();
+      final remindersData = await dataSource.getReminders();
 
       setState(() {
-        _reminders = remindersData.map((r) {
-          final reminder = r as Map<String, dynamic>;
-          final scheduledTime = reminder['scheduled_time'] ?? '';
-          final status = reminder['status'] ?? 'pending';
-          final isDone = status == 'done' || status == 'completed';
-          // Handle null case for is_enabled - default to true if null
-          final isEnabledValue = reminder['is_enabled'];
-          final bool isEnabled = isEnabledValue == 1 ||
-              isEnabledValue == true ||
-              isEnabledValue == null;
-          final isLate = _isReminderLate(scheduledTime, isDone);
-
-          return {
-            'id': reminder['id'].toString(),
-            'title': reminder['title'] ?? '',
-            'nextTime': _formatTime(scheduledTime),
-            'scheduledTime': scheduledTime,
-            'timeRemaining': _getTimeRemaining(scheduledTime, isDone),
-            'isLate': isLate,
-            'isDone': isDone,
-            'isEnabled': isEnabled,
-            'icon': _getIcon(isDone, isLate),
-            'reminderType': reminder['reminder_type'] ?? '',
-          };
-        }).toList();
+        _reminders = List<Reminder>.from(remindersData);
 
         // Sort: enabled first, then by time
         _reminders.sort((a, b) {
-          final aEnabled = a['isEnabled'] as bool? ?? true;
-          final bEnabled = b['isEnabled'] as bool? ?? true;
-          if (aEnabled != bEnabled) {
-            return aEnabled ? -1 : 1;
+          if (a.isEnabled != b.isEnabled) {
+            return a.isEnabled ? -1 : 1;
           }
-          return (a['scheduledTime'] as String)
-              .compareTo(b['scheduledTime'] as String);
+          return a.scheduledTime.compareTo(b.scheduledTime);
         });
 
         _isLoading = false;
@@ -88,33 +64,30 @@ class _RemindersPageState extends State<RemindersPage> {
   /// Schedule alarms for all active reminders
   Future<void> _scheduleAlarmsForReminders() async {
     for (final reminder in _reminders) {
-      final isEnabled = reminder['isEnabled'] as bool? ?? true;
-      final isDone = reminder['isDone'] as bool? ?? false;
-      final scheduledTime = reminder['scheduledTime'] as String? ?? '';
-
-      if (isEnabled && !isDone && scheduledTime.isNotEmpty) {
+      if (reminder.isEnabled &&
+          !reminder.isDone &&
+          reminder.scheduledTime.isNotEmpty) {
         // Parse the time
         final timeOfDay =
-            AlarmNotificationService.parseTimeString(scheduledTime);
+            AlarmNotificationService.parseTimeString(reminder.scheduledTime);
         if (timeOfDay != null) {
           // Generate unique alarm ID from reminder ID
-          final alarmId =
-              AlarmNotificationService.generateAlarmId(reminder['id']);
+          final alarmId = AlarmNotificationService.generateAlarmId(reminder.id);
 
           // Schedule the alarm
           await AlarmNotificationService.scheduleDailyAlarm(
             id: alarmId,
-            title: reminder['title'] ?? 'Reminder',
+            title: reminder.title,
             body:
-                'Tap to view your ${_getRepeatTypeLabel(reminder['reminderType'])} reminder',
+                'Tap to view your ${_getRepeatTypeLabel(reminder.reminderType)} reminder',
             scheduledTime: timeOfDay,
-            payload: '${reminder['id']}|${reminder['title']}|$scheduledTime',
+            payload:
+                '${reminder.id}|${reminder.title}|${reminder.scheduledTime}',
           );
         }
       } else {
         // Cancel alarm for disabled or completed reminders
-        final alarmId =
-            AlarmNotificationService.generateAlarmId(reminder['id']);
+        final alarmId = AlarmNotificationService.generateAlarmId(reminder.id);
         await AlarmNotificationService.cancelAlarm(alarmId);
       }
     }
@@ -219,8 +192,8 @@ class _RemindersPageState extends State<RemindersPage> {
     final l10n = AppLocalizations.of(context);
 
     try {
-      final dataService = getIt<DataService>();
-      await dataService.updateReminderStatus(
+      final dataSource = getIt<AppDataSource>();
+      await dataSource.updateReminderStatus(
         reminderId,
         status,
       );
@@ -250,21 +223,22 @@ class _RemindersPageState extends State<RemindersPage> {
 
   /// Shows the alarm ringing screen for a specific reminder
   /// This can be triggered when a reminder time is reached
-  void _showAlarmRingingScreen(Map<String, dynamic> reminder) {
+  void _showAlarmRingingScreen(Reminder reminder) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => AlarmRingingPage(
-          alarmTime:
-              reminder['scheduledTime'] ?? reminder['nextTime'] ?? '00:00',
-          alarmLabel: reminder['title'] ?? 'Reminder',
-          repeatType: _getRepeatTypeLabel(reminder['reminderType']),
+          alarmTime: reminder.scheduledTime.isNotEmpty
+              ? reminder.scheduledTime
+              : '00:00',
+          alarmLabel: reminder.title,
+          repeatType: _getRepeatTypeLabel(reminder.reminderType),
           onStop: () {
             // Mark reminder as done when stopped
-            _handleStatusChange(reminder['id'], 'done');
+            _handleStatusChange(reminder.id, 'done');
           },
           onSnooze: () {
             // Postpone reminder when snoozed
-            _handleStatusChange(reminder['id'], 'postponed');
+            _handleStatusChange(reminder.id, 'postponed');
           },
         ),
       ),
@@ -294,10 +268,11 @@ class _RemindersPageState extends State<RemindersPage> {
   Future<void> _toggleReminderEnabled(
       String reminderId, bool currentState) async {
     try {
-      final dataService = getIt<DataService>();
-      await dataService.updateReminder(reminderId, {
-        'is_enabled': currentState ? 0 : 1,
-      });
+      final dataSource = getIt<AppDataSource>();
+      await dataSource.updateReminder(
+        reminderId,
+        UpdateReminderInput(isEnabled: !currentState),
+      );
       await _loadReminders();
     } catch (e) {
       if (!mounted) return;
@@ -356,9 +331,9 @@ class _RemindersPageState extends State<RemindersPage> {
     if (confirm != true) return;
 
     try {
-      final dataService = getIt<DataService>();
+      final dataSource = getIt<AppDataSource>();
       for (final id in _selectedIds) {
-        await dataService.deleteReminder(id);
+        await dataSource.deleteReminder(id);
       }
 
       setState(() {
@@ -532,43 +507,76 @@ class _RemindersPageState extends State<RemindersPage> {
         itemCount: _reminders.length,
         itemBuilder: (context, index) {
           final reminder = _reminders[index];
+          final now = DateTime.now();
+          final isLate = reminder.isLate(now);
+          final timeRemaining = _getTimeRemainingFromReminder(reminder, now);
           return ReminderCardWidget(
-            title: reminder['title'],
-            nextTime: reminder['nextTime'],
-            timeRemaining: reminder['timeRemaining'],
-            isLate: reminder['isLate'],
-            isDone: reminder['isDone'],
-            isEnabled: reminder['isEnabled'],
-            icon: reminder['icon'],
+            title: reminder.title,
+            nextTime: _formatTime(reminder.scheduledTime),
+            timeRemaining: timeRemaining,
+            isLate: isLate,
+            isDone: reminder.isDone,
+            isEnabled: reminder.isEnabled,
+            icon: _getIcon(reminder.isDone, isLate),
             isSelectionMode: _isSelectionMode,
-            isSelected: _selectedIds.contains(reminder['id']),
+            isSelected: _selectedIds.contains(reminder.id),
             onTap: () {
               // If reminder is late and not done, show alarm screen
-              if (reminder['isLate'] == true && reminder['isDone'] != true) {
+              if (isLate && !reminder.isDone) {
                 _showAlarmRingingScreen(reminder);
               } else {
                 _showStatusDialog(
-                  reminder['id'],
-                  reminder['title'],
-                  reminder['nextTime'],
+                  reminder.id,
+                  reminder.title,
+                  _formatTime(reminder.scheduledTime),
                 );
               }
             },
             onToggleEnabled: () {
               _toggleReminderEnabled(
-                reminder['id'],
-                reminder['isEnabled'],
+                reminder.id,
+                reminder.isEnabled,
               );
             },
             onSelectToggle: () {
               if (!_isSelectionMode) {
                 _toggleSelectionMode();
               }
-              _toggleSelection(reminder['id']);
+              _toggleSelection(reminder.id);
             },
           );
         },
       ),
     );
+  }
+
+  /// Helper to get time remaining string from a Reminder
+  String _getTimeRemainingFromReminder(Reminder reminder, DateTime now) {
+    if (reminder.isDone) return 'Done';
+    if (!reminder.isEnabled) return '';
+    final remaining = reminder.timeRemaining(now);
+    if (remaining == null) {
+      // Reminder is late
+      if (reminder.scheduledTime.isEmpty) return '';
+      try {
+        final parts = reminder.scheduledTime.split(':');
+        if (parts.length < 2) return '';
+        final scheduledHour = int.parse(parts[0]);
+        final scheduledMinute = int.parse(parts[1]);
+        final scheduled = DateTime(
+            now.year, now.month, now.day, scheduledHour, scheduledMinute);
+        final diff = now.difference(scheduled);
+        if (diff.inHours > 0) {
+          return '${diff.inHours}h ${diff.inMinutes % 60}m late';
+        }
+        return '${diff.inMinutes}m late';
+      } catch (e) {
+        return '';
+      }
+    }
+    if (remaining.inHours > 0) {
+      return 'in ${remaining.inHours}h ${remaining.inMinutes % 60}m';
+    }
+    return 'in ${remaining.inMinutes}m';
   }
 }
