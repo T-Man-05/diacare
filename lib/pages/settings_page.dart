@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../models/settings_data.dart';
-import '../services/data_service_supabase.dart';
+import '../data/service_locator.dart';
+import '../domain/app_data_source.dart';
+import '../domain/models/models.dart';
 import '../utils/constants.dart';
 import '../blocs/blocs.dart';
 import '../l10n/app_localizations.dart';
@@ -28,11 +29,11 @@ class _MyProfilePageState extends State<MyProfilePage> {
 
   Future<void> _loadData() async {
     try {
-      final dataService = getIt<DataService>();
-      final settingsJson = await dataService.getSettings();
+      final dataSource = getIt<AppDataSource>();
+      final settingsData = await dataSource.getSettingsData();
 
       setState(() {
-        _settingsData = SettingsData.fromJson(settingsJson);
+        _settingsData = settingsData;
         _isLoading = false;
       });
     } catch (e) {
@@ -43,15 +44,16 @@ class _MyProfilePageState extends State<MyProfilePage> {
 
   Future<void> _saveSettings() async {
     if (_settingsData != null) {
-      final dataService = getIt<DataService>();
-      await dataService.updateSettings(_settingsData!.toJson());
+      final dataSource = getIt<AppDataSource>();
+      await dataSource
+          .setNotificationsEnabled(_settingsData!.notificationsEnabled);
     }
   }
 
   /// Handle logout
   Future<void> _handleLogout() async {
-    final dataService = getIt<DataService>();
-    await dataService.logout();
+    final dataSource = getIt<AppDataSource>();
+    await dataSource.logout();
 
     if (!mounted) return;
 
@@ -548,7 +550,11 @@ class _MyProfilePageState extends State<MyProfilePage> {
             value: _settingsData!.preferences.notificationsEnabled,
             onChanged: (value) {
               setState(() {
-                _settingsData!.preferences.notificationsEnabled = value;
+                final updatedPrefs = _settingsData!.preferences.copyWith(
+                  notificationsEnabled: value,
+                );
+                _settingsData =
+                    _settingsData!.copyWith(preferences: updatedPrefs);
               });
               _saveSettings();
             },
@@ -820,8 +826,8 @@ class _MyProfilePageState extends State<MyProfilePage> {
               Navigator.pop(context);
               try {
                 // Delete account from database
-                final dataService = getIt<DataService>();
-                await dataService.deleteAccount();
+                final dataSource = getIt<AppDataSource>();
+                await dataSource.deleteAccount();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(l10n.accountDeleted)),
                 );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/settings_data.dart';
-import '../services/data_service_supabase.dart';
+import '../data/service_locator.dart';
+import '../domain/app_data_source.dart';
+import '../domain/models/models.dart';
 import '../utils/constants.dart';
 import '../l10n/app_localizations.dart';
 
@@ -36,11 +37,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   Future<void> _loadData() async {
     try {
-      final dataService = getIt<DataService>();
-      final settingsJson = await dataService.getSettings();
+      final dataSource = getIt<AppDataSource>();
+      final settingsData = await dataSource.getSettingsData();
 
       setState(() {
-        _settingsData = SettingsData.fromJson(settingsJson);
+        _settingsData = settingsData;
         _fullNameController.text = _settingsData?.fullName ?? 'Charlotte King';
         _usernameController.text =
             _settingsData?.username ?? '@johnkinggraphics';
@@ -57,12 +58,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Future<void> _saveChanges() async {
     if (_formKey.currentState?.validate() ?? false) {
       if (_settingsData != null) {
-        _settingsData!.fullName = _fullNameController.text;
-        _settingsData!.username = _usernameController.text;
-        _settingsData!.email = _emailController.text;
+        final updatedProfile = _settingsData!.profile.copyWith(
+          fullName: _fullNameController.text,
+          username: _usernameController.text,
+          email: _emailController.text,
+        );
+        final updatedSettingsData =
+            _settingsData!.copyWith(profile: updatedProfile);
 
-        final dataService = getIt<DataService>();
-        await dataService.updateSettings(_settingsData!.toJson());
+        final dataSource = getIt<AppDataSource>();
+        await dataSource.updateSettingsData(updatedSettingsData);
 
         if (mounted) {
           final l10n = AppLocalizations.of(context);

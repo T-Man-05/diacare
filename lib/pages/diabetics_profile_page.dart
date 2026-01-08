@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../models/settings_data.dart';
+import '../data/service_locator.dart';
+import '../domain/app_data_source.dart';
+import '../domain/models/models.dart';
 import '../blocs/blocs.dart';
-import '../services/data_service_supabase.dart';
 import '../utils/constants.dart';
 import '../l10n/app_localizations.dart';
 
@@ -36,11 +37,11 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
 
   Future<void> _loadData() async {
     try {
-      final dataService = getIt<DataService>();
-      final settingsJson = await dataService.getSettings();
+      final dataSource = getIt<AppDataSource>();
+      final settingsData = await dataSource.getSettingsData();
 
       setState(() {
-        _settingsData = SettingsData.fromJson(settingsJson);
+        _settingsData = settingsData;
         _minGlucoseController.text =
             _settingsData!.diabeticProfile.minGlucose.toString();
         _maxGlucoseController.text =
@@ -105,13 +106,15 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
   Future<void> _saveChanges() async {
     if (_formKey.currentState?.validate() ?? false) {
       if (_settingsData != null) {
-        _settingsData!.diabeticProfile.minGlucose =
-            int.tryParse(_minGlucoseController.text) ?? 70;
-        _settingsData!.diabeticProfile.maxGlucose =
-            int.tryParse(_maxGlucoseController.text) ?? 180;
+        final updatedDiabeticProfile = _settingsData!.diabeticProfile.copyWith(
+          minGlucose: int.tryParse(_minGlucoseController.text) ?? 70,
+          maxGlucose: int.tryParse(_maxGlucoseController.text) ?? 180,
+        );
+        final updatedSettingsData =
+            _settingsData!.copyWith(diabeticProfile: updatedDiabeticProfile);
 
-        final dataService = getIt<DataService>();
-        await dataService.updateSettings(_settingsData!.toJson());
+        final dataSource = getIt<AppDataSource>();
+        await dataSource.updateSettingsData(updatedSettingsData);
 
         if (mounted) {
           final l10n = AppLocalizations.of(context);
@@ -436,9 +439,15 @@ class _DiabeticsProfilePageState extends State<DiabeticsProfilePage> {
           ];
           if (diabeticTypes
               .any((type) => value.contains(type.split(' ').first))) {
-            _settingsData!.diabeticProfile.diabeticType = value;
+            final updatedDiabeticProfile =
+                _settingsData!.diabeticProfile.copyWith(diabeticType: value);
+            _settingsData = _settingsData!
+                .copyWith(diabeticProfile: updatedDiabeticProfile);
           } else {
-            _settingsData!.diabeticProfile.treatmentType = value;
+            final updatedDiabeticProfile =
+                _settingsData!.diabeticProfile.copyWith(treatmentType: value);
+            _settingsData = _settingsData!
+                .copyWith(diabeticProfile: updatedDiabeticProfile);
           }
         });
         Navigator.pop(context);

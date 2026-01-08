@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../models/dashboard_data.dart';
 import '../blocs/blocs.dart';
 import '../blocs/locale/locale_cubit.dart';
-import '../services/data_service_supabase.dart';
+import '../data/service_locator.dart';
+import '../domain/app_data_source.dart';
+import '../domain/models/models.dart';
 import '../widgets/info_card.dart';
 import '../widgets/blood_sugar_chart.dart';
 import '../widgets/add_data_dialog.dart';
@@ -22,11 +23,6 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   DashboardData? _dashboardData;
   bool _isLoading = true;
-  int _lateRemindersCount = 0;
-  int _minGlucose = 70;
-  int _maxGlucose = 180;
-  Map<String, dynamic>? _closestReminder;
-  String _timeUntilReminder = '';
 
   @override
   void initState() {
@@ -34,76 +30,16 @@ class _DashboardPageState extends State<DashboardPage> {
     _loadData();
   }
 
-  /// Load data from the DataService
+  /// Load data from the AppDataSource
   Future<void> _loadData() async {
     try {
-      final dataService = getIt<DataService>();
+      final dataSource = getIt<AppDataSource>();
 
-      // Get dashboard data from SQLite
-      final dashboardJson = await dataService.getDashboardData();
-
-      // Get diabetic profile for glucose range
-      final profile = await dataService.getDiabeticProfile();
-      if (profile != null) {
-        _minGlucose = profile['min_glucose'] as int? ?? 70;
-        _maxGlucose = profile['max_glucose'] as int? ?? 180;
-      }
-
-      // Get reminders and find closest upcoming + count late ones
-      final reminders = await dataService.getReminders();
-      final now = DateTime.now();
-      int lateCount = 0;
-      Map<String, dynamic>? closestReminder;
-      Duration? closestDuration;
-      String timeUntil = '';
-
-      for (final r in reminders) {
-        final reminder = r as Map<String, dynamic>;
-        final isEnabled = reminder['is_enabled'] == 1 ||
-            reminder['is_enabled'] == true ||
-            reminder['is_enabled'] == null;
-        final status = reminder['status'] ?? 'pending';
-        final isDone = status == 'done' || status == 'completed';
-        if (!isEnabled || isDone) continue;
-
-        final scheduledTime = reminder['scheduled_time'] ?? '';
-        if (scheduledTime.isNotEmpty) {
-          final parts = scheduledTime.split(':');
-          if (parts.length >= 2) {
-            try {
-              final hour = int.parse(parts[0]);
-              final minute = int.parse(parts[1]);
-              final scheduled =
-                  DateTime(now.year, now.month, now.day, hour, minute);
-
-              if (now.isAfter(scheduled)) {
-                // This reminder is late
-                lateCount++;
-              } else {
-                // This is an upcoming reminder - check if it's the closest
-                final duration = scheduled.difference(now);
-                if (closestDuration == null || duration < closestDuration) {
-                  closestDuration = duration;
-                  closestReminder = reminder;
-                  // Format time until
-                  if (duration.inHours > 0) {
-                    timeUntil =
-                        '${duration.inHours}h ${duration.inMinutes % 60}m';
-                  } else {
-                    timeUntil = '${duration.inMinutes}m';
-                  }
-                }
-              }
-            } catch (_) {}
-          }
-        }
-      }
+      // Get complete dashboard data (includes glucose, reminders, health cards, chart, profile)
+      final dashboardData = await dataSource.getDashboardData();
 
       setState(() {
-        _dashboardData = DashboardData.fromJson(dashboardJson);
-        _lateRemindersCount = lateCount;
-        _closestReminder = closestReminder;
-        _timeUntilReminder = timeUntil;
+        _dashboardData = dashboardData;
         _isLoading = false;
       });
     } catch (e) {
@@ -175,7 +111,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     const SizedBox(height: AppSpacing.sectionSpacing),
                     BloodSugarChart(
                       flag: true,
-                      chartData: _dashboardData!.chart,
+                      chartData: _dashboardData!.chartData,
                       units: settingsState.units,
                       onSeeDetails: () {
                         Navigator.push(
@@ -224,6 +160,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildNotificationIcon() {
+    final lateCount = _dashboardData?.lateRemindersCount ?? 0;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -235,7 +172,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           child: const Icon(Icons.notifications, color: Colors.white, size: 20),
         ),
-        if (_lateRemindersCount > 0)
+        if (lateCount > 0)
           Positioned(
             right: -6,
             top: -6,
@@ -251,7 +188,7 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               child: Center(
                 child: Text(
-                  _lateRemindersCount > 9 ? '9+' : '$_lateRemindersCount',
+                  lateCount > 9 ? '9+' : '$lateCount',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10,
@@ -279,16 +216,18 @@ class _DashboardPageState extends State<DashboardPage> {
 
     // Determine glucose status based on diabetic profile range
     final glucoseValue = glucose.value.toDouble();
+    final minGlucose = _dashboardData!.minGlucose;
+    final maxGlucose = _dashboardData!.maxGlucose;
     String statusText;
     Color statusColor;
     IconData statusIcon;
 
-    if (glucoseValue < _minGlucose) {
+    if (glucoseValue < minGlucose) {
       // Low glucose
       statusText = l10n.lowGlucose;
       statusColor = Colors.orange;
       statusIcon = Icons.arrow_downward;
-    } else if (glucoseValue > _maxGlucose) {
+    } else if (glucoseValue > maxGlucose) {
       // High glucose
       statusText = l10n.highGlucose;
       statusColor = Colors.red;
@@ -376,29 +315,26 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildReminderCard(
       ThemeData theme, bool isDark, AppLocalizations l10n) {
-    // Get reminder title and time from the closest upcoming reminder
+    // Get reminder title and time from the next upcoming reminder
+    final nextReminder = _dashboardData!.nextReminder;
+    final timeUntilReminder = _dashboardData!.timeUntilNextReminder;
     String reminderTitle;
     String reminderTime;
 
-    if (_closestReminder != null) {
-      final reminderType = _closestReminder!['reminder_type'] ?? '';
-      final title = _closestReminder!['title'] ?? '';
-      reminderTitle = _getLocalizedReminderByType(reminderType, title, l10n);
-
-      final scheduledTime = _closestReminder!['scheduled_time'] ?? '';
-      if (scheduledTime.isNotEmpty) {
-        final parts = scheduledTime.split(':');
-        if (parts.length >= 2) {
-          reminderTime = '${parts[0]}:${parts[1]}';
-        } else {
-          reminderTime = scheduledTime;
-        }
-      } else {
-        reminderTime = '--:--';
-      }
+    if (nextReminder != null) {
+      reminderTitle = _getLocalizedReminderByType(
+        nextReminder.reminderType,
+        nextReminder.title,
+        l10n,
+      );
+      // Use formattedTime for display (e.g., "08:30")
+      final parts = nextReminder.scheduledTime.split(':');
+      reminderTime = parts.length >= 2
+          ? '${parts[0]}:${parts[1]}'
+          : nextReminder.scheduledTime;
     } else {
-      // No upcoming reminders, use default from dashboard data
-      reminderTitle = _getLocalizedReminder(_dashboardData!.reminder, l10n);
+      // No upcoming reminders
+      reminderTitle = l10n.reminders;
       reminderTime = '--:--';
     }
 
@@ -448,9 +384,9 @@ class _DashboardPageState extends State<DashboardPage> {
                       color: theme.textTheme.bodyLarge?.color,
                     ),
                   ),
-                  if (_timeUntilReminder.isNotEmpty)
+                  if (timeUntilReminder != null && timeUntilReminder.isNotEmpty)
                     Text(
-                      'in $_timeUntilReminder',
+                      'in $timeUntilReminder',
                       style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.primary,

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/constants.dart';
-import '../services/data_service_supabase.dart';
+import '../data/service_locator.dart';
+import '../domain/app_data_source.dart';
+import '../domain/inputs/inputs.dart';
 import '../services/alarm_notification_service.dart';
 
 /// Dialog for adding a new reminder
@@ -126,7 +128,7 @@ class _AddReminderDialogState extends State<AddReminderDialog> {
     setState(() => _isLoading = true);
 
     try {
-      final dataService = getIt<DataService>();
+      final dataSource = getIt<AppDataSource>();
       final l10n = AppLocalizations.of(context);
 
       // Get title - either from preset type or custom input
@@ -137,8 +139,8 @@ class _AddReminderDialogState extends State<AddReminderDialog> {
         title = _titleController.text.trim();
       }
 
-      // Save reminder to database
-      final result = await dataService.addReminder(
+      // Create input DTO for the reminder
+      final input = CreateReminderInput(
         title: title,
         reminderType: _selectedType,
         scheduledTime: _formatTimeOfDay(_selectedTime),
@@ -146,19 +148,18 @@ class _AddReminderDialogState extends State<AddReminderDialog> {
         recurrencePattern: _getRecurrencePattern(),
       );
 
-      // Get the reminder ID from the result
-      final reminderId = result['id']?.toString() ??
-          DateTime.now().millisecondsSinceEpoch.toString();
+      // Save reminder to database
+      final reminder = await dataSource.addReminder(input);
 
       // Schedule alarm notification for this reminder
-      final alarmId = AlarmNotificationService.generateAlarmId(reminderId);
+      final alarmId = AlarmNotificationService.generateAlarmId(reminder.id);
 
       await AlarmNotificationService.scheduleDailyAlarm(
         id: alarmId,
         title: title,
         body: 'Tap to view your reminder',
         scheduledTime: _selectedTime,
-        payload: '$reminderId|$title|${_formatTimeOfDay(_selectedTime)}',
+        payload: '${reminder.id}|$title|${_formatTimeOfDay(_selectedTime)}',
       );
 
       if (!mounted) return;
