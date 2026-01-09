@@ -37,7 +37,7 @@ DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = [
     host.strip()
-    for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,10.0.2.2").split(",")
+    for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,10.0.2.2,172.18.64.1,10.80.17.223,*").split(",")
 ]
 
 
@@ -392,3 +392,19 @@ LOGGING = {
         },
     },
 }
+
+
+# =============================================================================
+# GROQ AI CONFIGURATION
+# =============================================================================
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+
+
+# =============================================================================
+# SUPABASE CONFIGURATION (for reference)
+# =============================================================================
+
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")

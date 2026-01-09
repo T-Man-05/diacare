@@ -23,7 +23,7 @@
 /// ============================================================================
 
 import 'package:flutter/material.dart';
-import '../services/ai_chat_service.dart';
+import '../services/django_chat_service.dart';
 import '../data/service_locator.dart';
 import '../domain/app_data_source.dart';
 import '../domain/models/models.dart';
@@ -56,8 +56,8 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   /// Scroll controller for auto-scrolling chat to bottom
   final ScrollController _scrollController = ScrollController();
 
-  /// AI Chat Service for communicating with Gemini AI
-  final AIChatService _aiService = AIChatService();
+  /// Django Chat Service for communicating with backend AI
+  late final DjangoChatService _chatService;
 
   // ---------------------------------------------------------------------------
   // STATE VARIABLES
@@ -88,6 +88,9 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    // Initialize chat service from service locator
+    _chatService = getIt<DjangoChatService>();
+
     // Initialize typing animation
     _typingAnimationController = AnimationController(
       vsync: this,
@@ -198,8 +201,15 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     _messageController.clear();
 
     // Add user's message to the chat
+    final userMessage = ChatMessage(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      role: 'user',
+      content: messageText,
+      timestamp: DateTime.now(),
+    );
+
     setState(() {
-      _messages.add(ChatMessage.user(messageText));
+      _messages.add(userMessage);
       _isLoading = true;
     });
 
@@ -207,34 +217,31 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     _scrollToBottom();
 
     try {
-      // Send message to AI and get response
-      final response = await _aiService.sendMessage(
+      // Send message to Django backend AI and get response
+      final aiResponse = await _chatService.sendMessage(
         message: messageText,
-        userContext: _userContext,
       );
 
       // Add AI's response to the chat
       setState(() {
-        _messages.add(ChatMessage.ai(response));
+        _messages.add(aiResponse);
         _isLoading = false;
       });
 
       // Scroll to bottom to show AI response
       _scrollToBottom();
-    } on AIChatException catch (e) {
-      // Handle AI-specific errors
-      setState(() {
-        _messages.add(ChatMessage.ai(
-          "I'm sorry, I couldn't process your request. Please try again. Error: ${e.message}",
-        ));
-        _isLoading = false;
-      });
     } catch (e) {
-      // Handle general errors
+      // Handle errors
+      final errorMessage = ChatMessage(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        role: 'assistant',
+        content:
+            "I'm having trouble connecting right now. Please check your internet connection and try again. Error: ${e.toString()}",
+        timestamp: DateTime.now(),
+      );
+
       setState(() {
-        _messages.add(ChatMessage.ai(
-          "I'm having trouble connecting right now. Please check your internet connection and try again.",
-        ));
+        _messages.add(errorMessage);
         _isLoading = false;
       });
     }
@@ -258,7 +265,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   void _resetChat() {
     setState(() {
       _messages.clear();
-      _aiService.resetChat();
+      // Backend manages chat history, just clear local display
     });
   }
 

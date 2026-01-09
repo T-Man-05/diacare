@@ -175,6 +175,11 @@ class PreferencesService {
     return prefs.getBool(keyOnboardingComplete) ?? false;
   }
 
+  /// Get onboarding complete status (alias for isOnboardingComplete)
+  bool getOnboardingComplete() {
+    return isOnboardingComplete();
+  }
+
   /// Check if this is first launch
   bool isFirstLaunch() {
     return prefs.getBool(keyFirstLaunch) ?? true;
