@@ -29,20 +29,17 @@ class ReminderRepository:
     
     @staticmethod
     def get_today_reminders(user_id: int) -> QuerySet:
-        """Get today's upcoming reminders"""
-        now = timezone.now()
-        current_time = now.time()
-        
+        """Get all enabled reminders for today (for dashboard display)"""
         return Reminder.objects.filter(
             user_id=user_id,
-            is_enabled=True,
-            scheduled_time__gte=current_time
+            is_enabled=True
         ).order_by("scheduled_time")
     
     @staticmethod
-    def create_reminder(user_id: int, title: str, scheduled_time: time,
+    def create_reminder(user_id: int, title: str = None, scheduled_time: time = None,
                        reminder_type: str = "medication", description: str = "",
-                       is_recurring: bool = False, recurrence_pattern: str = None) -> Reminder:
+                       is_recurring: bool = False, recurrence_pattern: str = None,
+                       **kwargs) -> Reminder:
         """
         Create a new reminder
         

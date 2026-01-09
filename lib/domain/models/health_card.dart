@@ -56,6 +56,7 @@ enum HealthCardType {
   activity,
   carbs,
   insulin,
+  weight,
 }
 
 extension HealthCardTypeExtension on HealthCardType {
@@ -71,6 +72,8 @@ extension HealthCardTypeExtension on HealthCardType {
         return 'Carbs';
       case HealthCardType.insulin:
         return 'Insulin';
+      case HealthCardType.weight:
+        return 'Weight';
     }
   }
 
@@ -86,6 +89,8 @@ extension HealthCardTypeExtension on HealthCardType {
         return 'cal';
       case HealthCardType.insulin:
         return 'units';
+      case HealthCardType.weight:
+        return 'kg';
     }
   }
 }

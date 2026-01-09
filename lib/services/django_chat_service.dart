@@ -75,9 +75,12 @@ class ChatSession {
   factory ChatSession.fromJson(Map<String, dynamic> json) {
     return ChatSession(
       id: json['id'].toString(),
-      title: json['title'] as String,
+      title: json['title'] as String? ?? 'Chat',
       createdAt: DateTime.parse(json['created_at']),
-      lastMessageAt: DateTime.parse(json['last_message_at']),
+      // last_message_at may not exist, fallback to created_at
+      lastMessageAt: json['last_message_at'] != null 
+          ? DateTime.parse(json['last_message_at'])
+          : DateTime.parse(json['created_at']),
     );
   }
 }
@@ -120,9 +123,11 @@ class DjangoChatService {
           .timeout(ApiConfig.timeout);
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final responseData = jsonDecode(response.body);
+        // Backend returns { success: true, data: { response, timestamp, ... } }
+        final data = responseData['data'] ?? responseData;
         return ChatMessage.fromJson({
-          'id': data['id'],
+          'id': data['message_id'] ?? data['id'],
           'role': 'assistant',
           'content': data['response'],
           'timestamp': data['timestamp'],
@@ -154,8 +159,11 @@ class DjangoChatService {
           .timeout(ApiConfig.timeout);
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return data.map((item) => ChatMessage.fromJson(item)).toList();
+        final responseData = jsonDecode(response.body);
+        // Backend returns { success: true, data: { messages: [...] } }
+        final data = responseData['data'] ?? responseData;
+        final List<dynamic> messages = data['messages'] ?? data;
+        return messages.map((item) => ChatMessage.fromJson(item)).toList();
       } else {
         return [];
       }
@@ -177,8 +185,11 @@ class DjangoChatService {
           .timeout(ApiConfig.timeout);
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return data.map((item) => ChatSession.fromJson(item)).toList();
+        final responseData = jsonDecode(response.body);
+        // Backend returns { success: true, data: { sessions: [...] } }
+        final data = responseData['data'] ?? responseData;
+        final List<dynamic> sessions = data['sessions'] ?? data;
+        return sessions.map((item) => ChatSession.fromJson(item)).toList();
       } else {
         return [];
       }
@@ -192,15 +203,15 @@ class DjangoChatService {
     await _loadToken();
 
     try {
+      // Backend expects DELETE /chat/sessions/<session_id>/
       final response = await http
-          .post(
-            Uri.parse('${ApiConfig.baseUrl}${ApiConfig.chatDeleteSession}'),
+          .delete(
+            Uri.parse('${ApiConfig.baseUrl}${ApiConfig.chatDeleteSession}$sessionId/'),
             headers: _getHeaders(),
-            body: jsonEncode({'session_id': sessionId}),
           )
           .timeout(ApiConfig.timeout);
 
-      if (response.statusCode != 200) {
+      if (response.statusCode != 200 && response.statusCode != 204) {
         throw Exception('Failed to delete session');
       }
     } catch (e) {

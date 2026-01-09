@@ -27,7 +27,6 @@ import '../../services/preferences_service.dart';
 /// Django REST API implementation of AppDataSource
 class DjangoDataSource implements AppDataSource {
   final PreferencesService _prefs;
-  final http.Client _client = http.Client();
   final String _baseUrl = ApiConfig.baseUrl;
 
   String? _accessToken;
@@ -36,6 +35,26 @@ class DjangoDataSource implements AppDataSource {
 
   DjangoDataSource(this._prefs) {
     _loadTokens();
+  }
+
+  // ============================================================================
+  // HELPER: Safe parsing for numbers (handles both strings and numbers)
+  // ============================================================================
+  
+  /// Safely parse a value to double, handling both num and String types
+  double _safeDouble(dynamic value, [double defaultValue = 0.0]) {
+    if (value == null) return defaultValue;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? defaultValue;
+    return defaultValue;
+  }
+
+  /// Safely parse a value to int, handling both num and String types
+  int _safeInt(dynamic value, [int defaultValue = 0]) {
+    if (value == null) return defaultValue;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? defaultValue;
+    return defaultValue;
   }
 
   /// Load tokens from SharedPreferences
@@ -90,13 +109,13 @@ class DjangoDataSource implements AppDataSource {
   }
 
   /// Get auth headers for authenticated requests
-  Future<Map<String, String>> _getAuthHeaders() async {
-    await _ensureAuthenticated();
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $_accessToken',
-    };
-  }
+  // Future<Map<String, String>> _getAuthHeaders() async {
+  //   await _ensureAuthenticated();
+  //   return {
+  //     'Content-Type': 'application/json',
+  //     'Authorization': 'Bearer $_accessToken',
+  //   };
+  // }
 
   /// Refresh access token using refresh token
   Future<bool> _refreshAccessToken() async {
@@ -625,8 +644,11 @@ class DjangoDataSource implements AppDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final readings = data['results'] as List;
-        return readings.map((r) => _parseGlucoseReading(r)).toList();
+        // Handle both paginated results and direct list
+        final readings = data is List 
+            ? data 
+            : (data['results'] as List?) ?? [];
+        return readings.map((r) => _parseGlucoseReading(r as Map<String, dynamic>)).toList();
       }
 
       return [];
@@ -714,8 +736,11 @@ class DjangoDataSource implements AppDataSource {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final cards = data['results'] as List;
-        return cards.map((c) => _parseHealthCard(c)).toList();
+        // Handle both paginated results and direct list
+        final cards = data is List 
+            ? data 
+            : (data['results'] as List?) ?? [];
+        return cards.map((c) => _parseHealthCard(c as Map<String, dynamic>)).toList();
       }
 
       return [];
@@ -764,10 +789,38 @@ class DjangoDataSource implements AppDataSource {
           )
           .timeout(ApiConfig.timeout));
 
+      debugPrint('Reminders response status: ${response.statusCode}');
+      debugPrint('Reminders response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final reminders = data['results'] as List;
-        return reminders.map((r) => _parseReminder(r)).toList();
+        debugPrint('Reminders parsed data type: ${data.runtimeType}');
+        
+        // Handle wrapped response: {'success': true, 'data': [...]}
+        List<dynamic> reminders;
+        if (data is Map<String, dynamic>) {
+          debugPrint('Reminders data keys: ${data.keys.toList()}');
+          if (data['data'] is List) {
+            reminders = data['data'] as List;
+            debugPrint('Using data field, count: ${reminders.length}');
+          } else if (data['results'] is List) {
+            reminders = data['results'] as List;
+            debugPrint('Using results field, count: ${reminders.length}');
+          } else {
+            reminders = [];
+            debugPrint('No list found in response');
+          }
+        } else if (data is List) {
+          reminders = data;
+          debugPrint('Data is direct list, count: ${reminders.length}');
+        } else {
+          reminders = [];
+          debugPrint('Unknown data format');
+        }
+        
+        final parsed = reminders.map((r) => _parseReminder(r as Map<String, dynamic>)).toList();
+        debugPrint('Parsed ${parsed.length} reminders');
+        return parsed;
       }
 
       return [];
@@ -782,10 +835,16 @@ class DjangoDataSource implements AppDataSource {
     await _ensureAuthenticated();
 
     try {
+      // Ensure scheduled_time is in HH:MM:SS format for backend
+      String scheduledTime = input.scheduledTime;
+      if (scheduledTime.isNotEmpty && scheduledTime.split(':').length == 2) {
+        scheduledTime = '$scheduledTime:00';  // Add seconds if missing
+      }
+      
       final body = {
         'title': input.title,
         'reminder_type': input.reminderType,
-        'scheduled_time': input.scheduledTime,
+        'scheduled_time': scheduledTime,
         'description': input.description,
         'is_recurring': input.isRecurring,
         'recurrence_pattern': input.recurrencePattern,
@@ -801,7 +860,11 @@ class DjangoDataSource implements AppDataSource {
 
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        return _parseReminder(data);
+        // Handle wrapped response: {'success': true, 'data': {...}}
+        final reminderData = data is Map<String, dynamic> && data['data'] != null
+            ? data['data'] as Map<String, dynamic>
+            : data as Map<String, dynamic>;
+        return _parseReminder(reminderData);
       }
 
       throw const DataSourceException('Failed to add reminder');
@@ -821,8 +884,14 @@ class DjangoDataSource implements AppDataSource {
       if (input.title != null) body['title'] = input.title;
       if (input.reminderType != null)
         body['reminder_type'] = input.reminderType;
-      if (input.scheduledTime != null)
-        body['scheduled_time'] = input.scheduledTime;
+      if (input.scheduledTime != null) {
+        // Ensure scheduled_time is in HH:MM:SS format for backend
+        String scheduledTime = input.scheduledTime!;
+        if (scheduledTime.isNotEmpty && scheduledTime.split(':').length == 2) {
+          scheduledTime = '$scheduledTime:00';  // Add seconds if missing
+        }
+        body['scheduled_time'] = scheduledTime;
+      }
       if (input.description != null) body['description'] = input.description;
       if (input.isEnabled != null) body['is_enabled'] = input.isEnabled;
       if (input.status != null) body['status'] = input.status;
@@ -986,7 +1055,7 @@ class DjangoDataSource implements AppDataSource {
   GlucoseReading _parseGlucoseReading(Map<String, dynamic> json) {
     return GlucoseReading(
       id: json['id'].toString(),
-      value: json['value']?.toDouble() ?? 0.0,
+      value: _safeDouble(json['value']),
       unit: json['unit'] ?? 'mg/dL',
       readingType: _parseGlucoseReadingType(json['reading_type']),
       notes: json['notes'],
@@ -1015,7 +1084,7 @@ class DjangoDataSource implements AppDataSource {
     return HealthCard(
       id: json['id'].toString(),
       type: _parseHealthCardType(json['card_type']),
-      value: json['value']?.toDouble() ?? 0.0,
+      value: _safeDouble(json['value']),
       unit: json['unit'] ?? '',
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'])
@@ -1035,17 +1104,44 @@ class DjangoDataSource implements AppDataSource {
         return HealthCardType.pills;
       case 'insulin':
         return HealthCardType.insulin;
+      case 'weight':
+        return HealthCardType.weight;
       default:
-        return HealthCardType.carbs;
+        return HealthCardType.water; // Default to water instead of carbs
     }
   }
 
   Reminder _parseReminder(Map<String, dynamic> json) {
+    // Backend returns scheduled_time as "HH:MM:SS" format
+    // Reminder model expects just "HH:MM" format
+    String scheduledTime = '';
+    final rawTime = json['scheduled_time'];
+    if (rawTime != null && rawTime.toString().isNotEmpty) {
+      final timeStr = rawTime.toString();
+      // If it's in HH:MM:SS format, extract HH:MM
+      if (timeStr.contains(':')) {
+        final parts = timeStr.split(':');
+        if (parts.length >= 2) {
+          scheduledTime = '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}';
+        } else {
+          scheduledTime = timeStr;
+        }
+      } else {
+        // Try parsing as ISO datetime (fallback)
+        try {
+          final parsed = DateTime.parse(timeStr);
+          scheduledTime = '${parsed.hour.toString().padLeft(2, '0')}:${parsed.minute.toString().padLeft(2, '0')}';
+        } catch (_) {
+          scheduledTime = timeStr;
+        }
+      }
+    }
+    
     return Reminder(
       id: json['id'].toString(),
       title: json['title'] ?? '',
       reminderType: json['reminder_type'] ?? '',
-      scheduledTime: json['scheduled_time'] ?? '',
+      scheduledTime: scheduledTime,
       description: json['description'],
       isEnabled: json['is_enabled'] ?? true,
       isRecurring: json['is_recurring'] ?? false,
@@ -1070,15 +1166,33 @@ class DjangoDataSource implements AppDataSource {
   }
 
   DashboardData _parseDashboardData(Map<String, dynamic> json) {
-    // Parse latest glucose
-    final latestGlucose = json['latest_glucose'] != null
+    // Backend response structure:
+    // {
+    //   'user': { 'id', 'full_name', 'email', 'profile_image_url' },
+    //   'glucose': { 'latest': {...}, 'trend': [...], 'stats': {...}, 'range_analysis': {...}, 'target_range': {...} },
+    //   'health_cards': { 'water': {...}, 'pills': {...}, 'activity': {...}, 'weight': {...} },
+    //   'reminders': [ ... ],
+    //   'goals': { ... },
+    //   'timestamp': '...'
+    // }
+    
+    // Parse user info for greeting
+    final user = json['user'] as Map<String, dynamic>?;
+    final userName = user?['full_name'] ?? 'User';
+    final greeting = _getTimeBasedGreeting(userName);
+
+    // Parse glucose data - backend returns nested 'glucose' object
+    final glucoseData = json['glucose'] as Map<String, dynamic>?;
+    final latestGlucoseData = glucoseData?['latest'] as Map<String, dynamic>?;
+    final targetRange = glucoseData?['target_range'] as Map<String, dynamic>?;
+    
+    final latestGlucose = latestGlucoseData != null
         ? LatestGlucose(
-            value: json['latest_glucose']['value']?.toDouble() ?? 0.0,
-            unit: json['latest_glucose']['unit'] ?? 'mg/dL',
-            status: json['latest_glucose']['status'] ?? 'No data',
-            readingType: json['latest_glucose']['reading_type'] != null
-                ? _parseGlucoseReadingType(
-                    json['latest_glucose']['reading_type'])
+            value: _safeDouble(latestGlucoseData['value']),
+            unit: latestGlucoseData['unit']?.toString() ?? 'mg/dL',
+            status: latestGlucoseData['status']?.toString() ?? 'No data',
+            readingType: latestGlucoseData['reading_type'] != null
+                ? _parseGlucoseReadingType(latestGlucoseData['reading_type'].toString())
                 : null,
           )
         : const LatestGlucose(
@@ -1087,62 +1201,273 @@ class DjangoDataSource implements AppDataSource {
             status: 'No data',
           );
 
-    // Parse next reminder
-    final nextReminder = json['next_reminder'] != null
-        ? _parseReminder(json['next_reminder'])
-        : null;
+    // Parse reminders list - get first one as next reminder
+    final remindersList = json['reminders'] as List?;
+    debugPrint('Dashboard reminders count: ${remindersList?.length ?? 0}');
+    Reminder? nextReminder;
+    int lateRemindersCount = 0;
+    
+    if (remindersList != null && remindersList.isNotEmpty) {
+      debugPrint('Dashboard reminders data: $remindersList');
+      // Parse all reminders
+      final reminders = remindersList
+          .map((r) => _parseReminder(r as Map<String, dynamic>))
+          .toList();
+      
+      debugPrint('Parsed ${reminders.length} reminders for dashboard');
+      
+      // Find next upcoming reminder - closest one that hasn't passed yet
+      final now = DateTime.now();
+      
+      // Filter to only enabled reminders with future scheduled time
+      final upcomingReminders = <Reminder>[];
+      for (final r in reminders) {
+        if (!r.isEnabled) {
+          debugPrint('Reminder "${r.title}" skipped: not enabled');
+          continue;
+        }
+        if (r.isDone) {
+          debugPrint('Reminder "${r.title}" skipped: already done');
+          continue;
+        }
+        
+        // Parse scheduled time and check if it's in the future
+        final parts = r.scheduledTime.split(':');
+        if (parts.length >= 2) {
+          try {
+            final hour = int.parse(parts[0]);
+            final minute = int.parse(parts[1]);
+            final scheduledDateTime = DateTime(now.year, now.month, now.day, hour, minute);
+            
+            if (scheduledDateTime.isAfter(now)) {
+              upcomingReminders.add(r);
+              final diff = scheduledDateTime.difference(now);
+              debugPrint('Reminder "${r.title}" at ${r.scheduledTime} is upcoming (in ${diff.inMinutes} min)');
+            } else {
+              debugPrint('Reminder "${r.title}" at ${r.scheduledTime} already passed');
+            }
+          } catch (e) {
+            debugPrint('Reminder "${r.title}" time parse error: $e');
+          }
+        }
+      }
+      
+      debugPrint('Found ${upcomingReminders.length} upcoming reminders');
+      
+      if (upcomingReminders.isNotEmpty) {
+        // Sort by scheduled time (earliest first)
+        upcomingReminders.sort((a, b) {
+          return a.scheduledTime.compareTo(b.scheduledTime);
+        });
+        nextReminder = upcomingReminders.first;
+        debugPrint('Next reminder: "${nextReminder!.title}" at ${nextReminder!.scheduledTime}');
+      } else if (reminders.isNotEmpty) {
+        // No upcoming reminders, show first enabled one (even if late)
+        final enabledReminders = reminders.where((r) => r.isEnabled).toList();
+        if (enabledReminders.isNotEmpty) {
+          // Sort by time
+          enabledReminders.sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime));
+          nextReminder = enabledReminders.first;
+          debugPrint('No upcoming, showing first enabled: "${nextReminder!.title}"');
+        }
+      }
+      
+      // Count late reminders (use Reminder's isLate method)
+      lateRemindersCount = reminders.where((r) => r.isLate(now)).length;
+      debugPrint('Late reminders count: $lateRemindersCount');
+    }
 
-    // Parse health cards
-    final healthCards = json['health_cards'] != null
-        ? (json['health_cards'] as List)
-            .map((c) => _parseHealthCard(c))
-            .toList()
-        : <HealthCard>[];
+    // Parse health cards - backend returns Dict keyed by card_type
+    final healthCardsData = json['health_cards'];
+    List<HealthCard> healthCards = [];
+    
+    if (healthCardsData != null && healthCardsData is Map) {
+      // Backend returns: { 'water': {...}, 'pills': {...}, ... }
+      healthCardsData.forEach((key, value) {
+        if (value is Map<String, dynamic>) {
+          healthCards.add(_parseHealthCardFromDict(key.toString(), value));
+        }
+      });
+    } else if (healthCardsData != null && healthCardsData is List) {
+      // Fallback: handle as list if backend changes
+      healthCards = healthCardsData
+          .map((c) => _parseHealthCard(c as Map<String, dynamic>))
+          .toList();
+    }
 
-    // Parse chart data
-    final chartData = json['chart_data'] != null
-        ? BloodSugarChartData(
-            title: 'Blood Sugar (mg/dL)',
-            beforeMealValues: (json['chart_data']['before_meal'] as List?)
-                    ?.map((v) => (v as num).toDouble())
-                    .toList() ??
-                [],
-            afterMealValues: (json['chart_data']['after_meal'] as List?)
-                    ?.map((v) => (v as num).toDouble())
-                    .toList() ??
-                [],
-            labels: (json['chart_data']['labels'] as List?)
-                    ?.map((l) => l.toString())
-                    .toList() ??
-                [],
-          )
-        : const BloodSugarChartData(
-            title: 'Blood Sugar (mg/dL)',
-            beforeMealValues: [],
-            afterMealValues: [],
-            labels: [],
-          );
+    // Parse chart data from glucose.trend
+    // Backend returns: glucose.trend = [ { 'id', 'value', 'recorded_at', 'reading_type' }, ... ]
+    final trendData = glucoseData?['trend'] as List? ?? [];
+    
+    // Separate before/after meal values and build labels
+    final List<double> beforeMealValues = [];
+    final List<double> afterMealValues = [];
+    final List<String> labels = [];
+    
+    for (final reading in trendData) {
+      if (reading is Map<String, dynamic>) {
+        final value = _safeDouble(reading['value']);
+        final readingType = reading['reading_type']?.toString() ?? '';
+        final recordedAt = reading['recorded_at']?.toString() ?? '';
+        
+        // Parse date for label
+        String label = '';
+        if (recordedAt.isNotEmpty) {
+          try {
+            final date = DateTime.parse(recordedAt);
+            label = '${date.day}/${date.month}';
+          } catch (_) {
+            label = recordedAt.substring(0, 10);
+          }
+        }
+        
+        if (readingType.toLowerCase().contains('before')) {
+          beforeMealValues.add(value);
+          if (!labels.contains(label) && label.isNotEmpty) labels.add(label);
+        } else if (readingType.toLowerCase().contains('after')) {
+          afterMealValues.add(value);
+          if (!labels.contains(label) && label.isNotEmpty) labels.add(label);
+        } else {
+          // Default to before meal
+          beforeMealValues.add(value);
+          if (!labels.contains(label) && label.isNotEmpty) labels.add(label);
+        }
+      }
+    }
+    
+    final chartData = BloodSugarChartData(
+      title: 'Blood Sugar (mg/dL)',
+      beforeMealValues: beforeMealValues,
+      afterMealValues: afterMealValues,
+      labels: labels,
+    );
+
+    // Get min/max from target_range
+    final minGlucose = targetRange != null 
+        ? _safeInt(targetRange['min'], 70)
+        : 70;
+    final maxGlucose = targetRange != null
+        ? _safeInt(targetRange['max'], 180)
+        : 180;
 
     return DashboardData(
-      greeting: json['greeting'] ?? 'Hello',
+      greeting: greeting,
       glucose: latestGlucose,
       nextReminder: nextReminder,
-      lateRemindersCount: json['late_reminders_count'] ?? 0,
+      lateRemindersCount: lateRemindersCount,
       healthCards: healthCards,
       chartData: chartData,
-      minGlucose: json['min_glucose'] ?? 70,
-      maxGlucose: json['max_glucose'] ?? 180,
+      minGlucose: minGlucose,
+      maxGlucose: maxGlucose,
     );
+  }
+  
+  /// Helper: Get time-based greeting
+  String _getTimeBasedGreeting(String name) {
+    final hour = DateTime.now().hour;
+    String greeting;
+    if (hour < 12) {
+      greeting = 'Good morning';
+    } else if (hour < 17) {
+      greeting = 'Good afternoon';
+    } else {
+      greeting = 'Good evening';
+    }
+    return '$greeting, $name';
+  }
+  
+  /// Helper: Parse health card from dict format (keyed by card_type)
+  HealthCard _parseHealthCardFromDict(String cardType, Map<String, dynamic> data) {
+    return HealthCard(
+      id: '${cardType}_${DateTime.now().millisecondsSinceEpoch}',
+      type: _parseHealthCardType(cardType),
+      value: _safeDouble(data['value']),
+      unit: data['unit']?.toString() ?? _getDefaultUnit(cardType),
+      updatedAt: data['recorded_date'] != null
+          ? DateTime.tryParse(data['recorded_date'].toString())
+          : null,
+    );
+  }
+  
+  /// Helper: Get default unit for card type
+  String _getDefaultUnit(String cardType) {
+    switch (cardType.toLowerCase()) {
+      case 'water':
+        return 'L';
+      case 'pills':
+        return 'pills';
+      case 'activity':
+        return 'min';
+      case 'weight':
+        return 'kg';
+      case 'carbs':
+        return 'g';
+      default:
+        return '';
+    }
   }
 
   GlucoseChartData _parseGlucoseChartData(Map<String, dynamic> json) {
+    // Backend returns: { success: true, data: [ { date, time, value, timestamp }, ... ] }
+    // Or legacy format: { before_meal: [...], after_meal: [...], labels: [...] }
+    
+    // Check for new format (data array)
+    if (json.containsKey('data') && json['data'] is List) {
+      final readings = json['data'] as List;
+      final beforeMealValues = <double>[];
+      final afterMealValues = <double>[];
+      final labels = <String>[];
+      final labelSet = <String>{}; // To avoid duplicate labels
+      
+      for (final reading in readings) {
+        if (reading is Map<String, dynamic>) {
+          final value = _safeDouble(reading['value']);
+          final date = reading['date']?.toString() ?? '';
+          final time = reading['time']?.toString() ?? '';
+          
+          // Create label from date (e.g., "01/09")
+          String label = date;
+          if (date.length >= 10) {
+            final parts = date.split('-');
+            if (parts.length == 3) {
+              label = '${parts[1]}/${parts[2]}';
+            }
+          }
+          
+          if (!labelSet.contains(label)) {
+            labelSet.add(label);
+            labels.add(label);
+          }
+          
+          // Determine if before or after meal based on time
+          // Morning readings (6-11) tend to be fasting/before meal
+          // Afternoon/evening (12+) tend to be after meal
+          final hour = int.tryParse(time.split(':').first) ?? 12;
+          if (hour < 12) {
+            beforeMealValues.add(value);
+          } else {
+            afterMealValues.add(value);
+          }
+        }
+      }
+      
+      return GlucoseChartData(
+        beforeMealValues: beforeMealValues,
+        afterMealValues: afterMealValues,
+        hours: labels,
+        hasData: readings.isNotEmpty,
+        totalRecords: readings.length,
+      );
+    }
+    
+    // Legacy format: { before_meal: [...], after_meal: [...], labels: [...] }
     return GlucoseChartData(
       beforeMealValues: (json['before_meal'] as List?)
-              ?.map((v) => (v as num).toDouble())
+              ?.map((v) => _safeDouble(v))
               .toList() ??
           [],
       afterMealValues: (json['after_meal'] as List?)
-              ?.map((v) => (v as num).toDouble())
+              ?.map((v) => _safeDouble(v))
               .toList() ??
           [],
       hours: (json['labels'] as List?)?.map((l) => l.toString()).toList() ?? [],

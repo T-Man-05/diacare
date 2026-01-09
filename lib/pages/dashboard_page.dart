@@ -230,7 +230,7 @@ class _DashboardPageState extends State<DashboardPage> {
     final units = settingsState.units;
 
     // Use status from backend (already calculated by Django)
-    final status = glucose.status ?? 'normal';
+    final status = glucose.status;
     String statusText;
     Color statusColor;
     IconData statusIcon;

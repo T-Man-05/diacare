@@ -13,3 +13,6 @@ export 'settings/settings_state.dart';
 // Locale Cubit
 export 'locale/locale_cubit.dart';
 export 'locale/locale_state.dart';
+
+// Dashboard Cubit
+export 'dashboard/dashboard_cubit.dart';

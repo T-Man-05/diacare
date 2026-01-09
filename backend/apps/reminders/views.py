@@ -23,7 +23,7 @@ class ReminderViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        return Reminder.objects.filter(user=self.request.user).order_by('time')
+        return Reminder.objects.filter(user=self.request.user).order_by('scheduled_time')
     
     def list(self, request):
         """List all reminders for the user"""

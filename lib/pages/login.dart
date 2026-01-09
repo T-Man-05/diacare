@@ -18,7 +18,6 @@ import 'home.dart';
 import '../utils/constants.dart';
 import '../data/service_locator.dart';
 import '../domain/app_data_source.dart';
-import '../domain/models/models.dart';
 import '../domain/inputs/inputs.dart';
 import '../l10n/app_localizations.dart';
 

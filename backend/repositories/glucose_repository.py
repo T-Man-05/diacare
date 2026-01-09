@@ -38,6 +38,22 @@ class GlucoseRepository:
         ).order_by("-recorded_at")
     
     @staticmethod
+    def get_latest_reading(user_id: int) -> Optional[GlucoseReading]:
+        """Get the latest glucose reading for a user"""
+        return GlucoseReading.objects.filter(
+            user_id=user_id
+        ).order_by("-recorded_at").first()
+    
+    @staticmethod
+    def get_readings_last_n_days(user_id: int, days: int = 7) -> QuerySet:
+        """Get glucose readings for the last N days"""
+        start_date = timezone.now() - timedelta(days=days)
+        return GlucoseReading.objects.filter(
+            user_id=user_id,
+            recorded_at__gte=start_date
+        ).order_by("-recorded_at")
+    
+    @staticmethod
     def get_statistics(user_id: int, days: int = 7) -> dict:
         """
         Calculate glucose statistics for a user

@@ -6,17 +6,25 @@
 /// Update baseUrl based on your development environment
 /// ============================================================================
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 class ApiConfig {
   /// Base URL for Django REST API
   ///
+  /// For Web: Use localhost
   /// For Android Emulator: Use 10.0.2.2 (maps to host machine)
-  /// For Physical Device: Use your computer's WiFi IP (10.80.17.223)
+  /// For Physical Device: Use your computer's WiFi IP
   /// Make sure both devices are on the same WiFi network
-  static const String baseUrl = 'http://10.80.17.223:8000/api/v1';
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:8000/api/v1';
+    }
+    // For physical Android device - update this IP to match your network
+    return 'http://10.80.17.231:8000/api/v1';
+  }
 
   // Alternative URLs for different platforms:
-  // static const String baseUrl = 'http://10.0.2.2:8000/api/v1'; // Android Emulator
-  // static const String baseUrl = 'http://10.68.21.126:8000/api/v1'; // Old IP
+  // static const String _emulatorUrl = 'http://10.0.2.2:8000/api/v1'; // Android Emulator
 
   /// API endpoints
   static const String authToken = '/auth/token/';
@@ -40,10 +48,10 @@ class ApiConfig {
   static const String reminders = '/reminders/';
   static const String remindersUpcoming = '/reminders/upcoming/';
 
-  static const String chat = '/chat/send/';
+  static const String chat = '/chat/';  // POST to send message
   static const String chatHistory = '/chat/history/';
   static const String chatSessions = '/chat/sessions/';
-  static const String chatDeleteSession = '/chat/delete_session/';
+  static const String chatDeleteSession = '/chat/sessions/';  // DELETE with session_id in path
 
   /// JWT token expiry times
   static const Duration accessTokenExpiry = Duration(minutes: 15);

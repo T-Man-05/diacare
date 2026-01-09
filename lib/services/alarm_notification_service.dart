@@ -21,13 +21,22 @@
 ///   );
 /// ============================================================================
 
-import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:permission_handler/permission_handler.dart';
+
+// Import dart:io conditionally for platform detection
+import 'dart:io' show Platform;
+
+/// Helper to check if running on Android (web-safe)
+bool get isAndroidPlatform => !kIsWeb && Platform.isAndroid;
+
+/// Helper to check if running on iOS (web-safe)
+bool get isIOSPlatform => !kIsWeb && Platform.isIOS;
 
 /// ============================================================================
 /// GLOBAL NOTIFICATION INSTANCE
@@ -121,7 +130,7 @@ class AlarmNotificationService {
     );
 
     // Create the notification channel on Android
-    if (Platform.isAndroid) {
+    if (isAndroidPlatform) {
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>()
@@ -144,7 +153,7 @@ class AlarmNotificationService {
 
   /// Request notification permissions
   static Future<bool> requestPermissions() async {
-    if (Platform.isAndroid) {
+    if (isAndroidPlatform) {
       // Request notification permission for Android 13+
       final notificationStatus = await Permission.notification.request();
 
@@ -153,7 +162,7 @@ class AlarmNotificationService {
 
       return notificationStatus.isGranted &&
           (alarmStatus.isGranted || alarmStatus.isLimited);
-    } else if (Platform.isIOS) {
+    } else if (isIOSPlatform) {
       final result = await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
               IOSFlutterLocalNotificationsPlugin>()
@@ -169,7 +178,7 @@ class AlarmNotificationService {
 
   /// Check if permissions are granted
   static Future<bool> hasPermissions() async {
-    if (Platform.isAndroid) {
+    if (isAndroidPlatform) {
       return await Permission.notification.isGranted;
     }
     return true;

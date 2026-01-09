@@ -161,7 +161,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
           // Latest glucose (using typed LatestGlucose properties)
           'latest_glucose': latestGlucose?.value ?? 'No reading',
           'glucose_unit': latestGlucose?.unit ?? 'mg/dL',
-          'latest_reading_type': latestGlucose?.readingType?.name ?? '',
+          'latest_reading_type': (latestGlucose?.readingType)?.name ?? '',
 
           // Health cards (List<HealthCard>)
           'health_cards': healthCards,
