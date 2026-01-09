@@ -9,29 +9,61 @@
 /// Uses the Cubit pattern from flutter_bloc for simpler state management
 /// when complex events are not needed.
 ///
-/// Settings are persisted to SharedPreferences automatically.
+/// Settings are persisted to backend via AppDataSource and cached locally.
 /// ============================================================================
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'settings_state.dart';
 import '../../services/preferences_service.dart';
+import '../../domain/app_data_source.dart';
 
 /// Cubit for managing application settings
 ///
 /// This Cubit handles theme and units preferences.
-/// It emits new states when settings are changed and persists to SharedPreferences.
+/// It emits new states when settings are changed and persists to backend.
 class SettingsCubit extends Cubit<SettingsState> {
   final PreferencesService _prefs = PreferencesService();
+  final AppDataSource _dataSource;
 
   /// Constructor initializes with default settings state, then loads saved settings
-  SettingsCubit() : super(const SettingsState()) {
+  SettingsCubit(this._dataSource) : super(const SettingsState()) {
     _loadSavedSettings();
   }
 
-  /// Load saved settings from SharedPreferences
+  /// Load saved settings from backend via AppDataSource
   Future<void> _loadSavedSettings() async {
     try {
+      // Try to load from backend first
+      try {
+        final settingsData = await _dataSource.getSettingsData();
+
+        ThemeMode themeMode;
+        switch (settingsData.theme) {
+          case 'light':
+            themeMode = ThemeMode.light;
+            break;
+          case 'dark':
+            themeMode = ThemeMode.dark;
+            break;
+          case 'system':
+            themeMode = ThemeMode.system;
+            break;
+          default:
+            themeMode = ThemeMode.light;
+        }
+
+        emit(state.copyWith(
+          themeMode: themeMode,
+          units: settingsData.units,
+        ));
+
+        return;
+      } catch (e) {
+        debugPrint('Failed to load settings from backend, using local: $e');
+      }
+
+      // Fallback to local storage if backend fails
       final savedTheme = _prefs.getTheme();
       final savedUnits = _prefs.getUnits();
 
@@ -66,7 +98,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   /// Set theme from string value (light, dark, system)
   ///
   /// [theme] - String value: 'light', 'dark', or 'system'
-  void setTheme(String theme) {
+  Future<void> setTheme(String theme) async {
     ThemeMode newMode;
     switch (theme) {
       case 'light':
@@ -82,15 +114,20 @@ class SettingsCubit extends Cubit<SettingsState> {
         newMode = ThemeMode.light;
     }
     emit(state.copyWith(themeMode: newMode));
-    _prefs.setTheme(theme); // Save to SharedPreferences
+
+    try {
+      await _dataSource.setTheme(theme);
+    } catch (e) {
+      debugPrint('Error persisting theme to backend: $e');
+    }
   }
 
   /// Set theme mode directly
   ///
   /// [mode] - ThemeMode enum value
-  void setThemeMode(ThemeMode mode) {
+  Future<void> setThemeMode(ThemeMode mode) async {
     emit(state.copyWith(themeMode: mode));
-    // Save to SharedPreferences
+    // Save to backend
     String themeStr;
     switch (mode) {
       case ThemeMode.light:
@@ -103,15 +140,19 @@ class SettingsCubit extends Cubit<SettingsState> {
         themeStr = 'system';
         break;
     }
-    _prefs.setTheme(themeStr);
+
+    try {
+      await _dataSource.setTheme(themeStr);
+    } catch (e) {
+      debugPrint('Error persisting theme to backend: $e');
+    }
   }
 
   /// Toggle between light and dark themes
-  void toggleTheme() {
+  Future<void> toggleTheme() async {
     final newMode =
         state.themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
-    emit(state.copyWith(themeMode: newMode));
-    _prefs.setTheme(newMode == ThemeMode.light ? 'light' : 'dark');
+    await setThemeMode(newMode);
   }
 
   // ============================================================================
@@ -121,18 +162,22 @@ class SettingsCubit extends Cubit<SettingsState> {
   /// Set units preference
   ///
   /// [units] - String value: 'mg/dL' or 'mmol/L'
-  void setUnits(String units) {
+  Future<void> setUnits(String units) async {
     if (units == 'mg/dL' || units == 'mmol/L') {
       emit(state.copyWith(units: units));
-      _prefs.setUnits(units); // Save to SharedPreferences
+
+      try {
+        await _dataSource.setUnits(units);
+      } catch (e) {
+        debugPrint('Error persisting units to backend: $e');
+      }
     }
   }
 
   /// Toggle between mg/dL and mmol/L units
-  void toggleUnits() {
+  Future<void> toggleUnits() async {
     final newUnits = state.units == 'mg/dL' ? 'mmol/L' : 'mg/dL';
-    emit(state.copyWith(units: newUnits));
-    _prefs.setUnits(newUnits);
+    await setUnits(newUnits);
   }
 
   // ============================================================================

@@ -10,3 +10,4 @@ export 'diabetic_profile.dart';
 export 'app_preferences.dart';
 export 'dashboard_data.dart';
 export 'settings_data.dart';
+export 'insights_data.dart';

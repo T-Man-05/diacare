@@ -28,6 +28,7 @@ class SettingsData {
   int get maxGlucose => diabeticProfile.maxGlucose;
 
   String get theme => preferences.theme;
+  String get locale => preferences.locale;
   String get units => preferences.units;
   bool get notificationsEnabled => preferences.notificationsEnabled;
 

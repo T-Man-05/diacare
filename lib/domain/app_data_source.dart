@@ -166,6 +166,13 @@ abstract class AppDataSource {
   Future<ActivityChartData> getActivityChartData();
 
   // ============================================================================
+  // INSIGHTS
+  // ============================================================================
+
+  /// Get comprehensive health insights including statistics, trends, and patterns
+  Future<InsightsData> getInsights();
+
+  // ============================================================================
   // UTILITY
   // ============================================================================
 

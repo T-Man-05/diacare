@@ -94,11 +94,11 @@ class MyApp extends StatelessWidget {
       providers: [
         // Settings Cubit - manages theme and units
         BlocProvider<SettingsCubit>(
-          create: (_) => SettingsCubit(),
+          create: (_) => SettingsCubit(dataSource),
         ),
         // Locale Cubit - manages app language
         BlocProvider<LocaleCubit>(
-          create: (_) => LocaleCubit(),
+          create: (_) => LocaleCubit(dataSource),
         ),
       ],
       child: BlocBuilder<SettingsCubit, SettingsState>(

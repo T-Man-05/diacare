@@ -209,34 +209,48 @@ class _DashboardPageState extends State<DashboardPage> {
     SettingsState settingsState,
   ) {
     final glucose = _dashboardData!.glucose;
+
+    // Handle no glucose reading (value is 0 or status is 'No data')
+    if (glucose.value == 0 || glucose.status == 'No data') {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: _cardDecoration(isDark),
+        child: Text(
+          'No glucose data available',
+          style: TextStyle(
+            color: theme.textTheme.bodyLarge?.color,
+          ),
+        ),
+      );
+    }
+
     // Convert glucose value based on settings
     final displayValue =
         settingsState.formatGlucoseValue(glucose.value.toDouble());
     final units = settingsState.units;
 
-    // Determine glucose status based on diabetic profile range
-    final glucoseValue = glucose.value.toDouble();
-    final minGlucose = _dashboardData!.minGlucose;
-    final maxGlucose = _dashboardData!.maxGlucose;
+    // Use status from backend (already calculated by Django)
+    final status = glucose.status ?? 'normal';
     String statusText;
     Color statusColor;
     IconData statusIcon;
 
-    if (glucoseValue < minGlucose) {
-      // Low glucose
-      statusText = l10n.lowGlucose;
-      statusColor = Colors.orange;
-      statusIcon = Icons.arrow_downward;
-    } else if (glucoseValue > maxGlucose) {
-      // High glucose
-      statusText = l10n.highGlucose;
-      statusColor = Colors.red;
-      statusIcon = Icons.arrow_upward;
-    } else {
-      // Normal range
-      statusText = l10n.youAreFine;
-      statusColor = AppColors.primary;
-      statusIcon = Icons.check;
+    switch (status.toLowerCase()) {
+      case 'low':
+        statusText = l10n.lowGlucose;
+        statusColor = Colors.orange;
+        statusIcon = Icons.arrow_downward;
+        break;
+      case 'high':
+        statusText = l10n.highGlucose;
+        statusColor = Colors.red;
+        statusIcon = Icons.arrow_upward;
+        break;
+      default: // 'normal'
+        statusText = l10n.youAreFine;
+        statusColor = AppColors.primary;
+        statusIcon = Icons.check;
+        break;
     }
 
     return Container(
