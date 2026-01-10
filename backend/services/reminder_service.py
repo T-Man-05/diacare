@@ -25,7 +25,7 @@ class ReminderService:
     
     def get_upcoming_reminders(self, user, limit=10):
         """Get upcoming reminders (not completed today)"""
-        reminders = self.reminder_repo.get_today_reminders(user.id)[:limit]
+        reminders = self.reminder_repo.get_upcoming_reminders(user.id, limit=limit)
         return [self._format_reminder(r) for r in reminders]
     
     def create_reminder(self, user, data):

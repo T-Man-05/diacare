@@ -2,6 +2,7 @@
 
 from typing import List, Optional
 from datetime import date
+from decimal import Decimal, InvalidOperation
 from django.db.models import QuerySet
 from apps.health.models import HealthCard
 
@@ -47,7 +48,11 @@ class HealthCardRepository:
                          recorded_date: Optional[date] = None) -> HealthCard:
         """Update or create health card value"""
         card = HealthCardRepository.get_or_create_card(user_id, card_type, recorded_date)
-        card.value = value
+        # Store as Decimal to match the model field type and avoid float issues.
+        try:
+            card.value = Decimal(str(value))
+        except (InvalidOperation, TypeError, ValueError):
+            card.value = Decimal('0')
         card.save()
         return card
     
@@ -56,7 +61,14 @@ class HealthCardRepository:
                            recorded_date: Optional[date] = None) -> HealthCard:
         """Increment health card value (useful for water glasses, pills taken)"""
         card = HealthCardRepository.get_or_create_card(user_id, card_type, recorded_date)
-        card.value += increment
+        # DecimalField stores Decimal; adding a float raises TypeError.
+        try:
+            inc = Decimal(str(increment))
+        except (InvalidOperation, TypeError, ValueError):
+            inc = Decimal('0')
+
+        current = card.value if card.value is not None else Decimal('0')
+        card.value = current + inc
         card.save()
         return card
     

@@ -6,6 +6,7 @@ import '../domain/models/models.dart';
 import '../utils/constants.dart';
 import '../blocs/blocs.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/top_error_banner.dart';
 import 'edit_profile_page.dart';
 import 'diabetics_profile_page.dart';
 import 'login.dart';
@@ -20,6 +21,7 @@ class MyProfilePage extends StatefulWidget {
 class _MyProfilePageState extends State<MyProfilePage> {
   SettingsData? _settingsData;
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -35,18 +37,37 @@ class _MyProfilePageState extends State<MyProfilePage> {
       setState(() {
         _settingsData = settingsData;
         _isLoading = false;
+        _errorMessage = null;
       });
     } catch (e) {
       setState(() => _isLoading = false);
       debugPrint('Error loading data: $e');
+
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = e is DataSourceException
+            ? e.displayMessage
+            : 'Failed to load settings';
+      });
     }
   }
 
   Future<void> _saveSettings() async {
     if (_settingsData != null) {
-      final dataSource = getIt<AppDataSource>();
-      await dataSource
-          .setNotificationsEnabled(_settingsData!.notificationsEnabled);
+      try {
+        final dataSource = getIt<AppDataSource>();
+        await dataSource
+            .setNotificationsEnabled(_settingsData!.notificationsEnabled);
+        if (!mounted) return;
+        setState(() => _errorMessage = null);
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _errorMessage = e is DataSourceException
+              ? e.displayMessage
+              : 'Failed to save settings';
+        });
+      }
     }
   }
 
@@ -80,7 +101,24 @@ class _MyProfilePageState extends State<MyProfilePage> {
     if (_settingsData == null) {
       return Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
-        body: Center(child: Text(l10n.error)),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_errorMessage != null)
+                  TopErrorBanner(
+                    message: _errorMessage!,
+                    onDismiss: () => setState(() => _errorMessage = null),
+                    onRetry: _loadData,
+                  )
+                else
+                  Text(l10n.error),
+              ],
+            ),
+          ),
+        ),
       );
     }
 
@@ -106,17 +144,32 @@ class _MyProfilePageState extends State<MyProfilePage> {
         centerTitle: true,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.screenPadding),
-          child: Column(
-            children: [
-              _buildProfileHeader(isDark),
-              const SizedBox(height: 24),
-              _buildMainMenuSection(isDark, l10n),
-              const SizedBox(height: 24),
-              _buildAccountActionsSection(isDark, l10n),
-            ],
-          ),
+        child: Column(
+          children: [
+            if (_errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: TopErrorBanner(
+                  message: _errorMessage!,
+                  onDismiss: () => setState(() => _errorMessage = null),
+                  onRetry: _loadData,
+                ),
+              ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.screenPadding),
+                child: Column(
+                  children: [
+                    _buildProfileHeader(isDark),
+                    const SizedBox(height: 24),
+                    _buildMainMenuSection(isDark, l10n),
+                    const SizedBox(height: 24),
+                    _buildAccountActionsSection(isDark, l10n),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -828,21 +881,20 @@ class _MyProfilePageState extends State<MyProfilePage> {
                 // Delete account from database
                 final dataSource = getIt<AppDataSource>();
                 await dataSource.deleteAccount();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.accountDeleted)),
-                );
+                if (!mounted) return;
+                setState(() => _errorMessage = null);
                 // Navigate to login
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (context) => const LoginScreen()),
                   (route) => false,
                 );
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error deleting account: $e'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+                if (!mounted) return;
+                setState(() {
+                  _errorMessage = e is DataSourceException
+                      ? e.displayMessage
+                      : 'Error deleting account';
+                });
               }
             },
             child: Text(

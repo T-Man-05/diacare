@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'diagnosis_treateement.dart';
+import 'home.dart';
 import '../utils/constants.dart';
 import '../l10n/app_localizations.dart';
 
@@ -31,10 +31,11 @@ class _DiabetesTypeScreen extends State<DiabetesTypeScreen> {
       return;
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-          builder: (context) => const DiagnosisTreatementScreen()),
+    // Skip the last onboarding step (treatment type + diagnosis duration)
+    // and go directly to the main app.
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const MainNavigationPage()),
+      (route) => false,
     );
   }
 

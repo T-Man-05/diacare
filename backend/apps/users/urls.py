@@ -4,6 +4,7 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.users.views import RegisterView, UserProfileView, LogoutView, diabetic_profile_read, diabetic_profile_write
 from apps.users.settings_views import settings_read, settings_write
+from apps.users.stream_views import settings_stream_view
 
 urlpatterns = [
     # JWT Authentication
@@ -18,6 +19,7 @@ urlpatterns = [
     # Settings (BFF pattern)
     path('settings/', settings_read, name='settings-read'),
     path('settings/update/', settings_write, name='settings-write'),
+    path('settings/stream/', settings_stream_view, name='settings-stream'),
     
     # Diabetic Profile
     path('diabetic-profile/', diabetic_profile_read, name='diabetic-profile-read'),

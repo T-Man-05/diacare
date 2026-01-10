@@ -14,6 +14,8 @@
 /// ============================================================================
 
 import 'dart:convert';
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,8 +35,177 @@ class DjangoDataSource implements AppDataSource {
   String? _refreshToken;
   String? _currentUserId;
 
+  // Token loading is async; many cubits call into the data source immediately
+  // on startup. Track the in-flight load so we can await it before auth checks.
+  Future<void>? _tokensLoadFuture;
+
   DjangoDataSource(this._prefs) {
-    _loadTokens();
+    _tokensLoadFuture = _loadTokens();
+  }
+
+  /// Ensure the data source is fully initialized (tokens loaded from storage).
+  ///
+  /// Call this once during app startup (before reading `isLoggedIn`).
+  Future<void> init() async {
+    await (_tokensLoadFuture ??= _loadTokens());
+  }
+
+  Future<void> _ensureInitialized() async {
+    await (_tokensLoadFuture ??= _loadTokens());
+  }
+
+  // ============================================================================
+  // ERROR HANDLING
+  // ============================================================================
+
+  DataSourceException _fromNetworkException(
+    Object error, {
+    String? fallbackCode,
+    String? fallbackMessage,
+  }) {
+    if (error is DataSourceException) return error;
+
+    if (error is TimeoutException) {
+      return DataSourceException(
+        fallbackMessage ?? 'Request timed out',
+        code: 'timeout',
+        uiMessage: "We couldn't load your data in time. Please try refreshing.",
+      );
+    }
+
+    if (error is SocketException) {
+      return DataSourceException(
+        fallbackMessage ?? 'No internet connection',
+        code: 'no_internet',
+        uiMessage:
+            'No internet connection. Please check your Wi-Fi or data.',
+      );
+    }
+
+    if (error is http.ClientException) {
+      return DataSourceException(
+        fallbackMessage ?? 'Network error',
+        code: 'network_error',
+        uiMessage:
+            'No internet connection. Please check your Wi-Fi or data.',
+      );
+    }
+
+    // Fallback
+    return DataSourceException(
+      fallbackMessage ?? 'Unexpected error',
+      code: fallbackCode ?? 'unexpected_error',
+      uiMessage:
+          "We're having trouble connecting to the server right now. We are working on fixing it.",
+    );
+  }
+
+  DataSourceException _fromErrorResponse(
+    http.Response response, {
+    required String fallbackMessage,
+    String? fallbackCode,
+  }) {
+    // Try to parse our standardized error schema.
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic>) {
+        final success = decoded['success'];
+        final err = decoded['error'];
+
+        if (success == false && err is Map<String, dynamic>) {
+          final code = (err['code'] as String?) ?? fallbackCode;
+          final uiMessage = (err['ui_message'] as String?) ??
+              (err['message'] as String?) ??
+              fallbackMessage;
+          final devMessage = err['dev_message'] as String?;
+
+          Map<String, List<String>>? fieldErrors;
+          final fe = err['field_errors'];
+          if (fe is Map) {
+            fieldErrors = <String, List<String>>{};
+            fe.forEach((key, value) {
+              final k = key.toString();
+              if (value is List) {
+                fieldErrors![k] = value.map((e) => e.toString()).toList();
+              } else if (value != null) {
+                fieldErrors![k] = [value.toString()];
+              }
+            });
+            if (fieldErrors!.isEmpty) fieldErrors = null;
+          }
+
+          return DataSourceException(
+            fallbackMessage,
+            code: code,
+            uiMessage: uiMessage,
+            devMessage: devMessage,
+            fieldErrors: fieldErrors,
+            httpStatus: response.statusCode,
+          );
+        }
+
+        // Older backend schema (legacy): {success:false, error:{code,message,details}}
+        if (success == false && err is Map<String, dynamic>) {
+          final code = (err['code'] as String?) ?? fallbackCode;
+          final uiMessage = (err['message'] as String?) ?? fallbackMessage;
+          return DataSourceException(
+            fallbackMessage,
+            code: code,
+            uiMessage: uiMessage,
+            httpStatus: response.statusCode,
+          );
+        }
+      }
+    } catch (_) {
+      // Ignore parse errors and fallback.
+    }
+
+    // Status-code based fallbacks (for non-standard responses).
+    if (response.statusCode == 401) {
+      return DataSourceException(
+        fallbackMessage,
+        code: 'session_expired',
+        uiMessage: 'Your session has expired. Please log in again to continue.',
+        httpStatus: response.statusCode,
+      );
+    }
+
+    if (response.statusCode == 404) {
+      return DataSourceException(
+        fallbackMessage,
+        code: 'not_found',
+        uiMessage:
+            "We couldn't find the information you were looking for. It may have been deleted.",
+        httpStatus: response.statusCode,
+      );
+    }
+
+    if (response.statusCode == 408 || response.statusCode == 504) {
+      return DataSourceException(
+        fallbackMessage,
+        code: 'timeout',
+        uiMessage: "We couldn't load your data in time. Please try refreshing.",
+        httpStatus: response.statusCode,
+      );
+    }
+
+    if (response.statusCode >= 500) {
+      return DataSourceException(
+        fallbackMessage,
+        code: 'service_unavailable',
+        uiMessage:
+            "We're having trouble connecting to the server right now. We are working on fixing it.",
+        httpStatus: response.statusCode,
+      );
+    }
+
+    return DataSourceException(
+      fallbackMessage,
+      code: fallbackCode,
+      uiMessage:
+          'Some information seems to be missing or incorrect. Please check the highlighted fields.',
+      httpStatus: response.statusCode,
+    );
   }
 
   // ============================================================================
@@ -100,10 +271,33 @@ class DjangoDataSource implements AppDataSource {
 
   /// Ensure user is authenticated
   Future<void> _ensureAuthenticated() async {
+    // If tokens were persisted from a previous session, make sure we load them
+    // before concluding that the user is not authenticated.
+    await _ensureInitialized();
     if (_accessToken == null) {
       throw const DataSourceException(
         'Not authenticated',
         code: 'not_authenticated',
+      );
+    }
+  }
+
+  Future<void> _patchSettings(Map<String, dynamic> body) async {
+    await _ensureAuthenticated();
+
+    final response = await _makeAuthenticatedRequest(() => http
+        .patch(
+          Uri.parse('$_baseUrl${ApiConfig.authSettingsUpdate}'),
+          headers: _getHeaders(),
+          body: jsonEncode(body),
+        )
+        .timeout(ApiConfig.timeout));
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw _fromErrorResponse(
+        response,
+        fallbackMessage: 'Failed to update settings',
+        fallbackCode: 'settings_update_failed',
       );
     }
   }
@@ -147,7 +341,12 @@ class DjangoDataSource implements AppDataSource {
   Future<http.Response> _makeAuthenticatedRequest(
     Future<http.Response> Function() request,
   ) async {
-    var response = await request();
+    http.Response response;
+    try {
+      response = await request();
+    } on Object catch (e) {
+      throw _fromNetworkException(e);
+    }
 
     // If token expired, refresh and retry
     if (response.statusCode == 401) {
@@ -210,6 +409,11 @@ class DjangoDataSource implements AppDataSource {
             data['refresh'],
             profileData['id'].toString(),
           );
+          // Keep PreferencesService session flag in sync (used by some flows).
+          final id = int.tryParse(profileData['id'].toString());
+          if (id != null) {
+            await _prefs.setLoggedInUserId(id);
+          }
           return _parseUserProfile(profileData);
         }
       }
@@ -368,16 +572,28 @@ class DjangoDataSource implements AppDataSource {
     await _ensureAuthenticated();
 
     try {
-      await _makeAuthenticatedRequest(() => http
+      final response = await _makeAuthenticatedRequest(() => http
           .delete(
             Uri.parse('$_baseUrl${ApiConfig.authProfile}'),
             headers: _getHeaders(),
           )
           .timeout(ApiConfig.timeout));
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw _fromErrorResponse(
+          response,
+          fallbackMessage: 'Failed to delete account',
+          fallbackCode: 'account_delete_failed',
+        );
+      }
       await _clearTokens();
       await _prefs.clearSession();
     } catch (e) {
-      throw DataSourceException('Failed to delete account: ${e.toString()}');
+      throw _fromNetworkException(
+        e,
+        fallbackCode: 'account_delete_failed',
+        fallbackMessage: 'Failed to delete account',
+      );
     }
   }
 
@@ -402,7 +618,11 @@ class DjangoDataSource implements AppDataSource {
         return _parseDashboardData(data);
       }
 
-      throw const DataSourceException('Failed to load dashboard data');
+      throw _fromErrorResponse(
+        response,
+        fallbackMessage: 'Failed to load dashboard data',
+        fallbackCode: 'dashboard_load_failed',
+      );
     } catch (e) {
       debugPrint('Error loading dashboard: $e');
       rethrow;
@@ -418,37 +638,61 @@ class DjangoDataSource implements AppDataSource {
     await _ensureAuthenticated();
 
     try {
-      // Get profile
-      final profileResponse = await _makeAuthenticatedRequest(() => http
+      // Preferred: backend BFF settings endpoint (profile + diabetic + preferences)
+      final response = await _makeAuthenticatedRequest(() => http
           .get(
-            Uri.parse('$_baseUrl${ApiConfig.authProfile}'),
+            Uri.parse('$_baseUrl${ApiConfig.authSettings}'),
             headers: _getHeaders(),
           )
           .timeout(ApiConfig.timeout));
 
-      // Get diabetic profile
-      final diabeticResponse = await _makeAuthenticatedRequest(() => http
-          .get(
-            Uri.parse('$_baseUrl${ApiConfig.diabeticProfile}'),
-            headers: _getHeaders(),
-          )
-          .timeout(ApiConfig.timeout));
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        final payload = (decoded is Map<String, dynamic> && decoded['data'] is Map)
+            ? decoded['data'] as Map<String, dynamic>
+            : (decoded is Map<String, dynamic> ? decoded : <String, dynamic>{});
 
-      if (profileResponse.statusCode == 200 &&
-          diabeticResponse.statusCode == 200) {
-        final profileData = jsonDecode(profileResponse.body);
-        final diabeticData = jsonDecode(diabeticResponse.body);
+        final profileData = payload['profile'] as Map<String, dynamic>?;
+        final diabeticData = payload['diabetic_profile'] as Map<String, dynamic>?;
+        final prefsData = payload['preferences'] as Map<String, dynamic>?;
+
+        final preferences = AppPreferences(
+          theme: prefsData?['theme']?.toString() ?? _prefs.getTheme(),
+          locale: prefsData?['locale']?.toString() ?? _prefs.getLocale(),
+          units: prefsData?['units']?.toString() ?? _prefs.getUnits(),
+          notificationsEnabled:
+              (prefsData?['notifications_enabled'] as bool?) ?? _prefs.getNotificationsEnabled(),
+          onboardingComplete:
+              (prefsData?['onboarding_complete'] as bool?) ?? _prefs.getOnboardingComplete(),
+        );
+
+        // Keep local preferences in sync with server.
+        await _prefs.setTheme(preferences.theme);
+        await _prefs.setLocale(preferences.locale);
+        await _prefs.setUnits(preferences.units);
+        await _prefs.setNotificationsEnabled(preferences.notificationsEnabled);
+        await _prefs.setOnboardingComplete(preferences.onboardingComplete);
 
         return SettingsData(
-          profile: _parseUserProfile(profileData),
-          diabeticProfile: _parseDiabeticProfile(diabeticData),
-          preferences: getPreferences(),
+          profile: profileData != null ? _parseUserProfile(profileData) : (await getCurrentUser())!,
+          diabeticProfile: diabeticData != null
+              ? _parseDiabeticProfile(diabeticData)
+              : (await getDiabeticProfile())!,
+          preferences: preferences,
         );
       }
 
-      throw const DataSourceException('Failed to load settings');
+      throw _fromErrorResponse(
+        response,
+        fallbackMessage: 'Failed to load settings',
+        fallbackCode: 'settings_load_failed',
+      );
     } catch (e) {
-      debugPrint('Error loading settings: $e');
+      if (e is DataSourceException && e.code == 'not_authenticated') {
+        // Normal when app starts before login or before session is restored.
+      } else {
+        debugPrint('Error loading settings: $e');
+      }
       rethrow;
     }
   }
@@ -458,25 +702,30 @@ class DjangoDataSource implements AppDataSource {
     await _ensureAuthenticated();
 
     try {
-      // Update profile
-      await updateUserProfile(UpdateProfileInput(
-        fullName: settings.fullName,
-        username: settings.username,
-      ));
+      // Persist everything in one backend call (BFF settings write)
+      await _patchSettings({
+        'theme': settings.theme,
+        'locale': settings.locale,
+        'units': settings.units,
+        'notifications_enabled': settings.notificationsEnabled,
+        'profile': {
+          'full_name': settings.fullName,
+          'username': settings.username,
+          'profile_image_url': settings.profileImageUrl,
+        },
+        'diabetic_profile': {
+          'diabetic_type': settings.diabeticType,
+          'treatment_type': settings.treatmentType,
+          'min_glucose': settings.minGlucose,
+          'max_glucose': settings.maxGlucose,
+        },
+      });
 
-      // Update diabetic profile
-      await updateDiabeticProfile(UpdateDiabeticProfileInput(
-        diabeticType: settings.diabeticType,
-        treatmentType: settings.treatmentType,
-        minGlucose: settings.minGlucose,
-        maxGlucose: settings.maxGlucose,
-      ));
-
-      // Update local preferences
-      await setTheme(settings.theme);
-      await setLocale(settings.locale);
-      await setUnits(settings.units);
-      await setNotificationsEnabled(settings.notificationsEnabled);
+      // Update local cache too
+      await _prefs.setTheme(settings.theme);
+      await _prefs.setLocale(settings.locale);
+      await _prefs.setUnits(settings.units);
+      await _prefs.setNotificationsEnabled(settings.notificationsEnabled);
     } catch (e) {
       throw DataSourceException('Failed to update settings: ${e.toString()}');
     }
@@ -553,21 +802,44 @@ class DjangoDataSource implements AppDataSource {
   @override
   Future<void> setTheme(String theme) async {
     await _prefs.setTheme(theme);
+    // If user is logged in, also persist to backend
+    try {
+      if (isLoggedIn) {
+        await _patchSettings({'theme': theme});
+      }
+    } catch (_) {
+      // Don't block UI on backend sync; local cache is still updated.
+    }
   }
 
   @override
   Future<void> setLocale(String locale) async {
     await _prefs.setLocale(locale);
+    try {
+      if (isLoggedIn) {
+        await _patchSettings({'locale': locale});
+      }
+    } catch (_) {}
   }
 
   @override
   Future<void> setUnits(String units) async {
     await _prefs.setUnits(units);
+    try {
+      if (isLoggedIn) {
+        await _patchSettings({'units': units});
+      }
+    } catch (_) {}
   }
 
   @override
   Future<void> setNotificationsEnabled(bool enabled) async {
     await _prefs.setNotificationsEnabled(enabled);
+    try {
+      if (isLoggedIn) {
+        await _patchSettings({'notifications_enabled': enabled});
+      }
+    } catch (_) {}
   }
 
   @override
@@ -760,16 +1032,27 @@ class DjangoDataSource implements AppDataSource {
         'increment': input.value,
       };
 
-      await _makeAuthenticatedRequest(() => http
+      final response = await _makeAuthenticatedRequest(() => http
           .post(
             Uri.parse('$_baseUrl${ApiConfig.healthCardsIncrement}'),
             headers: _getHeaders(),
             body: jsonEncode(body),
           )
           .timeout(ApiConfig.timeout));
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw _fromErrorResponse(
+          response,
+          fallbackMessage: 'Failed to update health card',
+          fallbackCode: 'health_card_update_failed',
+        );
+      }
     } catch (e) {
-      throw DataSourceException(
-          'Failed to update health card: ${e.toString()}');
+      throw _fromNetworkException(
+        e,
+        fallbackCode: 'health_card_update_failed',
+        fallbackMessage: 'Failed to update health card',
+      );
     }
   }
 
@@ -789,44 +1072,42 @@ class DjangoDataSource implements AppDataSource {
           )
           .timeout(ApiConfig.timeout));
 
-      debugPrint('Reminders response status: ${response.statusCode}');
-      debugPrint('Reminders response body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        debugPrint('Reminders parsed data type: ${data.runtimeType}');
         
         // Handle wrapped response: {'success': true, 'data': [...]}
         List<dynamic> reminders;
         if (data is Map<String, dynamic>) {
-          debugPrint('Reminders data keys: ${data.keys.toList()}');
           if (data['data'] is List) {
             reminders = data['data'] as List;
-            debugPrint('Using data field, count: ${reminders.length}');
           } else if (data['results'] is List) {
             reminders = data['results'] as List;
-            debugPrint('Using results field, count: ${reminders.length}');
           } else {
             reminders = [];
-            debugPrint('No list found in response');
           }
         } else if (data is List) {
           reminders = data;
-          debugPrint('Data is direct list, count: ${reminders.length}');
         } else {
           reminders = [];
-          debugPrint('Unknown data format');
         }
-        
-        final parsed = reminders.map((r) => _parseReminder(r as Map<String, dynamic>)).toList();
-        debugPrint('Parsed ${parsed.length} reminders');
-        return parsed;
+
+        return reminders
+            .map((r) => _parseReminder(r as Map<String, dynamic>))
+            .toList();
       }
 
-      return [];
+      throw _fromErrorResponse(
+        response,
+        fallbackMessage: 'Failed to load reminders',
+        fallbackCode: 'reminders_load_failed',
+      );
     } catch (e) {
       debugPrint('Error getting reminders: $e');
-      return [];
+      throw _fromNetworkException(
+        e,
+        fallbackCode: 'reminders_load_failed',
+        fallbackMessage: 'Failed to load reminders',
+      );
     }
   }
 
@@ -867,7 +1148,11 @@ class DjangoDataSource implements AppDataSource {
         return _parseReminder(reminderData);
       }
 
-      throw const DataSourceException('Failed to add reminder');
+      throw _fromErrorResponse(
+        response,
+        fallbackMessage: 'Failed to add reminder',
+        fallbackCode: 'reminder_create_failed',
+      );
     } catch (e) {
       debugPrint('Error adding reminder: $e');
       rethrow;
@@ -896,15 +1181,27 @@ class DjangoDataSource implements AppDataSource {
       if (input.isEnabled != null) body['is_enabled'] = input.isEnabled;
       if (input.status != null) body['status'] = input.status;
 
-      await _makeAuthenticatedRequest(() => http
+      final response = await _makeAuthenticatedRequest(() => http
           .patch(
             Uri.parse('$_baseUrl${ApiConfig.reminders}$reminderId/'),
             headers: _getHeaders(),
             body: jsonEncode(body),
           )
           .timeout(ApiConfig.timeout));
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw _fromErrorResponse(
+          response,
+          fallbackMessage: 'Failed to update reminder',
+          fallbackCode: 'reminder_update_failed',
+        );
+      }
     } catch (e) {
-      throw DataSourceException('Failed to update reminder: ${e.toString()}');
+      throw _fromNetworkException(
+        e,
+        fallbackCode: 'reminder_update_failed',
+        fallbackMessage: 'Failed to update reminder',
+      );
     }
   }
 
@@ -913,16 +1210,27 @@ class DjangoDataSource implements AppDataSource {
     await _ensureAuthenticated();
 
     try {
-      await _makeAuthenticatedRequest(() => http
+      final response = await _makeAuthenticatedRequest(() => http
           .patch(
             Uri.parse('$_baseUrl${ApiConfig.reminders}$reminderId/'),
             headers: _getHeaders(),
             body: jsonEncode({'status': status}),
           )
           .timeout(ApiConfig.timeout));
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw _fromErrorResponse(
+          response,
+          fallbackMessage: 'Failed to update reminder status',
+          fallbackCode: 'reminder_status_update_failed',
+        );
+      }
     } catch (e) {
-      throw DataSourceException(
-          'Failed to update reminder status: ${e.toString()}');
+      throw _fromNetworkException(
+        e,
+        fallbackCode: 'reminder_status_update_failed',
+        fallbackMessage: 'Failed to update reminder status',
+      );
     }
   }
 
@@ -931,14 +1239,26 @@ class DjangoDataSource implements AppDataSource {
     await _ensureAuthenticated();
 
     try {
-      await _makeAuthenticatedRequest(() => http
+      final response = await _makeAuthenticatedRequest(() => http
           .delete(
             Uri.parse('$_baseUrl${ApiConfig.reminders}$reminderId/'),
             headers: _getHeaders(),
           )
           .timeout(ApiConfig.timeout));
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw _fromErrorResponse(
+          response,
+          fallbackMessage: 'Failed to delete reminder',
+          fallbackCode: 'reminder_delete_failed',
+        );
+      }
     } catch (e) {
-      throw DataSourceException('Failed to delete reminder: ${e.toString()}');
+      throw _fromNetworkException(
+        e,
+        fallbackCode: 'reminder_delete_failed',
+        fallbackMessage: 'Failed to delete reminder',
+      );
     }
   }
 
@@ -1003,10 +1323,18 @@ class DjangoDataSource implements AppDataSource {
         return _parseInsightsData(data);
       }
 
-      throw const DataSourceException('Failed to load insights');
+      throw _fromErrorResponse(
+        response,
+        fallbackMessage: 'Failed to load insights',
+        fallbackCode: 'insights_load_failed',
+      );
     } catch (e) {
       debugPrint('Error loading insights: $e');
-      rethrow;
+      throw _fromNetworkException(
+        e,
+        fallbackCode: 'insights_load_failed',
+        fallbackMessage: 'Failed to load insights',
+      );
     }
   }
 
@@ -1201,80 +1529,46 @@ class DjangoDataSource implements AppDataSource {
             status: 'No data',
           );
 
-    // Parse reminders list - get first one as next reminder
-    final remindersList = json['reminders'] as List?;
-    debugPrint('Dashboard reminders count: ${remindersList?.length ?? 0}');
+    // Parse next reminder
+    // Prefer backend `next_reminder` (single closest reminder), but fall back to `reminders` list.
+    final nextReminderJson = json['next_reminder'];
     Reminder? nextReminder;
-    int lateRemindersCount = 0;
-    
-    if (remindersList != null && remindersList.isNotEmpty) {
-      debugPrint('Dashboard reminders data: $remindersList');
-      // Parse all reminders
-      final reminders = remindersList
-          .map((r) => _parseReminder(r as Map<String, dynamic>))
-          .toList();
-      
-      debugPrint('Parsed ${reminders.length} reminders for dashboard');
-      
-      // Find next upcoming reminder - closest one that hasn't passed yet
-      final now = DateTime.now();
-      
-      // Filter to only enabled reminders with future scheduled time
-      final upcomingReminders = <Reminder>[];
-      for (final r in reminders) {
-        if (!r.isEnabled) {
-          debugPrint('Reminder "${r.title}" skipped: not enabled');
-          continue;
-        }
-        if (r.isDone) {
-          debugPrint('Reminder "${r.title}" skipped: already done');
-          continue;
-        }
-        
-        // Parse scheduled time and check if it's in the future
-        final parts = r.scheduledTime.split(':');
-        if (parts.length >= 2) {
-          try {
-            final hour = int.parse(parts[0]);
-            final minute = int.parse(parts[1]);
-            final scheduledDateTime = DateTime(now.year, now.month, now.day, hour, minute);
-            
-            if (scheduledDateTime.isAfter(now)) {
-              upcomingReminders.add(r);
-              final diff = scheduledDateTime.difference(now);
-              debugPrint('Reminder "${r.title}" at ${r.scheduledTime} is upcoming (in ${diff.inMinutes} min)');
-            } else {
-              debugPrint('Reminder "${r.title}" at ${r.scheduledTime} already passed');
-            }
-          } catch (e) {
-            debugPrint('Reminder "${r.title}" time parse error: $e');
-          }
+
+    if (nextReminderJson is Map<String, dynamic>) {
+      nextReminder = _parseReminder(nextReminderJson);
+    } else {
+      final remindersList = json['reminders'] as List?;
+      if (remindersList != null && remindersList.isNotEmpty) {
+        final reminders = remindersList
+            .map((r) => _parseReminder(r as Map<String, dynamic>))
+            .toList();
+
+        // Defensive: pick the closest enabled + not-done reminder.
+        final now = DateTime.now();
+        final candidates = reminders.where((r) => r.isEnabled && !r.isDone).toList();
+        if (candidates.isNotEmpty) {
+          candidates.sort((a, b) {
+            final aRemaining = a.timeRemaining(now) ?? const Duration(days: 9999);
+            final bRemaining = b.timeRemaining(now) ?? const Duration(days: 9999);
+            return aRemaining.compareTo(bRemaining);
+          });
+          nextReminder = candidates.first;
         }
       }
-      
-      debugPrint('Found ${upcomingReminders.length} upcoming reminders');
-      
-      if (upcomingReminders.isNotEmpty) {
-        // Sort by scheduled time (earliest first)
-        upcomingReminders.sort((a, b) {
-          return a.scheduledTime.compareTo(b.scheduledTime);
-        });
-        nextReminder = upcomingReminders.first;
-        debugPrint('Next reminder: "${nextReminder!.title}" at ${nextReminder!.scheduledTime}');
-      } else if (reminders.isNotEmpty) {
-        // No upcoming reminders, show first enabled one (even if late)
-        final enabledReminders = reminders.where((r) => r.isEnabled).toList();
-        if (enabledReminders.isNotEmpty) {
-          // Sort by time
-          enabledReminders.sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime));
-          nextReminder = enabledReminders.first;
-          debugPrint('No upcoming, showing first enabled: "${nextReminder!.title}"');
-        }
+    }
+
+    // Parse late reminders count
+    // Prefer backend computed count; fall back to computing from reminders list if present.
+    int lateRemindersCount = _safeInt(json['late_reminders_count'], 0);
+    if (lateRemindersCount == 0) {
+      final remindersList = json['reminders'] as List?;
+      if (remindersList != null && remindersList.isNotEmpty) {
+        final now = DateTime.now();
+        final reminders = remindersList
+            .map((r) => _parseReminder(r as Map<String, dynamic>))
+            .toList();
+        lateRemindersCount = reminders.where((r) => r.isLate(now)).length;
       }
-      
-      // Count late reminders (use Reminder's isLate method)
-      lateRemindersCount = reminders.where((r) => r.isLate(now)).length;
-      debugPrint('Late reminders count: $lateRemindersCount');
     }
 
     // Parse health cards - backend returns Dict keyed by card_type

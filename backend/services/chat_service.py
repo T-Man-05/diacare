@@ -97,11 +97,13 @@ Remember: You're a helpful assistant, not a replacement for medical professional
         except Exception as e:
             # Log error and return friendly message
             print(f"Groq API Error: {e}")
-            return {
+            payload = {
                 'response': "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
                 'conversation_id': str(session.id),
-                'error': str(e)
             }
+            if getattr(settings, 'DEBUG', False):
+                payload['error'] = str(e)
+            return payload
     
     def _get_or_create_session(self, user):
         """Get the latest active session or create a new one"""

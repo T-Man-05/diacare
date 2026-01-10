@@ -1,5 +1,6 @@
 """API Views for Health app"""
 
+from decimal import Decimal, InvalidOperation
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -145,7 +146,20 @@ class HealthCardViewSet(viewsets.ModelViewSet):
     def increment(self, request):
         """Increment a health card value"""
         card_type = request.data.get('card_type')
-        increment = float(request.data.get('increment', 1.0))
+        if not card_type or not isinstance(card_type, str):
+            return Response(
+                {'detail': 'card_type is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        raw_increment = request.data.get('increment', 1.0)
+        try:
+            increment = Decimal(str(raw_increment))
+        except (InvalidOperation, TypeError, ValueError):
+            return Response(
+                {'detail': 'increment must be a number'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         card = HealthCardRepository.increment_card_value(
             request.user.id,

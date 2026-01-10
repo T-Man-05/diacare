@@ -8,6 +8,28 @@ Integration tests for REST API endpoints.
 
 import pytest
 from django.urls import reverse
+from asgiref.sync import async_to_sync
+
+
+def _read_streaming_body(response) -> str:
+    """Read StreamingHttpResponse body in tests (sync or async streaming_content)."""
+
+    sc = getattr(response, "streaming_content", None)
+    if sc is None:
+        return ""
+
+    if hasattr(sc, "__aiter__"):
+        async def _collect() -> bytes:
+            buf = bytearray()
+            async for chunk in sc:
+                buf.extend(chunk)
+            return bytes(buf)
+
+        data = async_to_sync(_collect)()
+    else:
+        data = b"".join(sc)
+
+    return data.decode("utf-8", errors="replace")
 
 
 @pytest.mark.django_db
@@ -98,10 +120,46 @@ class TestDashboardAPI:
         assert 'glucose' in response.data
         assert 'health_cards' in response.data
 
+    def test_get_dashboard_stream_ndjson(self, authenticated_client):
+        """Test streaming dashboard returns NDJSON chunks."""
+        response = authenticated_client.get('/api/v1/health/dashboard/stream/')
+
+        assert response.status_code == 200
+        assert response.get('Content-Type', '').startswith('application/x-ndjson')
+
+        body = _read_streaming_body(response)
+        # Order isn't guaranteed (parallel execution).
+        assert '"type": "user_profile"' in body
+        assert '"type": "stream_end"' in body
+
     def test_dashboard_unauthenticated(self, api_client):
         """Test dashboard without authentication."""
         response = api_client.get('/api/v1/health/dashboard/')
         
+        assert response.status_code == 401
+
+    def test_dashboard_stream_unauthenticated(self, api_client):
+        """Streaming dashboard should return 401 JSON when unauthenticated."""
+        response = api_client.get('/api/v1/health/dashboard/stream/')
+        assert response.status_code == 401
+
+
+@pytest.mark.django_db
+class TestSettingsAPI:
+    """Tests for settings endpoints."""
+
+    def test_get_settings_stream_ndjson(self, authenticated_client):
+        response = authenticated_client.get('/api/v1/auth/settings/stream/')
+        assert response.status_code == 200
+        assert response.get('Content-Type', '').startswith('application/x-ndjson')
+
+        body = _read_streaming_body(response)
+        assert '"type": "profile"' in body
+        assert '"type": "preferences"' in body
+        assert '"type": "stream_end"' in body
+
+    def test_get_settings_stream_unauthenticated(self, api_client):
+        response = api_client.get('/api/v1/auth/settings/stream/')
         assert response.status_code == 401
 
 
@@ -190,7 +248,8 @@ class TestRemindersAPI:
         response = authenticated_client.post('/api/v1/reminders/', data, format='json')
         
         assert response.status_code == 201
-        assert response.data['title'] == 'Take medication'
+        # Reminders API uses a BFF-style wrapper
+        assert response.data['data']['title'] == 'Take medication'
 
 
 @pytest.mark.django_db
@@ -199,7 +258,7 @@ class TestChatAPI:
 
     def test_chat_requires_message(self, authenticated_client):
         """Test chat endpoint requires message."""
-        response = authenticated_client.post('/api/v1/chat/send/', {}, format='json')
+        response = authenticated_client.post('/api/v1/chat/', {}, format='json')
         
         assert response.status_code == 400
         assert 'message' in str(response.data).lower()

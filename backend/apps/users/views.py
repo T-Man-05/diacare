@@ -10,6 +10,7 @@ from rest_framework.decorators import api_view, permission_classes
 from apps.users.serializers import UserRegistrationSerializer, UserSerializer
 from services.settings_service import SettingsService
 from repositories.glucose_repository import GlucoseRepository
+from utils.api_responses import error_response
 
 
 class RegisterView(generics.CreateAPIView):
@@ -64,7 +65,12 @@ class LogoutView(APIView):
             token.blacklist()
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                code="logout_failed",
+                ui_message="We couldn't log you out right now. Please try again.",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                exc=e,
+            )
 
 
 @api_view(['GET'])
@@ -76,7 +82,12 @@ def diabetic_profile_read(request):
         data = service.get_settings_data(request.user)
         return Response({'success': True, 'data': data['diabetic_profile']})
     except Exception as e:
-        return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return error_response(
+            code="service_unavailable",
+            ui_message="We're having trouble connecting to the server right now. We are working on fixing it.",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            exc=e,
+        )
 
 
 @api_view(['PATCH'])
@@ -89,6 +100,19 @@ def diabetic_profile_write(request):
         data = service.get_settings_data(request.user)
         return Response({'success': True, 'data': data['diabetic_profile']})
     except ValueError as e:
-        return Response({'success': False, 'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return error_response(
+            code="validation_error",
+            ui_message=(
+                "Some information seems to be missing or incorrect. "
+                "Please check the highlighted fields."
+            ),
+            status_code=status.HTTP_400_BAD_REQUEST,
+            exc=e,
+        )
     except Exception as e:
-        return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return error_response(
+            code="service_unavailable",
+            ui_message="We're having trouble connecting to the server right now. We are working on fixing it.",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            exc=e,
+        )

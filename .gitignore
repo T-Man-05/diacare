@@ -13,9 +13,6 @@ linux
 # If you don't generate documentation locally you can remove this line.
 doc/api/
 
-# dotenv environment variables file
-.env
-
 # Avoid committing generated Javascript files:
 *.dart.js
 # Produced by the --dump-info flag.
@@ -29,3 +26,13 @@ doc/api/
 
 .flutter-plugins
 .flutter-plugins-dependencies
+
+# Python (backend)
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Android / Gradle / Kotlin logs
+android/.kotlin/errors/
+*.log

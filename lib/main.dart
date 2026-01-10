@@ -15,6 +15,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'pages/login.dart';
 import 'pages/home.dart';
 import 'pages/alarm_ringing_page.dart';
@@ -32,6 +33,10 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 /// Initializes the service locator before running the app
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables (e.g., API_BASE_URL) before initializing
+  // services that depend on ApiConfig.
+  await dotenv.load(fileName: '.env');
 
   // Initialize the service locator with AppDataSource (Supabase)
   await setupServiceLocator();

@@ -12,6 +12,7 @@ from repositories.glucose_repository import GlucoseRepository
 from repositories.health_card_repository import HealthCardRepository
 from datetime import timedelta
 from django.utils import timezone
+from utils.api_responses import error_response
 
 
 class InsightsView(APIView):
@@ -117,7 +118,9 @@ class InsightsView(APIView):
             return Response({'success': True, 'data': insights_data})
             
         except Exception as e:
-            return Response({
-                'success': False,
-                'error': str(e)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return error_response(
+                code="service_unavailable",
+                ui_message="We're having trouble connecting to the server right now. We are working on fixing it.",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                exc=e,
+            )

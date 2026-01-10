@@ -11,6 +11,7 @@ import '../domain/models/models.dart';
 import '../domain/inputs/inputs.dart';
 import '../services/alarm_notification_service.dart';
 import 'alarm_ringing_page.dart';
+import '../widgets/top_error_banner.dart';
 
 class RemindersPage extends StatefulWidget {
   const RemindersPage({Key? key}) : super(key: key);
@@ -24,6 +25,7 @@ class _RemindersPageState extends State<RemindersPage> {
   bool _isLoading = true;
   bool _isSelectionMode = false;
   final Set<String> _selectedIds = {};
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -38,6 +40,7 @@ class _RemindersPageState extends State<RemindersPage> {
 
       setState(() {
         _reminders = List<Reminder>.from(remindersData);
+        _errorMessage = null;
 
         // Sort: enabled first, then by time
         _reminders.sort((a, b) {
@@ -57,6 +60,9 @@ class _RemindersPageState extends State<RemindersPage> {
       setState(() {
         _reminders = [];
         _isLoading = false;
+        _errorMessage = e is DataSourceException
+            ? e.displayMessage
+            : 'Failed to load reminders';
       });
     }
   }
@@ -213,11 +219,11 @@ class _RemindersPageState extends State<RemindersPage> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Error updating reminder: $e'),
-            duration: const Duration(seconds: 2)),
-      );
+      setState(() {
+        _errorMessage = e is DataSourceException
+            ? e.displayMessage
+            : 'Error updating reminder';
+      });
     }
   }
 
@@ -276,11 +282,11 @@ class _RemindersPageState extends State<RemindersPage> {
       await _loadReminders();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Error updating reminder: $e'),
-            duration: const Duration(seconds: 2)),
-      );
+      setState(() {
+        _errorMessage = e is DataSourceException
+            ? e.displayMessage
+            : 'Error updating reminder';
+      });
     }
   }
 
@@ -354,12 +360,11 @@ class _RemindersPageState extends State<RemindersPage> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error deleting reminders: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      setState(() {
+        _errorMessage = e is DataSourceException
+            ? e.displayMessage
+            : 'Error deleting reminders';
+      });
     }
   }
 
@@ -439,6 +444,26 @@ class _RemindersPageState extends State<RemindersPage> {
   }
 
   Widget _buildBody(
+      AppLocalizations l10n, Color textPrimary, Color textSecondary) {
+    final content = _buildContent(l10n, textPrimary, textSecondary);
+
+    return Column(
+      children: [
+        if (_errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: TopErrorBanner(
+              message: _errorMessage!,
+              onDismiss: () => setState(() => _errorMessage = null),
+              onRetry: _loadReminders,
+            ),
+          ),
+        Expanded(child: content),
+      ],
+    );
+  }
+
+  Widget _buildContent(
       AppLocalizations l10n, Color textPrimary, Color textSecondary) {
     if (_isLoading) {
       return const Center(

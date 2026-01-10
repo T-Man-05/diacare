@@ -75,8 +75,12 @@ class DashboardService:
         # 5. Health Cards (today)
         health_cards = DashboardService._get_health_cards(user_id)
         
-        # 6. Today's Reminders
-        reminders = DashboardService._get_today_reminders(user_id)
+        # 6. Next Reminder (single closest upcoming reminder)
+        next_reminder = DashboardService._get_next_reminder(user_id)
+        reminders = [next_reminder] if next_reminder else []
+
+        # Count late reminders (time already passed but not completed)
+        late_reminders_count = ReminderRepository.count_late_reminders(user_id)
         
         # 7. Streaks & Goals (placeholder for future)
         goals = {
@@ -104,7 +108,12 @@ class DashboardService:
                 }
             },
             'health_cards': health_cards,
+            # Backward compatible: still expose `reminders` but it now contains
+            # at most ONE item (the closest upcoming reminder).
             'reminders': reminders,
+            # Preferred field for clients that only need the closest reminder.
+            'next_reminder': next_reminder,
+            'late_reminders_count': late_reminders_count,
             'goals': goals,
             'timestamp': timezone.now().isoformat()
         }
@@ -161,18 +170,17 @@ class DashboardService:
         return result
     
     @staticmethod
-    def _get_today_reminders(user_id: int) -> List[Dict[str, Any]]:
-        """Get today's upcoming reminders"""
-        reminders = ReminderRepository.get_today_reminders(user_id)[:5]  # Next 5 reminders
-        
-        result = []
-        for reminder in reminders:
-            result.append({
-                'id': str(reminder.id),
-                'title': reminder.title,
-                'scheduled_time': reminder.scheduled_time.isoformat(),
-                'reminder_type': reminder.reminder_type,
-                'status': reminder.status
-            })
-        
-        return result
+    def _get_next_reminder(user_id: int) -> Dict[str, Any] | None:
+        """Get the single closest upcoming reminder (or None)."""
+        reminder = ReminderRepository.get_next_upcoming_reminder(user_id)
+        if not reminder:
+            return None
+
+        return {
+            'id': str(reminder.id),
+            'title': reminder.title,
+            'scheduled_time': reminder.scheduled_time.isoformat(),
+            'reminder_type': reminder.reminder_type,
+            'status': reminder.status,
+            'is_enabled': reminder.is_enabled,
+        }

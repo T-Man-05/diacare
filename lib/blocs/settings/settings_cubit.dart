@@ -60,7 +60,12 @@ class SettingsCubit extends Cubit<SettingsState> {
 
         return;
       } catch (e) {
-        debugPrint('Failed to load settings from backend, using local: $e');
+        // Not being logged in is a normal startup state; don't treat it as an error.
+        if (e is DataSourceException && e.code == 'not_authenticated') {
+          // silent
+        } else {
+          debugPrint('Failed to load settings from backend, using local: $e');
+        }
       }
 
       // Fallback to local storage if backend fails

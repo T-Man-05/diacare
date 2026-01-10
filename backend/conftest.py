@@ -16,6 +16,8 @@ def django_db_setup():
     settings.DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': ':memory:',
+        # Django expects this key to exist when wrapping views with atomic requests.
+        'ATOMIC_REQUESTS': False,
     }
 
 

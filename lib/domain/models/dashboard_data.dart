@@ -29,7 +29,26 @@ class DashboardData {
   /// Time until next reminder formatted
   String? get timeUntilNextReminder {
     if (nextReminder == null) return null;
-    final duration = nextReminder!.timeRemaining(DateTime.now());
+    final now = DateTime.now();
+    var duration = nextReminder!.timeRemaining(now);
+
+    // If the reminder time already passed today, treat it as the next day's
+    // occurrence for the dashboard's "next reminder" card.
+    if (duration == null && !nextReminder!.isDone && nextReminder!.isEnabled) {
+      final parts = nextReminder!.scheduledTime.split(':');
+      if (parts.length >= 2) {
+        final h = int.tryParse(parts[0]);
+        final m = int.tryParse(parts[1]);
+        if (h != null && m != null) {
+          final scheduledTomorrow =
+              DateTime(now.year, now.month, now.day, h, m).add(const Duration(days: 1));
+          if (scheduledTomorrow.isAfter(now)) {
+            duration = scheduledTomorrow.difference(now);
+          }
+        }
+      }
+    }
+
     if (duration == null) return null;
 
     if (duration.inHours > 0) {

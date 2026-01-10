@@ -10,11 +10,13 @@ import '../domain/inputs/inputs.dart';
 class AddDataDialog extends StatefulWidget {
   final String currentUnits; // 'mg/dL' or 'mmol/L'
   final VoidCallback onDataAdded;
+  final ValueChanged<String>? onError;
 
   const AddDataDialog({
     Key? key,
     required this.currentUnits,
     required this.onDataAdded,
+    this.onError,
   }) : super(key: key);
 
   @override
@@ -26,6 +28,7 @@ class _AddDataDialogState extends State<AddDataDialog> {
   final _valueController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  String? _errorMessage;
 
   // For glucose readings
   String _readingType = 'before_meal';
@@ -176,7 +179,10 @@ class _AddDataDialogState extends State<AddDataDialog> {
   Future<void> _saveData() async {
     if (!_formKey.currentState!.validate() || _selectedType == null) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
     try {
       final dataSource = getIt<AppDataSource>();
@@ -205,22 +211,17 @@ class _AddDataDialogState extends State<AddDataDialog> {
 
       widget.onDataAdded();
       Navigator.of(context).pop();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Data added successfully'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving data: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+
+      final msg = e is DataSourceException
+          ? e.displayMessage
+          : 'Error saving data';
+      widget.onError?.call(msg);
+
+      setState(() {
+        _errorMessage = msg;
+      });
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -265,6 +266,48 @@ class _AddDataDialogState extends State<AddDataDialog> {
                   ],
                 ),
                 const SizedBox(height: 16),
+
+                if (_errorMessage != null) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF3A2424)
+                          : const Color(0xFFFFF2F0),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isDark
+                            ? const Color(0xFF6B3A3A)
+                            : const Color(0xFFFFC6BE),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: isDark ? Colors.white : const Color(0xFF5D1A1A),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: TextStyle(
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF5D1A1A),
+                              fontSize: 13,
+                              height: 1.25,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
 
                 // Data type selection
                 Text(

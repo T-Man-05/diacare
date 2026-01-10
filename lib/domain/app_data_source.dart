@@ -188,7 +188,28 @@ class DataSourceException implements Exception {
   final String message;
   final String? code;
 
-  const DataSourceException(this.message, {this.code});
+  /// Human-friendly message ready for UI display (preferred when present).
+  final String? uiMessage;
+
+  /// Internal/dev-only message (optional; typically only present in debug).
+  final String? devMessage;
+
+  /// Optional field validation errors.
+  final Map<String, List<String>>? fieldErrors;
+
+  /// Optional HTTP status code when the error comes from an API response.
+  final int? httpStatus;
+
+  const DataSourceException(
+    this.message, {
+    this.code,
+    this.uiMessage,
+    this.devMessage,
+    this.fieldErrors,
+    this.httpStatus,
+  });
+
+  String get displayMessage => uiMessage ?? message;
 
   @override
   String toString() =>

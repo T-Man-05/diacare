@@ -11,6 +11,7 @@ import '../utils/constants.dart';
 import '../data/service_locator.dart';
 import '../domain/app_data_source.dart';
 import '../domain/models/models.dart';
+import '../widgets/top_error_banner.dart';
 
 class InsightsPage extends StatefulWidget {
   const InsightsPage({Key? key}) : super(key: key);
@@ -24,6 +25,7 @@ class _InsightsPageState extends State<InsightsPage> {
   CarbsChartData? _carbsData;
   ActivityChartData? _activityData;
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -33,6 +35,11 @@ class _InsightsPageState extends State<InsightsPage> {
 
   Future<void> _loadChartData() async {
     try {
+      if (mounted) {
+        setState(() {
+          _errorMessage = null;
+        });
+      }
       final dataSource = getIt<AppDataSource>();
 
       // Load all chart data
@@ -58,7 +65,12 @@ class _InsightsPageState extends State<InsightsPage> {
     } catch (e) {
       debugPrint('Error loading chart data: $e');
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e is DataSourceException
+              ? e.displayMessage
+              : 'Failed to load insights';
+        });
       }
     }
   }
@@ -131,6 +143,15 @@ class _InsightsPageState extends State<InsightsPage> {
         child: Column(
           children: [
             _buildHeader(headerBackground, textPrimary, l10n),
+            if (_errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: TopErrorBanner(
+                  message: _errorMessage!,
+                  onDismiss: () => setState(() => _errorMessage = null),
+                  onRetry: _loadChartData,
+                ),
+              ),
             Expanded(
               child: RefreshIndicator(
                 onRefresh: _onRefresh,
@@ -200,18 +221,6 @@ class _InsightsPageState extends State<InsightsPage> {
               fontSize: 32,
               fontWeight: FontWeight.bold,
               color: textPrimary,
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.notifications,
-              color: Colors.white,
-              size: 24,
             ),
           ),
         ],

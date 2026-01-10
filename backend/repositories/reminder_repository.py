@@ -34,6 +34,60 @@ class ReminderRepository:
             user_id=user_id,
             is_enabled=True
         ).order_by("scheduled_time")
+
+    @staticmethod
+    def get_upcoming_reminders(user_id: int, limit: int = 10) -> QuerySet:
+        """Get upcoming (future-time) reminders for today.
+
+        Notes:
+        - Reminders are time-only (no date), so we treat them as "today".
+        - Excludes completed/done reminders.
+        - Returns at most `limit` reminders ordered by scheduled_time.
+        """
+        now = timezone.now().time()
+        queryset = (
+            Reminder.objects.filter(user_id=user_id, is_enabled=True)
+            .exclude(status__in=["completed", "done"])
+            .filter(scheduled_time__gte=now)
+            .order_by("scheduled_time")
+        )
+        return queryset[:limit]
+
+    @staticmethod
+    def get_next_upcoming_reminder(user_id: int) -> Optional[Reminder]:
+        """Get the single closest upcoming reminder for today.
+
+        Returns:
+            The next Reminder (closest future scheduled_time), or None if none.
+        """
+        now = timezone.now().time()
+        base_qs = (
+            Reminder.objects.filter(user_id=user_id, is_enabled=True)
+            .exclude(status__in=["completed", "done"])
+        )
+
+        # 1) Prefer the closest reminder still ahead of us today.
+        upcoming = (
+            base_qs.filter(scheduled_time__gte=now)
+            .order_by("scheduled_time")
+            .first()
+        )
+        if upcoming:
+            return upcoming
+
+        # 2) If none remain today, wrap to the next day: pick the earliest one.
+        return base_qs.order_by("scheduled_time").first()
+
+    @staticmethod
+    def count_late_reminders(user_id: int) -> int:
+        """Count enabled reminders that are late today (time already passed) and not done."""
+        now = timezone.now().time()
+        return (
+            Reminder.objects.filter(user_id=user_id, is_enabled=True)
+            .exclude(status__in=["completed", "done"])
+            .filter(scheduled_time__lt=now)
+            .count()
+        )
     
     @staticmethod
     def create_reminder(user_id: int, title: str = None, scheduled_time: time = None,

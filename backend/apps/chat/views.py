@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from services.chat_service import ChatService
+from utils.api_responses import error_response
 
 
 @api_view(['POST'])
@@ -45,10 +46,11 @@ def chat_send_message(request):
         
         message = request.data.get('message')
         if not message:
-            return Response({
-                'success': False,
-                'error': 'message is required'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                code="validation_error",
+                ui_message="Please enter a message to continue.",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
         
         history = request.data.get('history', [])
         
@@ -60,10 +62,12 @@ def chat_send_message(request):
         })
         
     except Exception as e:
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return error_response(
+            code="service_unavailable",
+            ui_message="We're having trouble connecting to the server right now. We are working on fixing it.",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            exc=e,
+        )
 
 
 @api_view(['GET'])
@@ -81,7 +85,15 @@ def chat_get_history(request):
         service = ChatService()
         
         session_id = request.query_params.get('session_id')
-        limit = int(request.query_params.get('limit', 50))
+        try:
+            limit = int(request.query_params.get('limit', 50))
+        except (TypeError, ValueError) as e:
+            return error_response(
+                code="validation_error",
+                ui_message="Invalid 'limit' value. Please use a number.",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                exc=e,
+            )
         
         history = service.get_conversation_history(request.user, session_id, limit)
         
@@ -94,10 +106,12 @@ def chat_get_history(request):
         })
         
     except Exception as e:
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return error_response(
+            code="service_unavailable",
+            ui_message="We're having trouble connecting to the server right now. We are working on fixing it.",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            exc=e,
+        )
 
 
 @api_view(['GET'])
@@ -111,7 +125,15 @@ def chat_get_sessions(request):
     try:
         service = ChatService()
         
-        limit = int(request.query_params.get('limit', 10))
+        try:
+            limit = int(request.query_params.get('limit', 10))
+        except (TypeError, ValueError) as e:
+            return error_response(
+                code="validation_error",
+                ui_message="Invalid 'limit' value. Please use a number.",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                exc=e,
+            )
         sessions = service.get_user_sessions(request.user, limit)
         
         return Response({
@@ -123,10 +145,12 @@ def chat_get_sessions(request):
         })
         
     except Exception as e:
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return error_response(
+            code="service_unavailable",
+            ui_message="We're having trouble connecting to the server right now. We are working on fixing it.",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            exc=e,
+        )
 
 
 @api_view(['DELETE'])
@@ -147,7 +171,9 @@ def chat_delete_session(request, session_id):
         })
         
     except Exception as e:
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return error_response(
+            code="service_unavailable",
+            ui_message="We're having trouble connecting to the server right now. We are working on fixing it.",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            exc=e,
+        )

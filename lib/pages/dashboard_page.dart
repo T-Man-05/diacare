@@ -8,9 +8,11 @@ import '../domain/models/models.dart';
 import '../widgets/info_card.dart';
 import '../widgets/blood_sugar_chart.dart';
 import '../widgets/add_data_dialog.dart';
+import '../widgets/top_error_banner.dart';
 import '../utils/constants.dart';
 import '../l10n/app_localizations.dart';
 import 'insights_page.dart';
+import 'login.dart';
 
 /// Dashboard Page - Main screen showing health metrics
 class DashboardPage extends StatefulWidget {
@@ -23,6 +25,7 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   DashboardData? _dashboardData;
   bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -33,6 +36,11 @@ class _DashboardPageState extends State<DashboardPage> {
   /// Load data from the AppDataSource
   Future<void> _loadData() async {
     try {
+      if (mounted) {
+        setState(() {
+          _errorMessage = null;
+        });
+      }
       final dataSource = getIt<AppDataSource>();
 
       // Get complete dashboard data (includes glucose, reminders, health cards, chart, profile)
@@ -44,7 +52,28 @@ class _DashboardPageState extends State<DashboardPage> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
+
+      // If the session is no longer valid (expired/cleared tokens), take the
+      // user back to login instead of leaving them on a blank error screen.
+      if (e is DataSourceException &&
+          (e.code == 'session_expired' || e.code == 'not_authenticated')) {
+        if (!mounted) return;
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+        return;
+      }
+
       debugPrint('Error loading dashboard data: $e');
+
+      if (!mounted) return;
+      final msg = e is DataSourceException
+          ? e.displayMessage
+          : AppLocalizations.of(context).error;
+      setState(() {
+        _errorMessage = msg;
+      });
     }
   }
 
@@ -77,9 +106,24 @@ class _DashboardPageState extends State<DashboardPage> {
       return Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         body: Center(
-          child: Text(
-            l10n.error,
-            style: TextStyle(color: theme.textTheme.bodyLarge?.color),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_errorMessage != null)
+                  TopErrorBanner(
+                    message: _errorMessage!,
+                    onDismiss: () => setState(() => _errorMessage = null),
+                    onRetry: _loadData,
+                  )
+                else
+                  Text(
+                    l10n.error,
+                    style: TextStyle(color: theme.textTheme.bodyLarge?.color),
+                  ),
+              ],
+            ),
           ),
         ),
       );
@@ -100,6 +144,14 @@ class _DashboardPageState extends State<DashboardPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeader(theme, isDark, l10n),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 12),
+                      TopErrorBanner(
+                        message: _errorMessage!,
+                        onDismiss: () => setState(() => _errorMessage = null),
+                        onRetry: _loadData,
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     _buildGlucoseCard(theme, isDark, l10n, settingsState),
                     const SizedBox(height: 16),
@@ -150,54 +202,6 @@ class _DashboardPageState extends State<DashboardPage> {
             color: theme.textTheme.bodyLarge?.color,
           ),
         ),
-        Row(
-          children: [
-            _buildNotificationIcon(),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNotificationIcon() {
-    final lateCount = _dashboardData?.lateRemindersCount ?? 0;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(Icons.notifications, color: Colors.white, size: 20),
-        ),
-        if (lateCount > 0)
-          Positioned(
-            right: -6,
-            top: -6,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              constraints: const BoxConstraints(
-                minWidth: 18,
-                minHeight: 18,
-              ),
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  lateCount > 9 ? '9+' : '$lateCount',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }
@@ -556,6 +560,12 @@ class _DashboardPageState extends State<DashboardPage> {
         onDataAdded: () {
           // Refresh dashboard data after adding
           _loadData();
+        },
+        onError: (message) {
+          if (!mounted) return;
+          setState(() {
+            _errorMessage = message;
+          });
         },
       ),
     );

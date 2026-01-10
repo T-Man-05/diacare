@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from services.settings_service import SettingsService
+from utils.api_responses import error_response
 
 
 @api_view(['GET'])
@@ -31,10 +32,12 @@ def settings_read(request):
         })
         
     except Exception as e:
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return error_response(
+            code="service_unavailable",
+            ui_message="We're having trouble connecting to the server right now. We are working on fixing it.",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            exc=e,
+        )
 
 
 @api_view(['PATCH'])
@@ -92,13 +95,20 @@ def settings_write(request):
         })
         
     except ValueError as e:
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=status.HTTP_400_BAD_REQUEST)
+        return error_response(
+            code="validation_error",
+            ui_message=(
+                "Some information seems to be missing or incorrect. "
+                "Please check the highlighted fields."
+            ),
+            status_code=status.HTTP_400_BAD_REQUEST,
+            exc=e,
+        )
         
     except Exception as e:
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return error_response(
+            code="service_unavailable",
+            ui_message="We're having trouble connecting to the server right now. We are working on fixing it.",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            exc=e,
+        )

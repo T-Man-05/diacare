@@ -112,14 +112,18 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
     import dj_database_url
-    DATABASES = {
-        "default": dj_database_url.parse(DATABASE_URL)
-    }
+    _default_db = dj_database_url.parse(DATABASE_URL)
+    # Some environments (notably certain test runners) may access DATABASES
+    # before Django has injected default DB settings like ATOMIC_REQUESTS.
+    # Setting it explicitly avoids KeyError in request handling.
+    _default_db.setdefault("ATOMIC_REQUESTS", False)
+    DATABASES = {"default": _default_db}
 else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": BASE_DIR / "db.sqlite3",
+            "ATOMIC_REQUESTS": False,
         }
     }
 
@@ -254,7 +258,7 @@ REST_FRAMEWORK = {
     },
 
     # Exception handling
-    "EXCEPTION_HANDLER": "diacare_api.exceptions.custom_exception_handler",
+    "EXCEPTION_HANDLER": "utils.exception_handler.custom_exception_handler",
 
     # Schema generation
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",

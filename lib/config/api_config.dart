@@ -7,6 +7,7 @@
 /// ============================================================================
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiConfig {
   /// Base URL for Django REST API
@@ -16,10 +17,19 @@ class ApiConfig {
   /// For Physical Device: Use your computer's WiFi IP
   /// Make sure both devices are on the same WiFi network
   static String get baseUrl {
+    // Prefer .env override so the app works across emulator/device without
+    // editing code.
+    final envUrl = dotenv.env['API_BASE_URL'];
+    if (envUrl != null && envUrl.trim().isNotEmpty) {
+      // Ensure no trailing slash because endpoints already start with '/'.
+      return envUrl.trim().replaceAll(RegExp(r'/*$'), '');
+    }
+
     if (kIsWeb) {
       return 'http://localhost:8000/api/v1';
     }
-    // For physical Android device - update this IP to match your network
+
+    // Default to Android emulator host mapping.
     return 'http://10.80.17.231:8000/api/v1';
   }
 
@@ -34,6 +44,8 @@ class ApiConfig {
   static const String authLogout = '/auth/logout/';
   static const String diabeticProfile = '/auth/diabetic-profile/';
   static const String diabeticProfileUpdate = '/auth/diabetic-profile/update/';
+  static const String authSettings = '/auth/settings/';
+  static const String authSettingsUpdate = '/auth/settings/update/';
 
   static const String dashboard = '/health/dashboard/';
   static const String glucose = '/health/glucose/';
@@ -58,5 +70,7 @@ class ApiConfig {
   static const Duration refreshTokenExpiry = Duration(days: 7);
 
   /// Request timeout
-  static const Duration timeout = Duration(seconds: 30);
+  // Keep this near the UX threshold so timeouts surface quickly with a
+  // user-friendly message.
+  static const Duration timeout = Duration(seconds: 6);
 }

@@ -46,9 +46,10 @@ Future<void> setupServiceLocator() async {
 /// Setup Django-based data source
 Future<void> _setupDjangoDataSource(PreferencesService prefs) async {
   // Register Django data source implementation
-  getIt.registerLazySingleton<AppDataSource>(
-    () => DjangoDataSource(prefs),
-  );
+  // Eager init: load persisted tokens before UI checks `isLoggedIn`.
+  final ds = DjangoDataSource(prefs);
+  await ds.init();
+  getIt.registerSingleton<AppDataSource>(ds);
 
   // Register Django chat service for AI conversations
   getIt.registerLazySingleton<DjangoChatService>(

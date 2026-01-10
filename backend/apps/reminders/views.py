@@ -11,6 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from apps.reminders.models import Reminder
 from apps.reminders.serializers import ReminderSerializer
 from services.reminder_service import ReminderService
+from utils.api_responses import error_response
 
 
 class ReminderViewSet(viewsets.ModelViewSet):
@@ -38,7 +39,15 @@ class ReminderViewSet(viewsets.ModelViewSet):
             reminder = service.create_reminder(request.user, request.data)
             return Response({'success': True, 'data': reminder}, status=status.HTTP_201_CREATED)
         except ValueError as e:
-            return Response({'success': False, 'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                code="validation_error",
+                ui_message=(
+                    "Some information seems to be missing or incorrect. "
+                    "Please check the highlighted fields."
+                ),
+                status_code=status.HTTP_400_BAD_REQUEST,
+                exc=e,
+            )
     
     def update(self, request, pk=None):
         """Update a reminder"""
@@ -46,10 +55,22 @@ class ReminderViewSet(viewsets.ModelViewSet):
             service = ReminderService()
             reminder = service.update_reminder(pk, request.data)
             if not reminder:
-                return Response({'success': False, 'error': 'Reminder not found'}, status=status.HTTP_404_NOT_FOUND)
+                return error_response(
+                    code="not_found",
+                    ui_message="We couldn't find the reminder you're trying to update. It may have been deleted.",
+                    status_code=status.HTTP_404_NOT_FOUND,
+                )
             return Response({'success': True, 'data': reminder})
         except ValueError as e:
-            return Response({'success': False, 'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return error_response(
+                code="validation_error",
+                ui_message=(
+                    "Some information seems to be missing or incorrect. "
+                    "Please check the highlighted fields."
+                ),
+                status_code=status.HTTP_400_BAD_REQUEST,
+                exc=e,
+            )
     
     def partial_update(self, request, pk=None):
         """Partial update a reminder"""
@@ -67,7 +88,11 @@ class ReminderViewSet(viewsets.ModelViewSet):
         service = ReminderService()
         reminder = service.mark_as_completed(pk)
         if not reminder:
-            return Response({'success': False, 'error': 'Reminder not found'}, status=status.HTTP_404_NOT_FOUND)
+            return error_response(
+                code="not_found",
+                ui_message="We couldn't find the reminder you're trying to update. It may have been deleted.",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
         return Response({'success': True, 'data': reminder})
     
     @action(detail=True, methods=['post'])
@@ -76,7 +101,11 @@ class ReminderViewSet(viewsets.ModelViewSet):
         service = ReminderService()
         reminder = service.toggle_active(pk)
         if not reminder:
-            return Response({'success': False, 'error': 'Reminder not found'}, status=status.HTTP_404_NOT_FOUND)
+            return error_response(
+                code="not_found",
+                ui_message="We couldn't find the reminder you're trying to update. It may have been deleted.",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
         return Response({'success': True, 'data': reminder})
     
     @action(detail=False, methods=['get'])
